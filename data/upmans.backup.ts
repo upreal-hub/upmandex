@@ -1,0 +1,289 @@
+type Upman = {
+  slug: string;
+  name: string;
+  rarity: string;
+  creator: string;
+  image: string;
+  firstOwner?: string;
+  owners?: number;
+};
+
+export const upmans: Upman[] = [
+  // COMMONS
+
+  {
+    slug: "normalupman",
+    name: "NormalUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    firstOwner: "upreal_",
+    owners: 17,
+    image: "/upmans/normalupman.png",
+  },
+
+  {
+    slug: "nerdupman",
+    name: "NerdUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/nerdupman.png",
+  },
+
+  {
+    slug: "smokeupman",
+    name: "SmokeUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/smokeupman.png",
+  },
+
+  {
+    slug: "sleepupman",
+    name: "SleepUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/sleepupman.png",
+  },
+
+  {
+    slug: "kidupman",
+    name: "KidUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/kidupman.png",
+  },
+
+  {
+    slug: "feetupman",
+    name: "FeetUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/feetupman.png",
+  },
+
+  {
+    slug: "sassyupman",
+    name: "SassyUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/sassyupman.png",
+  },
+
+  {
+    slug: "fetusupman",
+    name: "FetusUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/fetusupman.png",
+  },
+
+  {
+    slug: "pandoraupman",
+    name: "PandoraUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/pandoraupman.png",
+  },
+
+  {
+    slug: "girlupman",
+    name: "GirlUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/girlupman.png",
+  },
+
+  {
+    slug: "manupupman",
+    name: "ManUpUpman",
+    rarity: "Common",
+    creator: "Darling Beanie",
+    image: "/upmans/manupupman.png",
+  },
+
+  {
+    slug: "disguisedupman",
+    name: "DisguisedUpman",
+    rarity: "Common",
+    creator: "upreal_",
+    image: "/upmans/disguisedupman.png",
+  },
+
+  // RARES
+
+  {
+    slug: "lemonupman",
+    name: "LemonUpman",
+    rarity: "Rare",
+    creator: "upreal_",
+    image: "/upmans/lemonupman.png",
+  },
+
+  {
+    slug: "omuupman",
+    name: "OmuUpman",
+    rarity: "Rare",
+    creator: "upreal_",
+    image: "/upmans/omuupman.png",
+  },
+
+  {
+    slug: "tealupman",
+    name: "TealUpman",
+    rarity: "Rare",
+    creator: "upreal_",
+    image: "/upmans/tealupman.png",
+  },
+
+  {
+    slug: "twistedupman",
+    name: "TwistedUpman",
+    rarity: "Rare",
+    creator: "upreal_",
+    image: "/upmans/twistedupman.png",
+  },
+
+  {
+    slug: "nuttellaupman",
+    name: "NuttellaUpman",
+    rarity: "Rare",
+    creator: "nuttellacafe",
+    image: "/upmans/nuttellaupman.png",
+  },
+
+  // EPICS
+
+  {
+    slug: "appleupman",
+    name: "AppleUpman",
+    rarity: "Epic",
+    creator: "4pple",
+    image: "/upmans/appleupman.png",
+  },
+
+  {
+    slug: "beanieupman",
+    name: "BeanieUpman",
+    rarity: "Epic",
+    creator: "Darling Beanie",
+    image: "/upmans/beanieupman.png",
+  },
+
+  {
+    slug: "boxxupman",
+    name: "BoxxUpman",
+    rarity: "Epic",
+    creator: "Boxxart",
+    image: "/upmans/boxxupman.png",
+  },
+
+  {
+    slug: "discoupman",
+    name: "DiscoUpman",
+    rarity: "Epic",
+    creator: "Discoman",
+    image: "/upmans/discoupman.png",
+  },
+
+  {
+    slug: "kittyupman",
+    name: "KittyUpman",
+    rarity: "Epic",
+    creator: "Darling Beanie",
+    image: "/upmans/kittyupman.png",
+  },
+
+  {
+    slug: "smoreupman",
+    name: "SmoreUpman",
+    rarity: "Epic",
+    creator: "Lupus323",
+    image: "/upmans/smoreupman.png",
+  },
+
+  // MYTHICS
+
+  {
+    slug: "pjupman",
+    name: "PJUpman",
+    rarity: "Mythic",
+    creator: "upreal_",
+    image: "/upmans/pjupman.png",
+  },
+
+  {
+    slug: "rottenupman",
+    name: "RottenUpman",
+    rarity: "Mythic",
+    creator: "upreal_",
+    image: "/upmans/rottenupman.png",
+  },
+
+  {
+    slug: "rossiupman",
+    name: "RossiUpman",
+    rarity: "Mythic",
+    creator: "ChefRossi",
+    image: "/upmans/rossiupman.png",
+  },
+
+  {
+    slug: "indigoupman",
+    name: "IndigoUpman",
+    rarity: "Mythic",
+    creator: "Indigo",
+    image: "/upmans/indigoupman.png",
+  },
+
+  {
+    slug: "personaupman",
+    name: "PersonaUpman",
+    rarity: "Mythic",
+    creator: "ChefRossi",
+    image: "/upmans/upmanpersona.png",
+  },
+
+  // LEGENDARIES
+
+  {
+    slug: "paleoupman",
+    name: "PaleoUpman",
+    rarity: "Legendary",
+    creator: "paleo_inquisitor",
+    image: "/upmans/paleoupman.png",
+  },
+
+  {
+    slug: "foxupman",
+    name: "FoxUpman",
+    rarity: "Legendary",
+    creator: "Darling Beanie",
+    firstOwner: "upreal_",
+    owners: 4,
+    image: "/upmans/foxupman.png",
+  },
+
+  {
+    slug: "cyclupman",
+    name: "CyclUpman",
+    rarity: "Legendary",
+    creator: "nyhkyyvyt",
+    image: "/upmans/cyclupman.png",
+  },
+
+  {
+    slug: "firfanupman",
+    name: "FirfanUpman",
+    rarity: "Legendary",
+    creator: "Firfan",
+    image: "/upmans/firfanupman.png",
+  },
+
+  {
+    slug: "djohanupman",
+    name: "DjohanUpman",
+    rarity: "Legendary",
+    creator: "djjohan",
+    image: "/upmans/djohanupman.png",
+  },
+];
