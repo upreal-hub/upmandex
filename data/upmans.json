@@ -4,8 +4,6 @@
     "name": "NormalUpman",
     "rarity": "Common",
     "creator": "Darling Beanie",
-    "firstOwner": "upreal_",
-    "owners": 17,
     "image": "/upmans/normalupman.png"
   },
   {
@@ -118,9 +116,7 @@
     "name": "NuttellaUpman",
     "rarity": "Rare",
     "creator": "nuttellacafe",
-    "image": "/upmans/nuttellaupman.png",
-    "owners": 1,
-    "firstOwner": "nuttella"
+    "image": "/upmans/nuttellaupman.png"
   },
   {
     "slug": "appleupman",
@@ -211,8 +207,6 @@
     "name": "FoxUpman",
     "rarity": "Legendary",
     "creator": "Darling Beanie",
-    "firstOwner": "upreal_",
-    "owners": 4,
     "image": "/upmans/foxupman.png"
   },
   {
@@ -249,8 +243,8 @@
     "rarity": "Mythic",
     "creator": "Gistly",
     "image": "/upmans/gistlyupman.png",
-    "owners": 2,
-    "firstOwner": "gislty"
+    "owners": 0,
+    "firstOwner": null
   },
   {
     "slug": "karuupman",
@@ -258,7 +252,7 @@
     "rarity": "Mythic",
     "creator": "Karu",
     "image": "/upmans/karuupman.png",
-    "owners": 2,
-    "firstOwner": "karu"
+    "owners": 0,
+    "firstOwner": null
   }
 ]
