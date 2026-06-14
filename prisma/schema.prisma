@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String      @id @default(cuid())
+  twitchLogin String      @unique
+  displayName String
+  avatar      String?
+  createdAt   DateTime    @default(now())
+  inventory   Inventory[]
+}
+
+model Upman {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  image         String
+  rarity        String
+  creator       String
+  creatorTwitch String?
+  ownersCount   Int         @default(0)
+  firstOwner    String?
+  createdAt     DateTime    @default(now())
+  inventory     Inventory[]
+}
+
+model Inventory {
+  id         String   @id @default(cuid())
+  userId     String
+  upmanId    String
+  obtainedAt DateTime @default(now())
+  upman      Upman    @relation(fields: [upmanId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, upmanId])
+}
