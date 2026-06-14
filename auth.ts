@@ -1,6 +1,11 @@
 import NextAuth from "next-auth";
 import Twitch from "next-auth/providers/twitch";
 
+console.log("AUTH INIT");
+console.log("AUTH_TWITCH_ID =", !!process.env.AUTH_TWITCH_ID);
+console.log("AUTH_TWITCH_SECRET =", !!process.env.AUTH_TWITCH_SECRET);
+console.log("AUTH_SECRET =", !!process.env.AUTH_SECRET);
+
 export const {
   handlers,
   signIn,
@@ -19,17 +24,4 @@ export const {
       clientSecret: process.env.AUTH_TWITCH_SECRET!,
     }),
   ],
-
-  callbacks: {
-    async jwt({ token, account, profile }) {
-      console.log("JWT CALLBACK");
-      console.log(JSON.stringify({ account, profile }));
-      return token;
-    },
-
-    async session({ session }) {
-      console.log("SESSION CALLBACK");
-      return session;
-    },
-  },
 });
