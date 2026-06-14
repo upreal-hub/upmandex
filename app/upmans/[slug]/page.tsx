@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
 
 export default async function UpmanPage({
   params,
@@ -8,9 +8,17 @@ export default async function UpmanPage({
 }) {
   const { slug } = await params;
 
-  const upman = upmans.find(
-    (u) => u.slug === slug
-  );
+  const upmans =
+    await prisma.upman.findMany({
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+  const upman =
+    upmans.find(
+      (u) => u.slug === slug
+    );
 
   if (!upman) {
     return (
@@ -68,7 +76,14 @@ export default async function UpmanPage({
     Epic: "text-purple-500",
     Mythic: "text-red-500",
     Legendary: "text-yellow-500",
-  }[upman.rarity];
+  }[
+    upman.rarity as
+      | "Common"
+      | "Rare"
+      | "Epic"
+      | "Mythic"
+      | "Legendary"
+  ];
 
   return (
     <main>
@@ -135,11 +150,11 @@ export default async function UpmanPage({
             </>
           )}
 
-          {upman.owners && (
+          {upman.ownersCount > 0 && (
             <p className="text-sky-700 pt-4">
               👥 Discovered by{" "}
-              {upman.owners} explorer
-              {upman.owners > 1
+              {upman.ownersCount}
+              {upman.ownersCount > 1
                 ? "s"
                 : ""}
             </p>

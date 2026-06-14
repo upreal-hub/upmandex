@@ -1,27 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
-  return NextResponse.json({
-    route: "give-upman OK",
-  });
-}
-
-export async function POST(req: Request) {
+export async function POST(
+  req: Request
+) {
   try {
     const {
+      secret,
       viewer,
       slug,
     } = await req.json();
 
-    if (!viewer || !slug) {
+    if (
+      secret !==
+      process.env.STREAMERBOT_SECRET
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Missing viewer or slug",
+          error: "Unauthorized",
         },
-        { status: 400 }
+        { status: 401 }
       );
     }
 
@@ -36,8 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Viewer not found",
+          error: "Viewer not found",
         },
         { status: 404 }
       );
@@ -54,8 +52,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Upman not found",
+          error: "Upman not found",
         },
         { status: 404 }
       );
@@ -70,14 +67,10 @@ export async function POST(req: Request) {
       });
 
     if (alreadyOwned) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Upman already owned",
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: true,
+        alreadyOwned: true,
+      });
     }
 
     await prisma.inventory.create({
@@ -104,6 +97,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      upman: upman.name,
+      viewer,
     });
 
   } catch (error) {

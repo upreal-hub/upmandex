@@ -1,6 +1,5 @@
-import { readFile, writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   return NextResponse.json({
@@ -10,48 +9,17 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const newUpman = await req.json();
+    const newUpman =
+      await req.json();
 
-    console.log(
-      "RECEIVED =",
-      newUpman
-    );
+    const existing =
+      await prisma.upman.findUnique({
+        where: {
+          slug: newUpman.slug,
+        },
+      });
 
-    const filePath = path.join(
-      process.cwd(),
-      "data",
-      "upmans.json"
-    );
-
-    console.log(
-      "FILE =",
-      filePath
-    );
-
-    const content = await readFile(
-      filePath,
-      "utf8"
-    );
-
-    const upmans = JSON.parse(content);
-
-    console.log(
-      "COUNT =",
-      upmans.length
-    );
-
-    const found = upmans.find(
-      (u: any) =>
-        u.slug.toLowerCase() ===
-        newUpman.slug.toLowerCase()
-    );
-
-    console.log(
-      "FOUND =",
-      found
-    );
-
-    if (found) {
+    if (existing) {
       return NextResponse.json(
         {
           success: false,
@@ -62,31 +30,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const upmanToSave = {
-      ...newUpman,
-      owners: 0,
-      firstOwner: "",
-    };
+    await prisma.upman.create({
+      data: {
+        slug: newUpman.slug,
+        name: newUpman.name,
+        rarity: newUpman.rarity,
+        creator:
+          newUpman.creator,
+        image: newUpman.image,
 
-    upmans.push(upmanToSave);
-
-    await writeFile(
-      filePath,
-      JSON.stringify(
-        upmans,
-        null,
-        2
-      )
-    );
-
-    console.log(
-      "SAVED =",
-      upmanToSave.slug
-    );
+        ownersCount: 0,
+        firstOwner: null,
+      },
+    });
 
     return NextResponse.json({
       success: true,
     });
+
   } catch (error) {
     console.error(error);
 

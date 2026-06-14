@@ -1,28 +1,19 @@
 import Link from "next/link";
-import { readFile } from "fs/promises";
-import path from "path";
-import { upmans } from "@/data/upmans";
-import Navbar from "@/components/Navbar";
+import { prisma } from "@/lib/prisma";
 
 export default async function CollectionsPage() {
+  const users =
+    await prisma.user.findMany({
+      include: {
+        inventory: true,
+      },
+      orderBy: {
+        displayName: "asc",
+      },
+    });
 
-  const filePath = path.join(
-    process.cwd(),
-    "data",
-    "inventories.json"
-  );
-
-  const content =
-    await readFile(
-      filePath,
-      "utf8"
-    );
-
-  const inventories =
-    JSON.parse(content);
-
-  const viewers =
-    Object.entries(inventories);
+  const totalUpmans =
+    await prisma.upman.count();
 
   return (
     <main>
@@ -35,50 +26,65 @@ export default async function CollectionsPage() {
         Browse collector profiles
       </p>
 
-      <div className="grid grid-cols-1
-md:grid-cols-2
-xl:grid-cols-3
-gap-6">
+      <div
+        className="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          xl:grid-cols-3
+          gap-6
+        "
+      >
 
-        {viewers.map(
-          ([viewer, data]: any) => {
+        {users.map((user) => {
 
-            const ownedCount =
-              data.upmans.length;
+          const ownedCount =
+            user.inventory.length;
 
-            const completion =
-              (
-                (ownedCount /
-                  upmans.length) *
-                100
-              ).toFixed(1);
+          const completion =
+            totalUpmans > 0
+              ? (
+                  (ownedCount /
+                    totalUpmans) *
+                  100
+                ).toFixed(1)
+              : "0";
 
-            return (
-              <Link
-                key={viewer}
-                href={`/collection/${viewer}`}
+          return (
+            <Link
+              key={user.id}
+              href={`/collection/${user.twitchLogin}`}
+            >
+
+              <div
+                className="
+                  border
+                  border-slate-700
+                  rounded-xl
+                  p-6
+                  hover:border-blue-500
+                  transition
+                  cursor-pointer
+                "
               >
 
-                <div className="border border-slate-700 rounded-xl p-6 hover:border-blue-500 transition cursor-pointer">
+                <h2 className="text-2xl font-bold mb-4">
+                  👤 {user.displayName}
+                </h2>
 
-                  <h2 className="text-2xl font-bold mb-4">
-                    👤 {viewer}
-                  </h2>
+                <p>
+                  📦 {ownedCount} / {totalUpmans}
+                </p>
 
-                  <p>
-                    📦 {ownedCount} / {upmans.length}
-                  </p>
+                <p className="mt-2 opacity-70">
+                  🎯 {completion}% Complete
+                </p>
 
-                  <p className="mt-2 opacity-70">
-                    🎯 {completion}% Complete
-                  </p>
+              </div>
 
-                </div>
-
-              </Link>
-            );
-          }
-        )}
+            </Link>
+          );
+        })}
 
       </div>
 

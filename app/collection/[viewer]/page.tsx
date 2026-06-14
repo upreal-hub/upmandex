@@ -1,7 +1,5 @@
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
 import UpmanCard from "@/components/UpmanCard";
-import { readFile } from "fs/promises";
-import path from "path";
 
 type Props = {
   params: Promise<{
@@ -15,44 +13,46 @@ export default async function ViewerCollection({
   const { viewer } =
     await params;
 
-  const filePath = path.join(
-    process.cwd(),
-    "data",
-    "inventories.json"
-  );
+  const user =
+    await prisma.user.findUnique({
+      where: {
+        twitchLogin: viewer,
+      },
 
-  const content =
-    await readFile(
-      filePath,
-      "utf8"
+      include: {
+        inventory: {
+          include: {
+            upman: true,
+          },
+
+          orderBy: {
+            obtainedAt: "asc",
+          },
+        },
+      },
+    });
+
+  if (!user) {
+    return (
+      <main className="text-center py-20">
+        <h1 className="text-5xl font-black text-sky-800">
+          Explorer Not Found
+        </h1>
+
+        <p className="mt-4 text-sky-600">
+          This explorer does not exist.
+        </p>
+      </main>
     );
-
-  const inventories =
-    JSON.parse(content);
-
-  const inventory =
-    inventories[viewer] ?? {
-      upmans: [],
-    };
+  }
 
   const ownedUpmans =
-    inventory.upmans
-      .map(
-        (
-          item: {
-            slug: string;
-          }
-        ) =>
-          upmans.find(
-            (u) =>
-              u.slug ===
-              item.slug
-          )
-      )
-      .filter(Boolean);
+    user.inventory.map(
+      (entry) => entry.upman
+    );
 
   const totalUpmans =
-    upmans.length;
+    await prisma.upman.count();
 
   const ownedCount =
     ownedUpmans.length;
@@ -68,35 +68,35 @@ export default async function ViewerCollection({
 
   const commonCount =
     ownedUpmans.filter(
-      (u: any) =>
+      (u) =>
         u.rarity ===
         "Common"
     ).length;
 
   const rareCount =
     ownedUpmans.filter(
-      (u: any) =>
+      (u) =>
         u.rarity ===
         "Rare"
     ).length;
 
   const epicCount =
     ownedUpmans.filter(
-      (u: any) =>
+      (u) =>
         u.rarity ===
         "Epic"
     ).length;
 
   const mythicCount =
     ownedUpmans.filter(
-      (u: any) =>
+      (u) =>
         u.rarity ===
         "Mythic"
     ).length;
 
   const legendaryCount =
     ownedUpmans.filter(
-      (u: any) =>
+      (u) =>
         u.rarity ===
         "Legendary"
     ).length;
@@ -105,7 +105,6 @@ export default async function ViewerCollection({
     ownedUpmans[
       ownedUpmans.length - 1
     ];
-
   return (
     <main>
 
@@ -148,7 +147,7 @@ export default async function ViewerCollection({
               </p>
 
               <h1 className="text-5xl font-black text-sky-800 mt-2">
-                {viewer}
+                {user.displayName}
               </h1>
 
               <p className="text-sky-600 mt-2">

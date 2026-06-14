@@ -1,6 +1,8 @@
-import { readFile, writeFile, unlink } from "fs/promises";
+import { unlink } from "fs/promises";
 import { NextResponse } from "next/server";
 import path from "path";
+
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -16,32 +18,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const jsonPath = path.join(
-      process.cwd(),
-      "data",
-      "upmans.json"
-    );
+    const upman =
+      await prisma.upman.findUnique({
+        where: {
+          slug,
+        },
+      });
 
-    const content = await readFile(
-      jsonPath,
-      "utf8"
-    );
+    if (!upman) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Upman not found",
+        },
+        { status: 404 }
+      );
+    }
 
-    const upmans = JSON.parse(content);
+    await prisma.inventory.deleteMany({
+      where: {
+        upmanId: upman.id,
+      },
+    });
 
-    const filtered = upmans.filter(
-      (u: any) =>
-        u.slug !== slug
-    );
-
-    await writeFile(
-      jsonPath,
-      JSON.stringify(
-        filtered,
-        null,
-        2
-      )
-    );
+    await prisma.upman.delete({
+      where: {
+        slug,
+      },
+    });
 
     const imagePath = path.join(
       process.cwd(),
@@ -61,6 +65,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
     });
+
   } catch (error) {
     console.error(error);
 

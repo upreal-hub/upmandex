@@ -19,74 +19,72 @@ export default function LoginButton() {
     return (
       <div className="flex items-center gap-4">
 
-  <div className="flex flex-col">
+        <div className="flex flex-col">
 
-  <Link
-    href={`/collections/${username}`}
-    className="
-      text-xs
-      text-sky-500
-      hover:text-sky-700
-      transition
-    "
-  >
-    📦 My Collection
-  </Link>
+          <Link
+            href="/profile"
+            className="
+              text-xs
+              text-sky-500
+              hover:text-sky-700
+              transition
+            "
+          >
+            👤 Profile
+          </Link>
 
-  {username.toLowerCase() === "upreal_" && (
+          {username.toLowerCase() === "upreal_" && (
+            <Link
+              href="/admin"
+              className="
+                text-xs
+                text-purple-500
+                hover:text-purple-700
+                transition
+              "
+            >
+              🛠 Admin
+            </Link>
+          )}
 
-    <Link
-      href="/admin"
-      className="
-        text-xs
-        text-purple-500
-        hover:text-purple-700
-        transition
-      "
-    >
-      🛠 Admin
-    </Link>
+        </div>
 
-  )}
+        <div className="flex items-center gap-3">
 
-</div>
+          <img
+            src={session.user.image ?? ""}
+            alt="Avatar"
+            className="
+              w-10
+              h-10
+              rounded-full
+              border-2
+              border-sky-300
+            "
+          />
 
-  <div className="flex items-center gap-3">
+          <div className="hidden md:block">
 
-    <img
-      src={session.user.image ?? ""}
-      alt="Avatar"
-      className="
-        w-10
-        h-10
-        rounded-full
-        border-2
-        border-sky-300
-      "
-    />
+            <p className="text-sky-800 font-bold leading-none">
+              {username}
+            </p>
 
-    <div className="hidden md:block">
+            <button
+              onClick={() => signOut()}
+              className="
+                text-xs
+                text-red-400
+                hover:text-red-600
+              "
+            >
+              Logout
+            </button>
 
-      <p className="text-sky-800 font-bold leading-none">
-        {username}
-      </p>
+          </div>
 
-      <button
-        onClick={() => signOut()}
-        className="
-          text-xs
-          text-red-400
-          hover:text-red-600
-        "
-      >
-        Logout
-      </button>
+        </div>
 
-    </div>
-
-  </div>
-
-</div>
+      </div>
     );
   }
 

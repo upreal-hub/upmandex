@@ -1,12 +1,17 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
 
-export default function HallOfFamePage() {
-  const topCreators = [...new Set(
-    upmans.map(
-      (u) => u.creator
-    )
-  )]
+export default async function HallOfFamePage() {
+  const upmans =
+    await prisma.upman.findMany();
+
+  const topCreators = [
+    ...new Set(
+      upmans.map(
+        (u) => u.creator
+      )
+    ),
+  ]
     .map((creator) => ({
       creator,
       count: upmans.filter(
@@ -23,8 +28,8 @@ export default function HallOfFamePage() {
     [...upmans]
       .sort(
         (a, b) =>
-          (b.owners ?? 0) -
-          (a.owners ?? 0)
+          b.ownersCount -
+          a.ownersCount
       )
       .slice(0, 10);
 
@@ -197,7 +202,7 @@ export default function HallOfFamePage() {
                         </p>
 
                         <p className="text-sky-600 mt-2">
-                          {upman.owners ?? 0} explorers
+                          {upman.ownersCount} explorers
                         </p>
 
                       </div>

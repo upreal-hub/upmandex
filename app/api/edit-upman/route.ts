@@ -1,67 +1,44 @@
-import { readFile, writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
     const updatedUpman =
       await req.json();
 
-    const filePath = path.join(
-      process.cwd(),
-      "data",
-      "upmans.json"
-    );
+    const existingUpman =
+      await prisma.upman.findUnique({
+        where: {
+          slug: updatedUpman.slug,
+        },
+      });
 
-    const content = await readFile(
-      filePath,
-      "utf8"
-    );
-
-    const upmans = JSON.parse(
-      content
-    );
-
-    const index =
-      upmans.findIndex(
-        (u: any) =>
-          u.slug ===
-          updatedUpman.slug
-      );
-
-    if (index === -1) {
+    if (!existingUpman) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Upman not found",
+          error: "Upman not found",
         },
         { status: 404 }
       );
     }
 
-    upmans[index] = {
-      ...upmans[index],
-      name:
-        updatedUpman.name,
-      creator:
-        updatedUpman.creator,
-      rarity:
-        updatedUpman.rarity,
-    };
+    await prisma.upman.update({
+      where: {
+        slug: updatedUpman.slug,
+      },
 
-    await writeFile(
-      filePath,
-      JSON.stringify(
-        upmans,
-        null,
-        2
-      )
-    );
+      data: {
+        name: updatedUpman.name,
+        creator: updatedUpman.creator,
+        rarity: updatedUpman.rarity,
+      },
+    });
 
     return NextResponse.json({
       success: true,
     });
+
   } catch (error) {
     console.error(error);
 

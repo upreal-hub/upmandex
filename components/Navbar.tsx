@@ -54,6 +54,13 @@ export default function Navbar() {
           </Link>
 
           <Link
+  href="/profile"
+  className="font-medium text-sky-800 hover:text-sky-500 transition"
+>
+  🎒 Profile
+</Link>
+
+          <Link
             href="/hall-of-fame"
             className="font-medium text-sky-800 hover:text-sky-500 transition"
           >

@@ -1,10 +1,16 @@
 import NextAuth from "next-auth";
 import Twitch from "next-auth/providers/twitch";
+import { prisma } from "@/lib/prisma";
 
-console.log("AUTH INIT");
-console.log("AUTH_TWITCH_ID =", !!process.env.AUTH_TWITCH_ID);
-console.log("AUTH_TWITCH_SECRET =", !!process.env.AUTH_TWITCH_SECRET);
-console.log("AUTH_SECRET =", !!process.env.AUTH_SECRET);
+console.log(
+  "TWITCH ID =",
+  process.env.AUTH_TWITCH_ID
+);
+
+console.log(
+  "TWITCH SECRET LENGTH =",
+  process.env.AUTH_TWITCH_SECRET?.length
+);
 
 export const {
   handlers,
@@ -12,16 +18,46 @@ export const {
   signOut,
   auth,
 } = NextAuth({
-  debug: true,
-
   session: {
     strategy: "jwt",
   },
 
   providers: [
     Twitch({
-      clientId: process.env.AUTH_TWITCH_ID!,
-      clientSecret: process.env.AUTH_TWITCH_SECRET!,
+      clientId:
+        process.env.AUTH_TWITCH_ID!,
+      clientSecret:
+        process.env.AUTH_TWITCH_SECRET!,
     }),
   ],
+
+  callbacks: {
+  async signIn({ user }) {
+
+    console.log("SIGNIN USER =", user);
+
+    if (!user.name) {
+      return false;
+    }
+
+    await prisma.user.upsert({
+      where: {
+        twitchLogin: user.name,
+      },
+      update: {
+        displayName: user.name,
+        avatar: user.image ?? null,
+      },
+      create: {
+        twitchLogin: user.name,
+        displayName: user.name,
+        avatar: user.image ?? null,
+      },
+    });
+
+    console.log("USER SAVED");
+
+    return true;
+  },
+},
 });
