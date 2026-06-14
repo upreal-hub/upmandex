@@ -7,12 +7,12 @@ export const {
   signOut,
   auth,
 } = NextAuth({
+  debug: true,
+
   providers: [
     Twitch({
-      clientId:
-        process.env.AUTH_TWITCH_ID!,
-      clientSecret:
-        process.env.AUTH_TWITCH_SECRET!,
+      clientId: process.env.AUTH_TWITCH_ID!,
+      clientSecret: process.env.AUTH_TWITCH_SECRET!,
     }),
   ],
 });
