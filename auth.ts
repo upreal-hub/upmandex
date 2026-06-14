@@ -9,22 +9,14 @@ export const {
 } = NextAuth({
   debug: true,
 
+  session: {
+    strategy: "jwt",
+  },
+
   providers: [
     Twitch({
       clientId: process.env.AUTH_TWITCH_ID!,
       clientSecret: process.env.AUTH_TWITCH_SECRET!,
     }),
   ],
-
-  callbacks: {
-    async session({ session }) {
-      console.log("SESSION =", session);
-      return session;
-    },
-
-    async jwt({ token, profile }) {
-      console.log("PROFILE =", profile);
-      return token;
-    },
-  },
 });
