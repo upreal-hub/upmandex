@@ -15,4 +15,16 @@ export const {
       clientSecret: process.env.AUTH_TWITCH_SECRET!,
     }),
   ],
+
+  callbacks: {
+    async session({ session }) {
+      console.log("SESSION =", session);
+      return session;
+    },
+
+    async jwt({ token, profile }) {
+      console.log("PROFILE =", profile);
+      return token;
+    },
+  },
 });
