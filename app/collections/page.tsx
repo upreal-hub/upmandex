@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic =
+  "force-dynamic";
+
 export default async function CollectionsPage() {
+
   const users =
     await prisma.user.findMany({
       include: {
@@ -11,6 +15,13 @@ export default async function CollectionsPage() {
         displayName: "asc",
       },
     });
+
+  console.log(
+    "COLLECTION USERS =",
+    users.map(
+      (u) => u.displayName
+    )
+  );
 
   const totalUpmans =
     await prisma.upman.count();
