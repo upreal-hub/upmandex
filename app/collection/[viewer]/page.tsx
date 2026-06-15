@@ -47,9 +47,11 @@ export default async function ViewerCollection({
   }
 
   const ownedUpmans =
-    user.inventory.map(
-      (entry) => entry.upman
-    );
+  user.inventory.map(
+    (entry: {
+      upman: any;
+    }) => entry.upman
+  );
 
   const totalUpmans =
     await prisma.upman.count();
