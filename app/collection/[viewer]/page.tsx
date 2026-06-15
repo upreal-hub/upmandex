@@ -70,35 +70,35 @@ export default async function ViewerCollection({
 
   const commonCount =
     ownedUpmans.filter(
-      (u) =>
+      (u: any) =>
         u.rarity ===
         "Common"
     ).length;
 
   const rareCount =
     ownedUpmans.filter(
-      (u) =>
+      (u: any) =>
         u.rarity ===
         "Rare"
     ).length;
 
   const epicCount =
     ownedUpmans.filter(
-      (u) =>
+      (u: any) =>
         u.rarity ===
         "Epic"
     ).length;
 
   const mythicCount =
     ownedUpmans.filter(
-      (u) =>
+      (u: any) =>
         u.rarity ===
         "Mythic"
     ).length;
 
   const legendaryCount =
     ownedUpmans.filter(
-      (u) =>
+      (u: any) =>
         u.rarity ===
         "Legendary"
     ).length;
