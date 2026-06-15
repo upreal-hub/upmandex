@@ -3,11 +3,18 @@ import UpmanCard from "@/components/UpmanCard";
 
 export default async function UpmansPage() {
   const upmans =
-    await prisma.upman.findMany({
-      orderBy: {
-        name: "asc",
-      },
-    });
+  await prisma.upman.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+console.log(
+  "UPMANS:",
+  upmans.map(
+    (u) => u.name
+  )
+);
 
   const commonCount =
     upmans.filter(
