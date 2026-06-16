@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import UpmanCard from "@/components/UpmanCard";
+import UpmansGrid from "@/components/UpmansGrid";
 
 export default async function UpmansPage() {
   const upmans =
@@ -80,35 +81,9 @@ console.log(
 
       </div>
 
-      <div
-        className="
-          grid
-          grid-cols-2
-          sm:grid-cols-3
-          lg:grid-cols-4
-          xl:grid-cols-5
-          gap-8
-        "
-      >
-
-        {upmans.map((upman) => (
-          <UpmanCard
-            key={upman.slug}
-            slug={upman.slug}
-            name={upman.name}
-            image={upman.image}
-            rarity={
-              upman.rarity as
-                | "Common"
-                | "Rare"
-                | "Epic"
-                | "Mythic"
-                | "Legendary"
-            }
-          />
-        ))}
-
-      </div>
+      <UpmansGrid
+  upmans={upmans}
+/>
 
     </main>
   );
