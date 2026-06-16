@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import CollectionsGrid from "@/components/CollectionsGrid";
 
 export const dynamic =
   "force-dynamic";
@@ -40,67 +40,10 @@ export default async function CollectionsPage() {
         Browse collector profiles
       </p>
 
-      <div
-        className="
-          grid
-          grid-cols-1
-          md:grid-cols-2
-          xl:grid-cols-3
-          gap-6
-        "
-      >
-
-        {users.map((user) => {
-
-          const ownedCount =
-            user.inventory.length;
-
-          const completion =
-            totalUpmans > 0
-              ? (
-                  (ownedCount /
-                    totalUpmans) *
-                  100
-                ).toFixed(1)
-              : "0";
-
-          return (
-            <Link
-              key={user.id}
-              href={`/collection/${user.twitchLogin}`}
-            >
-
-              <div
-                className="
-                  border
-                  border-slate-700
-                  rounded-xl
-                  p-6
-                  hover:border-blue-500
-                  transition
-                  cursor-pointer
-                "
-              >
-
-                <h2 className="text-2xl font-bold mb-4">
-                  👤 {user.displayName}
-                </h2>
-
-                <p>
-                  📦 {ownedCount} / {totalUpmans}
-                </p>
-
-                <p className="mt-2 opacity-70">
-                  🎯 {completion}% Complete
-                </p>
-
-              </div>
-
-            </Link>
-          );
-        })}
-
-      </div>
+      <CollectionsGrid
+  users={users}
+  totalUpmans={totalUpmans}
+/>
 
     </main>
   );
