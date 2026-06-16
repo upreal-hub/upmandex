@@ -12,6 +12,7 @@ type Props = {
   name: string;
   image: string;
   rarity: Rarity;
+  owned?: boolean;
 };
 
 export default function UpmanCard({
@@ -19,6 +20,7 @@ export default function UpmanCard({
   name,
   image,
   rarity,
+  owned = true,
 }: Props) {
   const rarityStyle = {
     Common: {
@@ -69,7 +71,11 @@ export default function UpmanCard({
           transition-all
           duration-300
           hover:-translate-y-2
-          ${rarityStyle.glow}
+          ${
+            owned
+              ? rarityStyle.glow
+              : "opacity-50 grayscale"
+          }
         `}
       >
         <img
@@ -88,26 +94,36 @@ export default function UpmanCard({
         </h2>
 
         <div className="flex justify-center mt-3">
-          <span
-            className={`
-              px-4
-              py-1
-              rounded-full
-              text-sm
-              font-bold
-              ${rarityStyle.badge}
-            `}
-          >
-            {rarity === "Legendary"
-              ? "Legendary"
-              : rarity === "Mythic"
-              ? "Mythic"
-              : rarity === "Epic"
-              ? "Epic"
-              : rarity === "Rare"
-              ? "Rare"
-              : "Common"}
-          </span>
+
+          {owned ? (
+            <span
+              className={`
+                px-4
+                py-1
+                rounded-full
+                text-sm
+                font-bold
+                ${rarityStyle.badge}
+              `}
+            >
+              {rarity}
+            </span>
+          ) : (
+            <span
+              className="
+                px-4
+                py-1
+                rounded-full
+                text-sm
+                font-bold
+                bg-slate-200
+                text-slate-600
+              "
+            >
+              🔒 Not Collected
+            </span>
+          )}
+
         </div>
       </div>
     </Link>

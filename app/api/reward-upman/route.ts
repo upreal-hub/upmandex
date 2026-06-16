@@ -6,10 +6,29 @@ async function rewardUpman(
   viewer: string,
   slug: string
 ) {
+  const normalizedViewer =
+    viewer.trim().toLowerCase();
+
   console.log(
-  "SECRET =",
-  process.env.STREAMERBOT_SECRET
-);
+    "[REWARD] viewer reçu =",
+    viewer
+  );
+
+  console.log(
+    "[REWARD] viewer normalisé =",
+    normalizedViewer
+  );
+
+  console.log(
+    "[REWARD] slug =",
+    slug
+  );
+
+  console.log(
+    "SECRET =",
+    process.env.STREAMERBOT_SECRET
+  );
+
   if (
     secret !==
     process.env.STREAMERBOT_SECRET
@@ -23,22 +42,38 @@ async function rewardUpman(
     );
   }
 
-  const user =
-    await prisma.user.findUnique({
-      where: {
-        twitchLogin: viewer,
+  let user =
+  await prisma.user.findUnique({
+    where: {
+      twitchLogin:
+        normalizedViewer,
+    },
+  });
+
+if (!user) {
+  console.log(
+    "[REWARD] Auto-creating user:",
+    normalizedViewer
+  );
+
+  user =
+    await prisma.user.create({
+      data: {
+        twitchLogin:
+          normalizedViewer,
+
+        displayName:
+          viewer,
+
+        avatar: null,
       },
     });
 
-  if (!user) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Viewer not found",
-      },
-      { status: 404 }
-    );
-  }
+  console.log(
+    "[REWARD] User created:",
+    normalizedViewer
+  );
+}
 
   const upman =
     await prisma.upman.findUnique({
@@ -48,6 +83,11 @@ async function rewardUpman(
     });
 
   if (!upman) {
+    console.error(
+      "[REWARD] Upman not found:",
+      slug
+    );
+
     return NextResponse.json(
       {
         success: false,
@@ -66,6 +106,12 @@ async function rewardUpman(
     });
 
   if (alreadyOwned) {
+    console.log(
+      "[REWARD] Already owned:",
+      normalizedViewer,
+      upman.name
+    );
+
     return NextResponse.json({
       success: true,
       alreadyOwned: true,
@@ -90,14 +136,20 @@ async function rewardUpman(
 
       firstOwner:
         upman.firstOwner ??
-        viewer,
+        normalizedViewer,
     },
   });
+
+  console.log(
+    "[REWARD] SUCCESS:",
+    normalizedViewer,
+    upman.name
+  );
 
   return NextResponse.json({
     success: true,
     upman: upman.name,
-    viewer,
+    viewer: normalizedViewer,
   });
 }
 
