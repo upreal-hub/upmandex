@@ -15,9 +15,9 @@ export default async function ProfilePage() {
   const user =
     await prisma.user.findUnique({
       where: {
-        twitchLogin:
-          session.user.name,
-      },
+  twitchLogin:
+    session.user.name.toLowerCase(),
+},
 
       include: {
         inventory: {
@@ -36,6 +36,16 @@ export default async function ProfilePage() {
     user.inventory.map(
       (item) => item.upman
     );
+
+  const allUpmans =
+  await prisma.upman.findMany();
+
+const ownedSlugs =
+  new Set(
+    ownedUpmans.map(
+      (u) => u.slug
+    )
+  );
 
   const totalUpmans =
     await prisma.upman.count();
@@ -228,8 +238,8 @@ export default async function ProfilePage() {
       )}
 
       <h2 className="text-4xl font-black text-sky-800 mb-8">
-        🎒 My Collection
-      </h2>
+  🎒 My Collection ({ownedCount} / {totalUpmans})
+</h2>
 
       <div
         className="
@@ -241,24 +251,27 @@ export default async function ProfilePage() {
         "
       >
 
-        {ownedUpmans.map(
-          (upman) => (
-            <UpmanCard
-              key={upman.slug}
-              slug={upman.slug}
-              name={upman.name}
-              image={upman.image}
-              rarity={
-                upman.rarity as
-                  | "Common"
-                  | "Rare"
-                  | "Epic"
-                  | "Mythic"
-                  | "Legendary"
-              }
-            />
-          )
-        )}
+        {allUpmans.map(
+  (upman) => (
+    <UpmanCard
+      key={upman.slug}
+      slug={upman.slug}
+      name={upman.name}
+      image={upman.image}
+      rarity={
+        upman.rarity as
+          | "Common"
+          | "Rare"
+          | "Epic"
+          | "Mythic"
+          | "Legendary"
+      }
+      owned={ownedSlugs.has(
+        upman.slug
+      )}
+    />
+  )
+)}
 
       </div>
 
