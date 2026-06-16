@@ -42,14 +42,14 @@ export const {
 
     await prisma.user.upsert({
       where: {
-        twitchLogin: user.name,
+        twitchLogin: user.name.toLowerCase(),
       },
       update: {
         displayName: user.name,
         avatar: user.image ?? null,
       },
       create: {
-        twitchLogin: user.name,
+        twitchLogin: user.name.toLowerCase(),
         displayName: user.name,
         avatar: user.image ?? null,
       },
