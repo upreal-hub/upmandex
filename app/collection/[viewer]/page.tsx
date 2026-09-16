@@ -13,6 +13,13 @@ type Props = {
   }>;
 };
 
+type UpmanRarity =
+  | "Common"
+  | "Rare"
+  | "Epic"
+  | "Mythic"
+  | "Legendary";
+
 export default async function ViewerCollection({
   params,
 }: Props) {
@@ -53,9 +60,7 @@ export default async function ViewerCollection({
 
   const ownedUpmans =
   user.inventory.map(
-    (entry: {
-      upman: any;
-    }) => entry.upman
+    (entry) => entry.upman
   );
 
 const allUpmans =
@@ -64,7 +69,7 @@ const allUpmans =
 const ownedSlugs =
   new Set(
     ownedUpmans.map(
-      (u: any) => u.slug
+      (upman) => upman.slug
     )
   );
 
@@ -85,36 +90,36 @@ const totalUpmans =
 
   const commonCount =
     ownedUpmans.filter(
-      (u: any) =>
-        u.rarity ===
+      (upman) =>
+        upman.rarity ===
         "Common"
     ).length;
 
   const rareCount =
     ownedUpmans.filter(
-      (u: any) =>
-        u.rarity ===
+      (upman) =>
+        upman.rarity ===
         "Rare"
     ).length;
 
   const epicCount =
     ownedUpmans.filter(
-      (u: any) =>
-        u.rarity ===
+      (upman) =>
+        upman.rarity ===
         "Epic"
     ).length;
 
   const mythicCount =
     ownedUpmans.filter(
-      (u: any) =>
-        u.rarity ===
+      (upman) =>
+        upman.rarity ===
         "Mythic"
     ).length;
 
   const legendaryCount =
     ownedUpmans.filter(
-      (u: any) =>
-        u.rarity ===
+      (upman) =>
+        upman.rarity ===
         "Legendary"
     ).length;
 
@@ -304,13 +309,13 @@ const totalUpmans =
     >
 
       {allUpmans.map(
-  (upman: any) => (
+  (upman) => (
     <UpmanCard
       key={upman.slug}
       slug={upman.slug}
       name={upman.name}
       image={upman.image}
-      rarity={upman.rarity}
+      rarity={upman.rarity as UpmanRarity}
       owned={ownedSlugs.has(
         upman.slug
       )}

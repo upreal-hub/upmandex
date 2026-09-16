@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import type { AdminUpman } from "./AdminClient";
 
 type Props = {
   initialName?: string;
-  editingUpman?: any;
+  editingUpman?: AdminUpman | null;
   onImported?: () => void;
 };
 
@@ -13,26 +14,34 @@ export default function UpmanGenerator({
   editingUpman,
   onImported,
 }: Props) {
-  const [name, setName] = useState(initialName);
-  const [creator, setCreator] = useState("");
-  const [rarity, setRarity] = useState("Common");
+  const [name, setName] = useState(
+    editingUpman?.name ?? initialName
+  );
+  const [creator, setCreator] = useState(
+    editingUpman?.creator ?? ""
+  );
+  const [rarity, setRarity] = useState(
+    editingUpman?.rarity ?? "Common"
+  );
+  const [previousInputs, setPreviousInputs] = useState({
+    initialName,
+    editingUpman,
+  });
 
-useEffect(() => {
-  if (editingUpman) {
-    setName(editingUpman.name);
-    setCreator(
-      editingUpman.creator
-    );
-    setRarity(
-      editingUpman.rarity
-    );
-  } else {
-    setName(initialName);
+  if (
+    previousInputs.initialName !== initialName ||
+    previousInputs.editingUpman !== editingUpman
+  ) {
+    setPreviousInputs({ initialName, editingUpman });
+
+    if (editingUpman) {
+      setName(editingUpman.name);
+      setCreator(editingUpman.creator);
+      setRarity(editingUpman.rarity);
+    } else {
+      setName(initialName);
+    }
   }
-}, [
-  initialName,
-  editingUpman,
-]);
   const slug = name
     .toLowerCase()
     .replace(/\s+/g, "");

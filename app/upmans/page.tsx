@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import UpmanCard from "@/components/UpmanCard";
 import UpmansGrid from "@/components/UpmansGrid";
 
 export default async function UpmansPage() {

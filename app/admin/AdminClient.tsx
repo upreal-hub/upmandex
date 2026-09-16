@@ -1,58 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import UpmanGenerator from "./UpmanGenerator";
+
+export type AdminUser = {
+  twitchLogin: string;
+  displayName: string;
+};
+
+export type AdminUpman = {
+  slug: string;
+  name: string;
+  image: string;
+  rarity: string;
+  creator: string;
+};
+
+type AdminData = {
+  pngs: string[];
+  upmans: AdminUpman[];
+  users: AdminUser[];
+};
+
+async function fetchAdminData(): Promise<AdminData> {
+  const response = await fetch("/api/upmans");
+  const pngs = await response.json() as string[];
+  const upmansResponse = await fetch("/api/admin-upmans");
+  const upmans = await upmansResponse.json() as AdminUpman[];
+  const usersResponse = await fetch("/api/users");
+  const users = await usersResponse.json() as AdminUser[];
+
+  return { pngs, upmans, users };
+}
 
 export default function AdminPage() {
 
   const [selectedImage, setSelectedImage] =
     useState("");
 
-  const [search, setSearch] =
+  const [search] =
     useState("");
 
   const [viewerName, setViewerName] =
     useState("");
 
   const [users, setUsers] =
-  useState<any[]>([]);
+  useState<AdminUser[]>([]);
 
   const [selectedUpman, setSelectedUpman] =
     useState("");
 
   const [editingUpman, setEditingUpman] =
-    useState<any>(null);
+  useState<AdminUpman | null>(null);
 
   const [upmans, setUpmans] =
-  useState<any[]>([]);
+  useState<AdminUpman[]>([]);
 
 const [unregisteredImages, setUnregisteredImages] =
   useState<string[]>([]);
 
-  async function loadImages() {
-    const response =
-      await fetch("/api/upmans");
+  const isMounted = useRef(true);
 
-    const pngs = await response.json();
-    const upmansResponse =
-  await fetch("/api/admin-upmans");
-
-const dbUpmans =
-  await upmansResponse.json();
-
-setUpmans(dbUpmans);
-const usersResponse =
-  await fetch("/api/users");
-
-const dbUsers =
-  await usersResponse.json();
-
-setUsers(dbUsers);
-    const registered = dbUpmans.map(
-  (u: any) =>
-    u.slug.toLowerCase()
-);
+  function applyAdminData({ pngs, upmans, users }: AdminData) {
+    setUpmans(upmans);
+    setUsers(users);
+    const registered = upmans.map((upman) => upman.slug.toLowerCase());
     const missing = pngs.filter(
       (png: string) =>
         !registered.includes(
@@ -64,8 +77,30 @@ setUsers(dbUsers);
   }
 
   useEffect(() => {
-    loadImages();
+    isMounted.current = true;
+
+    async function loadInitialData() {
+      const data = await fetchAdminData();
+
+      if (isMounted.current) {
+        applyAdminData(data);
+      }
+    }
+
+    void loadInitialData();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
+
+  async function loadImages() {
+    const data = await fetchAdminData();
+
+    if (isMounted.current) {
+      applyAdminData(data);
+    }
+  }
 
   const totalCreators = new Set(
     upmans.map((u) => u.creator)

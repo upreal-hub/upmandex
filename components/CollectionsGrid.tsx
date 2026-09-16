@@ -7,7 +7,7 @@ type User = {
   id: string;
   twitchLogin: string;
   displayName: string;
-  inventory: any[];
+  inventory: unknown[];
 };
 
 type Props = {
