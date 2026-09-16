@@ -1,12 +1,24 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
 import LatestUpmanCarousel from "@/components/LatestUpmanCarousel";
-import Navbar from "@/components/Navbar";
+import { prisma } from "@/lib/prisma";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-  const totalUpmans =
-    upmans.length;
+export default async function HomePage() {
+  const upmans = await prisma.upman.findMany({
+    orderBy: [{ createdAt: "desc" }, { slug: "asc" }],
+    select: {
+      slug: true,
+      name: true,
+      image: true,
+      rarity: true,
+      creator: true,
+      firstOwner: true,
+    },
+  });
+
+  const totalUpmans = upmans.length;
 
   const totalCreators =
     new Set(
@@ -20,10 +32,7 @@ export default function HomePage() {
       (u) => u.firstOwner
     ).length;
 
-  const latestUpmans =
-    upmans
-      .slice(-5)
-      .reverse();
+  const latestUpmans = upmans.slice(0, 5);
 
   return (
     <main>

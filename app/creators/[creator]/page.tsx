@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CreatorPage({
   params,
@@ -10,9 +13,16 @@ export default async function CreatorPage({
 
   const creatorName = decodeURIComponent(creator);
 
-  const creatorUpmans = upmans.filter(
-    (u) => u.creator === creatorName
-  );
+  const creatorUpmans = await prisma.upman.findMany({
+    where: { creator: creatorName },
+    orderBy: [{ createdAt: "asc" }, { slug: "asc" }],
+    select: {
+      slug: true,
+      name: true,
+      image: true,
+      rarity: true,
+    },
+  });
 
   if (creatorUpmans.length === 0) {
     return (

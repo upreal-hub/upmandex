@@ -1,7 +1,14 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
 
-export default function PantheonPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function PantheonPage() {
+  const upmans = await prisma.upman.findMany({
+    select: { creator: true },
+  });
+
   const ranking = [...new Set(upmans.map((u) => u.creator))]
     .map((creator) => ({
       creator,

@@ -1,55 +1,44 @@
 import Link from "next/link";
-import { upmans } from "@/data/upmans";
 
-export default async function CollectorPage({
-  params,
-}: {
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type Props = {
   params: Promise<{ collector: string }>;
-}) {
+};
+
+export default async function CollectorPage({ params }: Props) {
   const { collector } = await params;
+  const requestedCollector = decodeURIComponent(collector);
+  const normalizedLogin = requestedCollector.trim().toLowerCase();
 
-  const collectors = {
-    "upreal_": {
-      count: 24,
-      rank: 1,
-      completion: 73,
-      upmans: [
-        "foxupman",
-        "normalupman",
-        "firfanupman",
-        "personaupman",
-        "cyclupman",
-      ],
+  const inventoryInclude = {
+    inventory: {
+      include: { upman: true },
+      orderBy: { obtainedAt: "asc" },
     },
+  } as const;
 
-    "Darling Beanie": {
-      count: 17,
-      rank: 2,
-      completion: 52,
-      upmans: [
-        "beanieupman",
-        "kittyupman",
-        "foxupman",
-      ],
-    },
+  let user = await prisma.user.findUnique({
+    where: { twitchLogin: normalizedLogin },
+    include: inventoryInclude,
+  });
 
-    "Lupus323": {
-      count: 8,
-      rank: 3,
-      completion: 24,
-      upmans: [
-        "smoreupman",
-        "normalupman",
-      ],
-    },
-  };
+  if (!user) {
+    user = await prisma.user.findFirst({
+      where: {
+        displayName: {
+          equals: requestedCollector,
+          mode: "insensitive",
+        },
+      },
+      include: inventoryInclude,
+    });
+  }
 
-  const profile =
-    collectors[
-      collector as keyof typeof collectors
-    ];
-
-  if (!profile) {
+  if (!user) {
     return (
       <main className="min-h-screen bg-slate-900 text-white p-8">
         <h1>Collector not found 😢</h1>
@@ -57,31 +46,46 @@ export default async function CollectorPage({
     );
   }
 
-  const collectedUpmans = upmans.filter((u) =>
-    profile.upmans.includes(u.slug)
-  );
+  const totalUpmans = await prisma.upman.count();
+  const collectors = await prisma.user.findMany({
+    select: {
+      id: true,
+      displayName: true,
+      _count: { select: { inventory: true } },
+    },
+  });
+
+  const ranking = collectors
+    .sort(
+      (a, b) =>
+        b._count.inventory - a._count.inventory ||
+        a.displayName.localeCompare(b.displayName)
+    );
+  const rank = ranking.findIndex((entry) => entry.id === user.id) + 1;
+
+  const collectedUpmans = user.inventory.map((item) => item.upman);
+  const ownedCount = collectedUpmans.length;
+  const completion = totalUpmans > 0
+    ? Math.round((ownedCount / totalUpmans) * 100)
+    : 0;
 
   const legendaryCount = collectedUpmans.filter(
-  (u) => u.rarity === "Legendary"
-).length;
+    (upman) => upman.rarity === "Legendary"
+  ).length;
+  const mythicCount = collectedUpmans.filter(
+    (upman) => upman.rarity === "Mythic"
+  ).length;
 
-const mythicCount = collectedUpmans.filter(
-  (u) => u.rarity === "Mythic"
-).length;
-
-const badges = [];
-
-if (legendaryCount >= 1) {
-  badges.push("👑 Legendary Collector");
-}
-
-if (mythicCount >= 1) {
-  badges.push("🔥 Mythic Hunter");
-}
-
-if (profile.count >= 20) {
-  badges.push("🏅 Upman Veteran");
-}
+  const badges: string[] = [];
+  if (legendaryCount >= 1) {
+    badges.push("👑 Legendary Collector");
+  }
+  if (mythicCount >= 1) {
+    badges.push("🔥 Mythic Hunter");
+  }
+  if (ownedCount >= 20) {
+    badges.push("🏅 Upman Veteran");
+  }
 
   return (
     <main className="min-h-screen bg-slate-900 text-white p-8">
@@ -94,35 +98,35 @@ if (profile.count >= 20) {
       </Link>
 
       <h1 className="text-5xl font-bold mt-8">
-        👤 {collector}
+        👤 {user.displayName}
       </h1>
 
       <p className="opacity-70 mt-2">
-        {profile.count} Upmans
+        {ownedCount} Upmans
       </p>
 
       <p className="mt-2">
-        {profile.completion}% Complete
+        {completion}% Complete
       </p>
 
       <p className="mt-2 font-bold">
-        🏆 #{profile.rank} Collector
+        🏆 #{rank} Collector
       </p>
 
       {badges.length > 0 && (
-  <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
 
-    {badges.map((badge) => (
-      <div
-        key={badge}
-        className="border border-yellow-500 rounded-lg px-3 py-2"
-      >
-        {badge}
-      </div>
-    ))}
+          {badges.map((badge) => (
+            <div
+              key={badge}
+              className="border border-yellow-500 rounded-lg px-3 py-2"
+            >
+              {badge}
+            </div>
+          ))}
 
-  </div>
-)}
+        </div>
+      )}
 
       <hr className="my-10 border-slate-700" />
 

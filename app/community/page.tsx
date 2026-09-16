@@ -1,28 +1,32 @@
 import Link from "next/link";
 
-export default function CommunityPage() {
-  const collectors = [
-    {
-      name: "upreal_",
-      count: 24,
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function CommunityPage() {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      twitchLogin: true,
+      displayName: true,
+      _count: {
+        select: { inventory: true },
+      },
     },
-    {
-      name: "Darling Beanie",
-      count: 17,
-    },
-    {
-      name: "Lupus323",
-      count: 8,
-    },
-    {
-      name: "ChefRossi",
-      count: 6,
-    },
-    {
-      name: "NuttellaCafe",
-      count: 4,
-    },
-  ];
+  });
+
+  const collectors = users
+    .map((user) => ({
+      id: user.id,
+      name: user.displayName,
+      count: user._count.inventory,
+    }))
+    .sort(
+      (a, b) =>
+        b.count - a.count || a.name.localeCompare(b.name)
+    );
 
   const top3 = collectors.slice(0, 3);
 
@@ -42,7 +46,7 @@ export default function CommunityPage() {
 
         {top3.map((collector, index) => (
           <Link
-            key={collector.name}
+            key={collector.id}
             href={`/community/${encodeURIComponent(
               collector.name
             )}`}
@@ -87,7 +91,7 @@ export default function CommunityPage() {
 
           return (
             <Link
-              key={collector.name}
+              key={collector.id}
               href={`/community/${encodeURIComponent(
                 collector.name
               )}`}

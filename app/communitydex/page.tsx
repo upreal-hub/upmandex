@@ -1,6 +1,18 @@
-import { upmans } from "@/data/upmans";
+import { prisma } from "@/lib/prisma";
 
-export default function CommunityDexPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function CommunityDexPage() {
+  const upmans = await prisma.upman.findMany({
+    orderBy: [{ createdAt: "desc" }, { slug: "asc" }],
+    select: {
+      name: true,
+      rarity: true,
+      creator: true,
+    },
+  });
+
   const totalUpmans = upmans.length;
 
   const totalCreators = new Set(
@@ -38,8 +50,7 @@ export default function CommunityDexPage() {
 
   const topCreator = ranking[0];
 
-  const latestUpman =
-    upmans[upmans.length - 1];
+  const latestUpman = upmans[0];
 
   return (
     <main className="min-h-screen bg-slate-900 text-white p-8">
@@ -64,11 +75,11 @@ export default function CommunityDexPage() {
           </h2>
 
           <p className="text-xl">
-            {topCreator.creator}
+            {topCreator?.creator ?? "—"}
           </p>
 
           <p className="opacity-70">
-            {topCreator.count} creations
+            {topCreator?.count ?? 0} creations
           </p>
         </div>
 
@@ -78,7 +89,7 @@ export default function CommunityDexPage() {
           </h2>
 
           <p className="text-xl">
-            {latestUpman.name}
+            {latestUpman?.name ?? "—"}
           </p>
 
           <p className="opacity-70">

@@ -1,63 +1,49 @@
-import { readFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
 
-export async function GET(
-  req: Request
-) {
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req: Request) {
   try {
-    const { searchParams } =
-      new URL(req.url);
-
-    const viewer =
-      searchParams.get(
-        "viewer"
-      );
+    const { searchParams } = new URL(req.url);
+    const viewer = searchParams.get("viewer");
 
     if (!viewer) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Missing viewer",
+          error: "Missing viewer",
         },
         { status: 400 }
       );
     }
 
-    const filePath = path.join(
-      process.cwd(),
-      "data",
-      "inventories.json"
-    );
-
-    const content =
-      await readFile(
-        filePath,
-        "utf8"
-      );
-
-    const inventories =
-      JSON.parse(content);
+    const user = await prisma.user.findUnique({
+      where: {
+        twitchLogin: viewer.trim().toLowerCase(),
+      },
+      select: {
+        inventory: {
+          orderBy: { obtainedAt: "asc" },
+          select: {
+            upman: {
+              select: { slug: true },
+            },
+          },
+        },
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      inventory:
-        inventories[viewer] ??
-        {
-          upmans: [],
-        },
+      inventory: {
+        upmans: user?.inventory.map((entry) => entry.upman.slug) ?? [],
+      },
     });
-  } catch (error) {
-    console.error(error);
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: "Unable to load inventory",
       },
       { status: 500 }
     );
