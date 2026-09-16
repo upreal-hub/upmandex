@@ -1,122 +1,74 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
+import { requireAdmin } from "@/lib/authorization";
+import { grantUpman } from "@/lib/inventory";
+import { validateInventoryPayload } from "@/lib/validation";
 
 export async function GET() {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   return NextResponse.json({
     route: "give-upman OK",
   });
 }
 
 export async function POST(req: Request) {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   try {
-    const {
-      viewer,
-      slug,
-    } = await req.json();
-
-    if (!viewer || !slug) {
+    const validation = validateInventoryPayload(await req.json());
+    if (!validation.success) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Missing viewer or slug",
-        },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
 
-    const user =
-      await prisma.user.findUnique({
-        where: {
-          twitchLogin: viewer,
-        },
-      });
+    const result = await grantUpman({
+      viewer: validation.data.viewer,
+      displayName: validation.data.viewer,
+      slug: validation.data.slug,
+      autoCreateUser: false,
+    });
 
-    if (!user) {
+    if (result.status === "viewer-not-found") {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Viewer not found",
-        },
+        { success: false, error: "Viewer not found" },
         { status: 404 }
       );
     }
 
-    const upman =
-      await prisma.upman.findUnique({
-        where: {
-          slug,
-        },
-      });
-
-    if (!upman) {
+    if (result.status === "upman-not-found") {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Upman not found",
-        },
+        { success: false, error: "Upman not found" },
         { status: 404 }
       );
     }
 
-    const alreadyOwned =
-      await prisma.inventory.findFirst({
-        where: {
-          userId: user.id,
-          upmanId: upman.id,
-        },
-      });
-
-    if (alreadyOwned) {
+    if (result.status === "already-owned") {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Upman already owned",
-        },
+        { success: false, error: "Upman already owned" },
         { status: 400 }
       );
     }
 
-    await prisma.inventory.create({
-      data: {
-        userId: user.id,
-        upmanId: upman.id,
-      },
-    });
+    if (result.status === "invalid-input") {
+      return NextResponse.json(
+        { success: false, error: "Missing viewer or slug" },
+        { status: 400 }
+      );
+    }
 
-    await prisma.upman.update({
-      where: {
-        id: upman.id,
-      },
-
-      data: {
-        ownersCount:
-          upman.ownersCount + 1,
-
-        firstOwner:
-          upman.firstOwner ??
-          viewer,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-    });
-
-  } catch (error) {
-    console.error(error);
-
+    return NextResponse.json({ success: true });
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
+      { success: false, error: "Unable to give Upman" },
       { status: 500 }
     );
   }

@@ -2,11 +2,19 @@ import { unlink } from "fs/promises";
 import { NextResponse } from "next/server";
 import path from "path";
 
+import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
+import { validateSlug } from "@/lib/validation";
 
 export async function POST(req: Request) {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   try {
-    const { slug } = await req.json();
+    const payload = await req.json();
+    const slug = validateSlug(payload?.slug);
 
     if (!slug) {
       return NextResponse.json(
@@ -66,16 +74,11 @@ export async function POST(req: Request) {
       success: true,
     });
 
-  } catch (error) {
-    console.error(error);
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: "Unable to delete Upman",
       },
       { status: 500 }
     );

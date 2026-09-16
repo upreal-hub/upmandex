@@ -1,10 +1,24 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
+import { validateUpmanUpdatePayload } from "@/lib/validation";
 
 export async function POST(req: Request) {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   try {
-    const updatedUpman =
-      await req.json();
+    const validation = validateUpmanUpdatePayload(await req.json());
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    const updatedUpman = validation.data;
 
     const existingUpman =
       await prisma.upman.findUnique({
@@ -39,16 +53,11 @@ export async function POST(req: Request) {
       success: true,
     });
 
-  } catch (error) {
-    console.error(error);
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: "Unable to update Upman",
       },
       { status: 500 }
     );

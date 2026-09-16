@@ -1,227 +1,135 @@
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
-async function rewardUpman(
-  secret: string,
-  viewer: string,
-  slug: string
-) {
-  const normalizedViewer =
-    viewer.trim().toLowerCase();
+import { grantUpman } from "@/lib/inventory";
+import { validateInventoryPayload } from "@/lib/validation";
 
-  console.log(
-    "[REWARD] viewer reçu =",
-    viewer
+function isAuthorized(providedSecret: string): boolean {
+  const expectedSecret = process.env.STREAMERBOT_SECRET;
+
+  if (!providedSecret || !expectedSecret) {
+    return false;
+  }
+
+  const provided = Buffer.from(providedSecret);
+  const expected = Buffer.from(expectedSecret);
+
+  return (
+    provided.length === expected.length &&
+    timingSafeEqual(provided, expected)
   );
+}
 
-  console.log(
-    "[REWARD] viewer normalisé =",
-    normalizedViewer
-  );
+function bearerToken(req: Request): string | null {
+  const authorization = req.headers.get("authorization");
+  if (!authorization?.startsWith("Bearer ")) {
+    return null;
+  }
 
-  console.log(
-    "[REWARD] slug =",
-    slug
-  );
+  const token = authorization.slice("Bearer ".length).trim();
+  return token || null;
+}
 
-  console.log(
-    "SECRET =",
-    process.env.STREAMERBOT_SECRET
-  );
-
-  if (
-    secret !==
-    process.env.STREAMERBOT_SECRET
-  ) {
+async function rewardUpman(input: {
+  secret: string;
+  viewer: unknown;
+  slug: unknown;
+}) {
+  if (!isAuthorized(input.secret)) {
     return NextResponse.json(
-      {
-        success: false,
-        error: "Unauthorized",
-      },
+      { success: false, error: "Unauthorized" },
       { status: 401 }
     );
   }
 
-  let user =
-  await prisma.user.findUnique({
-    where: {
-      twitchLogin:
-        normalizedViewer,
-    },
+  const validation = validateInventoryPayload({
+    viewer: input.viewer,
+    slug: input.slug,
   });
 
-if (!user) {
-  console.log(
-    "[REWARD] Auto-creating user:",
-    normalizedViewer
-  );
-
-  user =
-    await prisma.user.create({
-      data: {
-        twitchLogin:
-          normalizedViewer,
-
-        displayName:
-          viewer,
-
-        avatar: null,
-      },
-    });
-
-  console.log(
-    "[REWARD] User created:",
-    normalizedViewer
-  );
-}
-
-  const upman =
-    await prisma.upman.findUnique({
-      where: {
-        slug,
-      },
-    });
-
-  if (!upman) {
-    console.error(
-      "[REWARD] Upman not found:",
-      slug
-    );
-
+  if (!validation.success) {
     return NextResponse.json(
-      {
-        success: false,
-        error: "Upman not found",
-      },
+      { success: false, error: validation.error },
+      { status: 400 }
+    );
+  }
+
+  const result = await grantUpman({
+    viewer: validation.data.viewer,
+    displayName:
+      typeof input.viewer === "string"
+        ? input.viewer.trim()
+        : validation.data.viewer,
+    slug: validation.data.slug,
+    autoCreateUser: true,
+  });
+
+  if (result.status === "upman-not-found") {
+    return NextResponse.json(
+      { success: false, error: "Upman not found" },
       { status: 404 }
     );
   }
 
-  const alreadyOwned =
-    await prisma.inventory.findFirst({
-      where: {
-        userId: user.id,
-        upmanId: upman.id,
-      },
-    });
-
-  if (alreadyOwned) {
-    console.log(
-      "[REWARD] Already owned:",
-      normalizedViewer,
-      upman.name
-    );
-
-    return NextResponse.json({
-      success: true,
-      alreadyOwned: true,
-    });
+  if (result.status === "already-owned") {
+    return NextResponse.json({ success: true, alreadyOwned: true });
   }
 
-  await prisma.inventory.create({
-    data: {
-      userId: user.id,
-      upmanId: upman.id,
-    },
-  });
+  if (result.status === "invalid-input") {
+    return NextResponse.json(
+      { success: false, error: "Missing viewer or slug" },
+      { status: 400 }
+    );
+  }
 
-  await prisma.upman.update({
-    where: {
-      id: upman.id,
-    },
-
-    data: {
-      ownersCount:
-        upman.ownersCount + 1,
-
-      firstOwner:
-        upman.firstOwner ??
-        normalizedViewer,
-    },
-  });
-
-  console.log(
-    "[REWARD] SUCCESS:",
-    normalizedViewer,
-    upman.name
-  );
+  if (result.status === "viewer-not-found") {
+    return NextResponse.json(
+      { success: false, error: "Viewer not found" },
+      { status: 404 }
+    );
+  }
 
   return NextResponse.json({
     success: true,
-    upman: upman.name,
-    viewer: normalizedViewer,
+    upman: result.upmanName,
+    viewer: result.viewer,
   });
 }
 
-export async function GET(
-  req: Request
-) {
+export async function GET(req: Request) {
   try {
-    const { searchParams } =
-      new URL(req.url);
+    const { searchParams } = new URL(req.url);
 
-    const secret =
-      searchParams.get(
-        "secret"
-      ) ?? "";
-
-    const viewer =
-      searchParams.get(
-        "viewer"
-      ) ?? "";
-
-    const slug =
-      searchParams.get(
-        "slug"
-      ) ?? "";
-
-    return rewardUpman(
-      secret,
-      viewer,
-      slug
-    );
-  } catch (error) {
-    console.error(error);
-
+    return rewardUpman({
+      secret: bearerToken(req) ?? searchParams.get("secret") ?? "",
+      viewer: searchParams.get("viewer") ?? "",
+      slug: searchParams.get("slug") ?? "",
+    });
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
+      { success: false, error: "Unable to reward Upman" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(
-  req: Request
-) {
+export async function POST(req: Request) {
   try {
-    const {
-      secret,
-      viewer,
-      slug,
-    } = await req.json();
+    const body: unknown = await req.json();
+    const payload = body && typeof body === "object"
+      ? (body as Record<string, unknown>)
+      : {};
 
-    return rewardUpman(
-      secret,
-      viewer,
-      slug
-    );
-  } catch (error) {
-    console.error(error);
-
+    return rewardUpman({
+      secret:
+        bearerToken(req) ??
+        (typeof payload.secret === "string" ? payload.secret : ""),
+      viewer: payload.viewer,
+      slug: payload.slug,
+    });
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
+      { success: false, error: "Unable to reward Upman" },
       { status: 500 }
     );
   }

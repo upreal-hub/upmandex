@@ -2,16 +2,6 @@ import NextAuth from "next-auth";
 import Twitch from "next-auth/providers/twitch";
 import { prisma } from "@/lib/prisma";
 
-console.log(
-  "TWITCH ID =",
-  process.env.AUTH_TWITCH_ID
-);
-
-console.log(
-  "TWITCH SECRET LENGTH =",
-  process.env.AUTH_TWITCH_SECRET?.length
-);
-
 export const {
   handlers,
   signIn,
@@ -33,29 +23,29 @@ export const {
 
   callbacks: {
   async signIn({ user }) {
-
-    console.log("SIGNIN USER =", user);
-
     if (!user.name) {
       return false;
     }
 
+    const twitchLogin = user.name.trim().toLowerCase();
+    const isBootstrapAdmin = twitchLogin === "upreal_";
+
     await prisma.user.upsert({
       where: {
-        twitchLogin: user.name.toLowerCase(),
+        twitchLogin,
       },
       update: {
         displayName: user.name,
         avatar: user.image ?? null,
+        ...(isBootstrapAdmin ? { role: "ADMIN" } : {}),
       },
       create: {
-        twitchLogin: user.name.toLowerCase(),
+        twitchLogin,
         displayName: user.name,
         avatar: user.image ?? null,
+        role: isBootstrapAdmin ? "ADMIN" : "USER",
       },
     });
-
-    console.log("USER SAVED");
 
     return true;
   },

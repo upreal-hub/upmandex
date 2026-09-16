@@ -1,16 +1,35 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
+import { validateUpmanPayload } from "@/lib/validation";
 
 export async function GET() {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   return NextResponse.json({
     route: "import-upman OK",
   });
 }
 
 export async function POST(req: Request) {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   try {
-    const newUpman =
-      await req.json();
+    const validation = validateUpmanPayload(await req.json());
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    const newUpman = validation.data;
 
     const existing =
       await prisma.upman.findUnique({
@@ -48,16 +67,11 @@ export async function POST(req: Request) {
       success: true,
     });
 
-  } catch (error) {
-    console.error(error);
-
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: "Unable to import Upman",
       },
       { status: 500 }
     );

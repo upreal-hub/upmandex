@@ -4,7 +4,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { readFile } from "fs/promises";
 import path from "path";
-console.log(process.env.DATABASE_URL);
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
 });

@@ -52,8 +52,6 @@ useEffect(() => {
         image: `/upmans/${slug}.png`,
       };
 
-      console.log("IMPORTING", payload);
-
       const response = await fetch(
         "/api/import-upman",
         {
@@ -68,16 +66,6 @@ useEffect(() => {
 
       const data =
         await response.json();
-
-      console.log(
-        "STATUS",
-        response.status
-      );
-
-      console.log(
-        "RESPONSE",
-        data
-      );
 
       if (!response.ok) {
         alert(
