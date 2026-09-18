@@ -1,4 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/client";
+import type { ActivityContext } from "@/lib/activity";
+import { createActivityLogData } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin, validateSlug } from "@/lib/validation";
 
@@ -45,7 +47,8 @@ function waitForTransactionRetry(attempt: number) {
 }
 
 export async function grantUpman(
-  input: GrantUpmanInput
+  input: GrantUpmanInput,
+  activityContext?: ActivityContext
 ): Promise<GrantUpmanResult> {
   const viewer = normalizeTwitchLogin(input.viewer);
   const slug = validateSlug(input.slug);
@@ -77,7 +80,7 @@ export async function grantUpman(
 
     const upman = await tx.upman.findUnique({
       where: { slug },
-      select: { id: true, name: true },
+      select: { id: true, slug: true, name: true },
     });
 
     if (!upman) {
@@ -113,12 +116,24 @@ export async function grantUpman(
       data: { firstOwner: viewer },
     });
 
+    if (activityContext) {
+      await tx.activityLog.create({
+        data: createActivityLogData({
+          action: "UPMAN_GRANTED",
+          context: activityContext,
+          target: { id: user.id, twitchLogin: viewer },
+          upman,
+        }),
+      });
+    }
+
     return { status: "granted", upmanName: upman.name, viewer };
   });
 }
 
 export async function removeUpman(
-  input: Pick<GrantUpmanInput, "viewer" | "slug">
+  input: Pick<GrantUpmanInput, "viewer" | "slug">,
+  activityContext?: ActivityContext
 ): Promise<RemoveUpmanResult> {
   const viewer = normalizeTwitchLogin(input.viewer);
   const slug = validateSlug(input.slug);
@@ -142,7 +157,7 @@ export async function removeUpman(
 
           const upman = await tx.upman.findUnique({
             where: { slug },
-            select: { id: true, name: true },
+            select: { id: true, slug: true, name: true },
           });
 
           if (!upman) {
@@ -172,6 +187,17 @@ export async function removeUpman(
 
           if (decremented.count !== 1) {
             throw new OwnersCountIntegrityError();
+          }
+
+          if (activityContext) {
+            await tx.activityLog.create({
+              data: createActivityLogData({
+                action: "UPMAN_REMOVED",
+                context: activityContext,
+                target: { id: user.id, twitchLogin: viewer },
+                upman,
+              }),
+            });
           }
 
           // firstOwner is a historical record and deliberately remains immutable.

@@ -14,7 +14,7 @@ const navigationItems: NavigationItem[] = [
   { href: "/admin", icon: "☁️", label: "Dashboard" },
   { href: "/admin/upmans", icon: "📦", label: "Upmans" },
   { href: "/admin/viewers", icon: "👥", label: "Viewers" },
-  { icon: "✨", label: "Activity", comingSoon: true },
+  { href: "/admin/activity", icon: "✨", label: "Activity" },
 ];
 
 export default function AdminNavigation() {

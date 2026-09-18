@@ -62,7 +62,7 @@ async function rewardUpman(input: {
         : validation.data.viewer,
     slug: validation.data.slug,
     autoCreateUser: true,
-  });
+  }, { origin: "STREAMERBOT" });
 
   if (result.status === "upman-not-found") {
     return NextResponse.json(

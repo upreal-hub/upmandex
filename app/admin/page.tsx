@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminPage() {
-  const [totalUpmans, totalUsers, totalDiscoveries, latestUpman] =
+  const [totalUpmans, totalUsers, totalDiscoveries, latestUpman, recentActivity] =
     await Promise.all([
       prisma.upman.count(),
       prisma.user.count(),
@@ -18,6 +18,20 @@ export default async function AdminPage() {
           image: true,
           rarity: true,
           creator: true,
+          createdAt: true,
+        },
+      }),
+      prisma.activityLog.findMany({
+        take: 5,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          action: true,
+          origin: true,
+          actorLogin: true,
+          targetLogin: true,
+          upmanName: true,
+          upmanSlug: true,
           createdAt: true,
         },
       }),
@@ -37,6 +51,7 @@ export default async function AdminPage() {
         totalDiscoveries,
         globalCompletion,
         latestUpman,
+        recentActivity,
       }}
     />
   );

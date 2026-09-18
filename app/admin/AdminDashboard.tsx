@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import type { ActivityAction, ActivityOrigin } from "@/app/generated/prisma/client";
+import { formatActivityDescription } from "@/lib/activity";
+
 type DashboardData = {
   totalUpmans: number;
   totalUsers: number;
@@ -13,6 +16,16 @@ type DashboardData = {
     creator: string;
     createdAt: Date;
   } | null;
+  recentActivity: Array<{
+    id: string;
+    action: ActivityAction;
+    origin: ActivityOrigin;
+    actorLogin: string | null;
+    targetLogin: string | null;
+    upmanName: string | null;
+    upmanSlug: string | null;
+    createdAt: Date;
+  }>;
 };
 
 type AdminDashboardProps = {
@@ -59,6 +72,31 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           value={`${data.globalCompletion.toFixed(1)}%`}
           detail="Inventory out of all possible viewer × Upman discoveries"
         />
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-500">Recent Activity</p>
+            <h2 className="mt-1 text-2xl font-black text-sky-950">Latest tracked mutations</h2>
+          </div>
+          <Link href="/admin/activity" className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">View all</Link>
+        </div>
+
+        {data.recentActivity.length > 0 ? (
+          <div className="mt-5 divide-y divide-sky-100">
+            {data.recentActivity.map((activity) => (
+              <article key={activity.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <p className="font-bold text-sky-950">{formatActivityDescription(activity)}</p>
+                <p className="shrink-0 text-sm text-sky-600">
+                  {activity.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-5 rounded-2xl bg-sky-50 p-4 text-sm text-sky-700">No tracked activity yet.</p>
+        )}
       </section>
 
       <section className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">

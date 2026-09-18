@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/authorization";
+import { createActivityLogData } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { validateUpmanPayload } from "@/lib/validation";
 
@@ -49,18 +50,27 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.upman.create({
-      data: {
-        slug: newUpman.slug,
-        name: newUpman.name,
-        rarity: newUpman.rarity,
-        creator:
-          newUpman.creator,
-        image: newUpman.image,
+    await prisma.$transaction(async (tx) => {
+      const upman = await tx.upman.create({
+        data: {
+          slug: newUpman.slug,
+          name: newUpman.name,
+          rarity: newUpman.rarity,
+          creator: newUpman.creator,
+          image: newUpman.image,
+          ownersCount: 0,
+          firstOwner: null,
+        },
+        select: { id: true, slug: true, name: true },
+      });
 
-        ownersCount: 0,
-        firstOwner: null,
-      },
+      await tx.activityLog.create({
+        data: createActivityLogData({
+          action: "UPMAN_CREATED",
+          context: { origin: "IMPORT", actor: authorization.user },
+          upman,
+        }),
+      });
     });
 
     return NextResponse.json({

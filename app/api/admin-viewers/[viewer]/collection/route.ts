@@ -53,7 +53,7 @@ async function authorizeCollectionRequest(
     };
   }
 
-  return { twitchLogin, slug };
+  return { twitchLogin, slug, actor: authorization.user };
 }
 
 export async function POST(
@@ -71,6 +71,9 @@ export async function POST(
       displayName: input.twitchLogin,
       slug: input.slug,
       autoCreateUser: false,
+    }, {
+      origin: "ADMIN",
+      actor: input.actor,
     });
 
     switch (result.status) {
@@ -113,6 +116,9 @@ export async function DELETE(
     const result = await removeUpman({
       viewer: input.twitchLogin,
       slug: input.slug,
+    }, {
+      origin: "ADMIN",
+      actor: input.actor,
     });
 
     switch (result.status) {

@@ -35,6 +35,9 @@ export async function POST(req: Request) {
       displayName: validation.data.viewer,
       slug: validation.data.slug,
       autoCreateUser: false,
+    }, {
+      origin: "ADMIN",
+      actor: authorization.user,
     });
 
     if (result.status === "viewer-not-found") {

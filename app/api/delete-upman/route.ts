@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 
 import { requireAdmin } from "@/lib/authorization";
+import { createActivityLogData } from "@/lib/activity";
 import { isManagedUpmanBlobUrl } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { validateSlug } from "@/lib/validation";
@@ -45,16 +46,27 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.inventory.deleteMany({
-      where: {
-        upmanId: upman.id,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      const inventoryRemoved = await tx.inventory.deleteMany({
+        where: {
+          upmanId: upman.id,
+        },
+      });
 
-    await prisma.upman.delete({
-      where: {
-        slug,
-      },
+      await tx.activityLog.create({
+        data: createActivityLogData({
+          action: "UPMAN_DELETED",
+          context: { origin: "ADMIN", actor: authorization.user },
+          upman: { id: upman.id, slug: upman.slug, name: upman.name },
+          metadata: { inventoryRemoved: inventoryRemoved.count },
+        }),
+      });
+
+      await tx.upman.delete({
+        where: {
+          slug,
+        },
+      });
     });
 
     if (isManagedUpmanBlobUrl(upman.image)) {

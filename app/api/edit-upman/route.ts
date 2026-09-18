@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/authorization";
+import { createActivityLogData } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { validateUpmanUpdatePayload } from "@/lib/validation";
 
@@ -37,16 +38,38 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.upman.update({
-      where: {
-        slug: updatedUpman.slug,
-      },
+    await prisma.$transaction(async (tx) => {
+      const upman = await tx.upman.update({
+        where: {
+          slug: updatedUpman.slug,
+        },
+        data: {
+          name: updatedUpman.name,
+          creator: updatedUpman.creator,
+          rarity: updatedUpman.rarity,
+        },
+        select: { id: true, slug: true, name: true },
+      });
 
-      data: {
-        name: updatedUpman.name,
-        creator: updatedUpman.creator,
-        rarity: updatedUpman.rarity,
-      },
+      await tx.activityLog.create({
+        data: createActivityLogData({
+          action: "UPMAN_UPDATED",
+          context: { origin: "ADMIN", actor: authorization.user },
+          upman,
+          metadata: {
+            before: {
+              name: existingUpman.name,
+              creator: existingUpman.creator,
+              rarity: existingUpman.rarity,
+            },
+            after: {
+              name: updatedUpman.name,
+              creator: updatedUpman.creator,
+              rarity: updatedUpman.rarity,
+            },
+          },
+        }),
+      });
     });
 
     return NextResponse.json({

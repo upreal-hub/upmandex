@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { getUpmanBlobPath, isPngFile, UPMAN_IMAGE_MAX_BYTES } from "@/lib/blob";
 import { requireAdmin } from "@/lib/authorization";
+import { createActivityLogData } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { validateUploadedUpmanPayload } from "@/lib/validation";
 
@@ -99,27 +100,39 @@ export async function POST(request: Request) {
   }
 
   try {
-    const upman = await prisma.upman.create({
-      data: {
-        slug: data.slug,
-        name: data.name,
-        image: blob.url,
-        rarity: data.rarity,
-        creator: data.creator,
-        creatorTwitch: data.creatorTwitch,
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        image: true,
-        rarity: true,
-        creator: true,
-        creatorTwitch: true,
-        ownersCount: true,
-        firstOwner: true,
-        createdAt: true,
-      },
+    const upman = await prisma.$transaction(async (tx) => {
+      const createdUpman = await tx.upman.create({
+        data: {
+          slug: data.slug,
+          name: data.name,
+          image: blob.url,
+          rarity: data.rarity,
+          creator: data.creator,
+          creatorTwitch: data.creatorTwitch,
+        },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          image: true,
+          rarity: true,
+          creator: true,
+          creatorTwitch: true,
+          ownersCount: true,
+          firstOwner: true,
+          createdAt: true,
+        },
+      });
+
+      await tx.activityLog.create({
+        data: createActivityLogData({
+          action: "UPMAN_CREATED",
+          context: { origin: "ADMIN", actor: authorization.user },
+          upman: createdUpman,
+        }),
+      });
+
+      return createdUpman;
     });
 
     return NextResponse.json({ success: true, upman }, { status: 201 });

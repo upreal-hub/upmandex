@@ -12,6 +12,21 @@ enum UserRole {
   ADMIN
 }
 
+enum ActivityAction {
+  UPMAN_GRANTED
+  UPMAN_REMOVED
+  UPMAN_CREATED
+  UPMAN_UPDATED
+  UPMAN_DELETED
+}
+
+enum ActivityOrigin {
+  ADMIN
+  STREAMERBOT
+  IMPORT
+  SYSTEM
+}
+
 model User {
   id          String      @id @default(cuid())
   twitchLogin String      @unique
@@ -20,6 +35,8 @@ model User {
   role        UserRole    @default(USER)
   createdAt   DateTime    @default(now())
   inventory   Inventory[]
+  activityAsActor  ActivityLog[] @relation("ActivityActor")
+  activityAsTarget ActivityLog[] @relation("ActivityTarget")
 }
 
 model Upman {
@@ -34,6 +51,7 @@ model Upman {
   firstOwner    String?
   createdAt     DateTime    @default(now())
   inventory     Inventory[]
+  activityLogs  ActivityLog[]
 }
 
 model Inventory {
@@ -45,4 +63,34 @@ model Inventory {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, upmanId])
+}
+
+model ActivityLog {
+  id        String         @id @default(cuid())
+  action    ActivityAction
+  origin    ActivityOrigin
+  createdAt DateTime       @default(now())
+
+  actorUserId String?
+  actorLogin  String?
+
+  targetUserId String?
+  targetLogin  String?
+
+  upmanId   String?
+  upmanSlug String?
+  upmanName String?
+
+  metadata Json?
+
+  actorUser  User?  @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  targetUser User?  @relation("ActivityTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  upman      Upman? @relation(fields: [upmanId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt, id])
+  @@index([action, createdAt])
+  @@index([origin, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([upmanId, createdAt])
 }

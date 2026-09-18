@@ -1,0 +1,94 @@
+import type { ActivityAction, ActivityOrigin } from "@/app/generated/prisma/client";
+
+export type ActivityActor = {
+  id: string;
+  twitchLogin: string;
+};
+
+export type ActivityContext = {
+  origin: ActivityOrigin;
+  actor?: ActivityActor | null;
+};
+
+type ActivityTarget = {
+  id: string;
+  twitchLogin: string;
+};
+
+type ActivityUpman = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type ActivityMetadata =
+  | {
+      before: { name: string; creator: string; rarity: string };
+      after: { name: string; creator: string; rarity: string };
+    }
+  | { inventoryRemoved: number };
+
+export function createActivityLogData({
+  action,
+  context,
+  target,
+  upman,
+  metadata,
+}: {
+  action: ActivityAction;
+  context: ActivityContext;
+  target?: ActivityTarget;
+  upman?: ActivityUpman;
+  metadata?: ActivityMetadata;
+}) {
+  return {
+    action,
+    origin: context.origin,
+    actorUserId: context.actor?.id,
+    actorLogin: context.actor?.twitchLogin,
+    targetUserId: target?.id,
+    targetLogin: target?.twitchLogin,
+    upmanId: upman?.id,
+    upmanSlug: upman?.slug,
+    upmanName: upman?.name,
+    ...(metadata ? { metadata } : {}),
+  };
+}
+
+export type ActivityDisplayEntry = {
+  action: ActivityAction;
+  origin: ActivityOrigin;
+  actorLogin: string | null;
+  targetLogin: string | null;
+  upmanName: string | null;
+  upmanSlug: string | null;
+};
+
+function actorLabel(entry: ActivityDisplayEntry) {
+  if (entry.actorLogin) return entry.actorLogin;
+  if (entry.origin === "STREAMERBOT") return "Streamer.bot";
+  return "System";
+}
+
+function upmanLabel(entry: ActivityDisplayEntry) {
+  return entry.upmanName ?? entry.upmanSlug ?? "an Upman";
+}
+
+export function formatActivityDescription(entry: ActivityDisplayEntry) {
+  const actor = actorLabel(entry);
+  const upman = upmanLabel(entry);
+  const target = entry.targetLogin ?? "a viewer";
+
+  switch (entry.action) {
+    case "UPMAN_GRANTED":
+      return `${actor} granted ${upman} to ${target}`;
+    case "UPMAN_REMOVED":
+      return `${actor} removed ${upman} from ${target}`;
+    case "UPMAN_CREATED":
+      return `${actor} created ${upman}`;
+    case "UPMAN_UPDATED":
+      return `${actor} updated ${upman}`;
+    case "UPMAN_DELETED":
+      return `${actor} deleted ${upman}`;
+  }
+}
