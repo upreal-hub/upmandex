@@ -98,6 +98,55 @@ export function validateUpmanUpdatePayload(value: unknown):
   return { success: true, data: { slug, name, creator, rarity } };
 }
 
+export function validateUploadedUpmanPayload(value: unknown):
+  | {
+      success: true;
+      data: {
+        slug: string;
+        name: string;
+        creator: string;
+        creatorTwitch: string | null;
+        rarity: Rarity;
+      };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object") {
+    return { success: false, error: "Invalid Upman details" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  const slug = validateSlug(payload.slug);
+  const name = nonEmptyString(payload.name, 120);
+  const creator = nonEmptyString(payload.creator, 120);
+  const rarity = validateRarity(payload.rarity);
+  const creatorTwitchValue = payload.creatorTwitch;
+
+  let creatorTwitch: string | null = null;
+
+  if (creatorTwitchValue !== null && creatorTwitchValue !== undefined) {
+    if (typeof creatorTwitchValue !== "string") {
+      return { success: false, error: "Invalid creator Twitch login" };
+    }
+
+    if (creatorTwitchValue.trim()) {
+      creatorTwitch = normalizeTwitchLogin(creatorTwitchValue);
+
+      if (!creatorTwitch) {
+        return { success: false, error: "Invalid creator Twitch login" };
+      }
+    }
+  }
+
+  if (!slug || !name || !creator || !rarity) {
+    return { success: false, error: "Invalid Upman details" };
+  }
+
+  return {
+    success: true,
+    data: { slug, name, creator, creatorTwitch, rarity },
+  };
+}
+
 export function validateInventoryPayload(value: unknown):
   | { success: true; data: { viewer: string; slug: string } }
   | { success: false; error: string } {

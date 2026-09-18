@@ -1,8 +1,10 @@
 import { unlink } from "fs/promises";
+import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import path from "path";
 
 import { requireAdmin } from "@/lib/authorization";
+import { isManagedUpmanBlobUrl } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { validateSlug } from "@/lib/validation";
 
@@ -55,19 +57,32 @@ export async function POST(req: Request) {
       },
     });
 
-    const imagePath = path.join(
-      process.cwd(),
-      "public",
-      "upmans",
-      `${slug}.png`
-    );
+    if (isManagedUpmanBlobUrl(upman.image)) {
+      try {
+        await del(upman.image);
+      } catch {
+        console.error("Unable to delete the Upman image from Blob storage.");
 
-    try {
-      await unlink(imagePath);
-    } catch {
-      console.log(
-        "PNG already missing"
+        return NextResponse.json({
+          success: true,
+          warning: "Upman deleted, but image cleanup could not be completed.",
+        });
+      }
+    } else {
+      const imagePath = path.join(
+        process.cwd(),
+        "public",
+        "upmans",
+        `${slug}.png`
       );
+
+      try {
+        await unlink(imagePath);
+      } catch {
+        console.log(
+          "PNG already missing"
+        );
+      }
     }
 
     return NextResponse.json({

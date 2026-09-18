@@ -107,7 +107,7 @@ export default function UpmanManager({ upmans }: { upmans: ManagedUpman[] }) {
             Legacy tools
           </Link>
           <Link
-            href="/admin/upmans/legacy"
+            href="/admin/upmans/new"
             className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-600"
           >
             + Add Upman
