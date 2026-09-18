@@ -1,5 +1,26 @@
-import AdminClient from "../AdminClient";
+import { prisma } from "@/lib/prisma";
 
-export default function AdminUpmansPage() {
-  return <AdminClient />;
+import UpmanManager from "./UpmanManager";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function AdminUpmansPage() {
+  const upmans = await prisma.upman.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      image: true,
+      rarity: true,
+      creator: true,
+      creatorTwitch: true,
+      ownersCount: true,
+      firstOwner: true,
+      createdAt: true,
+    },
+  });
+
+  return <UpmanManager upmans={upmans} />;
 }
