@@ -112,9 +112,12 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
             >
               Add Upman →
             </Link>
-            <span className="rounded-2xl border border-dashed border-sky-200 bg-white/70 px-4 py-3 text-center font-bold text-sky-500">
-              Find Viewer · Coming Soon
-            </span>
+            <Link
+              href="/admin/viewers"
+              className="rounded-2xl border border-sky-200 bg-white px-4 py-3 text-center font-black text-sky-800 transition hover:bg-sky-50"
+            >
+              Find Viewer →
+            </Link>
           </div>
         </article>
       </section>

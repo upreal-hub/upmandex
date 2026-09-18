@@ -13,7 +13,7 @@ type NavigationItem = {
 const navigationItems: NavigationItem[] = [
   { href: "/admin", icon: "☁️", label: "Dashboard" },
   { href: "/admin/upmans", icon: "📦", label: "Upmans" },
-  { icon: "👥", label: "Viewers", comingSoon: true },
+  { href: "/admin/viewers", icon: "👥", label: "Viewers" },
   { icon: "✨", label: "Activity", comingSoon: true },
 ];
 
