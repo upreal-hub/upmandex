@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 
+import { ADMIN_RARITY_CLASSES } from "../rarity";
 import type { ViewerDetails, ViewerSummary } from "./types";
-
-const rarityClasses: Record<string, string> = {
-  Common: "bg-slate-100 text-slate-700",
-  Rare: "bg-sky-100 text-sky-700",
-  Epic: "bg-violet-100 text-violet-700",
-  Mythic: "bg-amber-100 text-amber-800",
-  Legendary: "bg-rose-100 text-rose-700",
-};
 
 function formatDate(value: string | null) {
   if (!value) return "No discoveries yet";
@@ -105,18 +99,22 @@ export default function ViewerDetailsModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  return (
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <div
       role="presentation"
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-sky-950/25 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-sky-950/25 p-3 backdrop-blur-sm sm:p-6"
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-label={`Viewer details for ${viewer.displayName}`}
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[30px] border border-white bg-[#fffdf7] p-5 shadow-2xl shadow-sky-950/20 sm:p-7"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto rounded-[30px] border border-white bg-[#fffdf7] p-5 shadow-2xl shadow-sky-950/20 sm:max-h-[calc(100dvh-3rem)] sm:p-7"
       >
         <div className="flex items-start justify-between gap-5">
           <div className="flex min-w-0 items-center gap-4">
@@ -193,7 +191,7 @@ export default function ViewerDetailsModal({
                   />
                   <div>
                     <p className="font-black text-sky-950">{details.latestDiscovery.upman.name}</p>
-                    <span className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-black ${rarityClasses[details.latestDiscovery.upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
+                    <span className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-black ${ADMIN_RARITY_CLASSES[details.latestDiscovery.upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
                       {details.latestDiscovery.upman.rarity}
                     </span>
                   </div>
@@ -205,7 +203,7 @@ export default function ViewerDetailsModal({
               <p className="text-xs font-black uppercase tracking-wide text-sky-500">Rarity breakdown</p>
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {Object.entries(details.rarityBreakdown).map(([rarity, count]) => (
-                  <div key={rarity} className={`rounded-2xl px-3 py-3 text-center text-sm font-black ${rarityClasses[rarity] ?? "bg-sky-100 text-sky-700"}`}>
+                  <div key={rarity} className={`rounded-2xl px-3 py-3 text-center text-sm font-black ${ADMIN_RARITY_CLASSES[rarity] ?? "bg-sky-100 text-sky-700"}`}>
                     <p>{count}</p>
                     <p className="mt-1 text-xs">{rarity}</p>
                   </div>
@@ -228,7 +226,7 @@ export default function ViewerDetailsModal({
                         <p className="truncate font-black text-sky-950">{discovery.upman.name}</p>
                         <p className="mt-1 text-xs text-sky-700">{formatDate(discovery.obtainedAt)}</p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-black ${rarityClasses[discovery.upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-black ${ADMIN_RARITY_CLASSES[discovery.upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
                         {discovery.upman.rarity}
                       </span>
                     </div>
@@ -241,6 +239,7 @@ export default function ViewerDetailsModal({
           </div>
         )}
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }

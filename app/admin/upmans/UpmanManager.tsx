@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { ADMIN_RARITY_CLASSES } from "../rarity";
 import UpmanEditorModal from "./UpmanEditorModal";
 import { UP_MAN_RARITIES } from "./types";
 import type { ManagedUpman } from "./types";
@@ -24,14 +25,6 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "most-owned", label: "Most Owned" },
   { value: "least-owned", label: "Least Owned" },
 ];
-
-const rarityClasses: Record<string, string> = {
-  Common: "bg-slate-100 text-slate-700",
-  Rare: "bg-sky-100 text-sky-700",
-  Epic: "bg-violet-100 text-violet-700",
-  Mythic: "bg-amber-100 text-amber-800",
-  Legendary: "bg-rose-100 text-rose-700",
-};
 
 function compareNames(first: ManagedUpman, second: ManagedUpman) {
   return first.name.localeCompare(second.name, undefined, { sensitivity: "base" });
@@ -194,7 +187,7 @@ export default function UpmanManager({ upmans }: { upmans: ManagedUpman[] }) {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="truncate font-black text-sky-950">{upman.name}</h2>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-black ${rarityClasses[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-black ${ADMIN_RARITY_CLASSES[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
                       {upman.rarity}
                     </span>
                   </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ADMIN_RARITY_CLASSES } from "../../rarity";
 type CollectionUpman = {
   id: string;
   slug: string;
@@ -16,14 +17,6 @@ type CollectionUpman = {
 type OwnershipFilter = "all" | "owned" | "missing";
 
 const rarities = ["Common", "Rare", "Epic", "Mythic", "Legendary"];
-
-const rarityClasses: Record<string, string> = {
-  Common: "bg-slate-100 text-slate-700",
-  Rare: "bg-sky-100 text-sky-700",
-  Epic: "bg-violet-100 text-violet-700",
-  Mythic: "bg-amber-100 text-amber-800",
-  Legendary: "bg-rose-100 text-rose-700",
-};
 
 function responseMessage(status: string) {
   switch (status) {
@@ -217,7 +210,7 @@ export default function CollectionEditor({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate font-black text-sky-950">{upman.name}</h2>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-black ${rarityClasses[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-black ${ADMIN_RARITY_CLASSES[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>
                         {upman.rarity}
                       </span>
                     </div>

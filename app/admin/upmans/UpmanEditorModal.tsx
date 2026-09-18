@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 
 import { UP_MAN_RARITIES } from "./types";
 import type { ManagedUpman } from "./types";
@@ -139,14 +140,18 @@ export default function UpmanEditorModal({
     }
   }
 
-  return (
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end bg-sky-950/30 p-0 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-sky-950/30 p-3 backdrop-blur-sm sm:p-6"
       role="presentation"
       onClick={closeIfIdle}
     >
       <section
-        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:rounded-[32px] sm:p-7"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-7"
         role="dialog"
         aria-modal="true"
         aria-labelledby="upman-editor-title"
@@ -333,6 +338,7 @@ export default function UpmanEditorModal({
           )}
         </section>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
