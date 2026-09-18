@@ -119,7 +119,7 @@ const [unregisteredImages, setUnregisteredImages] =
     );
 
   return (
-    <main className="min-h-screen bg-slate-900 text-white p-8">
+    <main className="min-h-screen p-2 text-slate-800 sm:p-4">
 
       <h1 className="text-5xl font-bold mb-10">
         🛠 Admin Panel
@@ -127,7 +127,7 @@ const [unregisteredImages, setUnregisteredImages] =
 
       <div className="grid grid-cols-3 gap-6 mb-10">
 
-        <div className="border border-slate-700 rounded-lg p-6">
+        <div className="rounded-2xl border border-sky-100 bg-white/80 p-6 shadow-sm">
           <h2 className="text-xl font-bold">
             📦 Total Upmans
           </h2>
@@ -137,7 +137,7 @@ const [unregisteredImages, setUnregisteredImages] =
           </p>
         </div>
 
-        <div className="border border-slate-700 rounded-lg p-6">
+        <div className="rounded-2xl border border-sky-100 bg-white/80 p-6 shadow-sm">
           <h2 className="text-xl font-bold">
             🎨 Creators
           </h2>
@@ -147,7 +147,7 @@ const [unregisteredImages, setUnregisteredImages] =
           </p>
         </div>
 
-        <div className="border border-slate-700 rounded-lg p-6">
+        <div className="rounded-2xl border border-sky-100 bg-white/80 p-6 shadow-sm">
           <h2 className="text-xl font-bold">
             ⚠ Pending Imports
           </h2>
@@ -165,7 +165,7 @@ const [unregisteredImages, setUnregisteredImages] =
       e.target.value
     )
   }
-  className="bg-slate-800 p-3 rounded"
+  className="rounded-xl border border-sky-200 bg-white p-3 text-slate-800"
 >
   <option value="">
     Select Viewer
@@ -193,7 +193,7 @@ const [unregisteredImages, setUnregisteredImages] =
 ).map((upman) => (
   <div
     key={upman.slug}
-    className="border border-slate-700 rounded-lg p-4 flex justify-between items-center"
+    className="flex items-center justify-between rounded-2xl border border-sky-100 bg-white/80 p-4 shadow-sm"
   >
     <div className="flex items-center gap-4">
 
@@ -278,7 +278,7 @@ const [unregisteredImages, setUnregisteredImages] =
         {unregisteredImages.map((image) => (
           <div
             key={image}
-            className="border border-yellow-500 rounded-lg p-4 flex justify-between items-center"
+            className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50/70 p-4"
           >
             <div className="flex items-center gap-4">
 
@@ -321,7 +321,7 @@ const [unregisteredImages, setUnregisteredImages] =
         </Link>
       </div>
 
-<div className="border border-slate-700 rounded-lg p-6 mt-12">
+<div className="mt-12 rounded-2xl border border-sky-100 bg-white/80 p-6 shadow-sm">
 
   <h2 className="text-3xl font-bold mb-6">
     🎁 Give Upman
@@ -338,7 +338,7 @@ const [unregisteredImages, setUnregisteredImages] =
           e.target.value
         )
       }
-      className="bg-slate-800 p-3 rounded"
+      className="rounded-xl border border-sky-200 bg-white p-3 text-slate-800"
     />
 
     <select
@@ -348,7 +348,7 @@ const [unregisteredImages, setUnregisteredImages] =
           e.target.value
         )
       }
-      className="bg-slate-800 p-3 rounded"
+      className="rounded-xl border border-sky-200 bg-white p-3 text-slate-800"
     >
       <option value="">
         Select Upman

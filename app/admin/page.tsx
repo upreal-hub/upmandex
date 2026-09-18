@@ -1,12 +1,43 @@
-import { redirect } from "next/navigation";
-import { isCurrentUserAdmin } from "@/lib/authorization";
+import { prisma } from "@/lib/prisma";
 
-import AdminClient from "./AdminClient";
+import AdminDashboard from "./AdminDashboard";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function AdminPage() {
-  if (!(await isCurrentUserAdmin())) {
-    redirect("/");
-  }
+  const [totalUpmans, totalUsers, totalDiscoveries, latestUpman] =
+    await Promise.all([
+      prisma.upman.count(),
+      prisma.user.count(),
+      prisma.inventory.count(),
+      prisma.upman.findFirst({
+        orderBy: { createdAt: "desc" },
+        select: {
+          name: true,
+          image: true,
+          rarity: true,
+          creator: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
-  return <AdminClient />;
+  const possibleDiscoveries = totalUsers * totalUpmans;
+  const globalCompletion =
+    possibleDiscoveries > 0
+      ? (totalDiscoveries / possibleDiscoveries) * 100
+      : 0;
+
+  return (
+    <AdminDashboard
+      data={{
+        totalUpmans,
+        totalUsers,
+        totalDiscoveries,
+        globalCompletion,
+        latestUpman,
+      }}
+    />
+  );
 }
