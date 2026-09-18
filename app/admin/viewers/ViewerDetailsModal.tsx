@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import type { ViewerDetails, ViewerSummary } from "./types";
 
@@ -131,13 +132,21 @@ export default function ViewerDetailsModal({
               <p className="mt-2 text-sm text-sky-700">Joined UPMANDEX {formatDate(viewer.createdAt.toISOString())}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <Link
+              href={`/admin/viewers/${encodeURIComponent(viewer.twitchLogin)}`}
+              className="rounded-xl bg-sky-500 px-3 py-2 text-sm font-black text-white transition hover:bg-sky-600"
+            >
+              Manage Collection
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         {!details && !error && (

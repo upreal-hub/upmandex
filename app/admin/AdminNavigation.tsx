@@ -24,7 +24,9 @@ export default function AdminNavigation() {
     <nav aria-label="Admin navigation">
       <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
         {navigationItems.map((item) => {
-          const isActive = item.href === pathname;
+          const isActive =
+            item.href === pathname ||
+            (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
           const className = `
             flex min-w-max items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition
             ${
