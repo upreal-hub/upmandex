@@ -16,7 +16,7 @@ export default async function ProfilePage() {
     await prisma.user.findUnique({
       where: {
         twitchLogin:
-          session.user.name,
+          session.user.name.toLowerCase(),
       },
 
       include: {

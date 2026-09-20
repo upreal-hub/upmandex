@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import Twitch from "next-auth/providers/twitch";
 import { prisma } from "@/lib/prisma";
+import { resolveTwitchIdentity } from "@/lib/twitch-identity";
+import { normalizeTwitchLogin } from "@/lib/validation";
 
 export const {
   handlers,
@@ -22,30 +24,44 @@ export const {
   ],
 
   callbacks: {
-  async signIn({ user }) {
-    if (!user.name) {
+  async signIn({ user, account }) {
+    const twitchLogin = normalizeTwitchLogin(user.name);
+    const displayName = user.name?.trim();
+    const twitchUserId = account?.provider === "twitch"
+      ? account.providerAccountId
+      : null;
+
+    if (!twitchLogin || !displayName || !twitchUserId) {
       return false;
     }
 
-    const twitchLogin = user.name.trim().toLowerCase();
     const isBootstrapAdmin = twitchLogin === "upreal_";
 
-    await prisma.user.upsert({
-      where: {
+    const resolution = await prisma.$transaction(async (tx) => {
+      const result = await resolveTwitchIdentity(tx, {
+        twitchUserId,
         twitchLogin,
-      },
-      update: {
-        displayName: user.name,
+        displayName,
         avatar: user.image ?? null,
-        ...(isBootstrapAdmin ? { role: "ADMIN" } : {}),
-      },
-      create: {
-        twitchLogin,
-        displayName: user.name,
-        avatar: user.image ?? null,
-        role: isBootstrapAdmin ? "ADMIN" : "USER",
-      },
+      });
+
+      if (result.status === "identity-conflict") {
+        return result;
+      }
+
+      if (isBootstrapAdmin) {
+        await tx.user.update({
+          where: { id: result.user.id },
+          data: { role: "ADMIN" },
+        });
+      }
+
+      return result;
     });
+
+    if (resolution.status === "identity-conflict") {
+      throw new Error("Twitch identity conflict");
+    }
 
     return true;
   },

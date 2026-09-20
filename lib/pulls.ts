@@ -3,6 +3,7 @@ import { randomInt } from "crypto";
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
+import { resolveTwitchIdentity } from "@/lib/twitch-identity";
 
 type PullViewer = {
   twitchUserId: string;
@@ -109,61 +110,6 @@ function selectWeightedRarity(
   return null;
 }
 
-async function resolveViewer(
-  tx: Prisma.TransactionClient,
-  viewer: PullViewer
-) {
-  const [userByTwitchId, userByLogin] = await Promise.all([
-    tx.user.findUnique({
-      where: { twitchUserId: viewer.twitchUserId },
-      select: { id: true, twitchUserId: true, twitchLogin: true },
-    }),
-    tx.user.findUnique({
-      where: { twitchLogin: viewer.twitchLogin },
-      select: { id: true, twitchUserId: true, twitchLogin: true },
-    }),
-  ]);
-
-  if (userByTwitchId && userByLogin && userByTwitchId.id !== userByLogin.id) {
-    return { status: "identity-conflict" as const };
-  }
-
-  const existingUser = userByTwitchId ?? userByLogin;
-
-  if (!existingUser) {
-    const user = await tx.user.create({
-      data: {
-        twitchUserId: viewer.twitchUserId,
-        twitchLogin: viewer.twitchLogin,
-        displayName: viewer.displayName,
-        avatar: null,
-      },
-      select: { id: true, twitchLogin: true },
-    });
-
-    return { status: "resolved" as const, user };
-  }
-
-  if (
-    existingUser.twitchUserId &&
-    existingUser.twitchUserId !== viewer.twitchUserId
-  ) {
-    return { status: "identity-conflict" as const };
-  }
-
-  const user = await tx.user.update({
-    where: { id: existingUser.id },
-    data: {
-      twitchUserId: viewer.twitchUserId,
-      twitchLogin: viewer.twitchLogin,
-      displayName: viewer.displayName,
-    },
-    select: { id: true, twitchLogin: true },
-  });
-
-  return { status: "resolved" as const, user };
-}
-
 export async function resolvePull(
   input: ResolvePullInput,
   options: PullOptions = {}
@@ -196,7 +142,7 @@ export async function resolvePull(
             };
           }
 
-          const viewerResult = await resolveViewer(tx, input.viewer);
+          const viewerResult = await resolveTwitchIdentity(tx, input.viewer);
           if (viewerResult.status === "identity-conflict") {
             return viewerResult;
           }
