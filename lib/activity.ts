@@ -26,7 +26,12 @@ export type ActivityMetadata =
       before: { name: string; creator: string; rarity: string };
       after: { name: string; creator: string; rarity: string };
     }
-  | { inventoryRemoved: number };
+  | { inventoryRemoved: number }
+  | {
+      requestId: string;
+      result: "new" | "duplicate";
+      twitchUserId: string;
+    };
 
 export function createActivityLogData({
   action,
@@ -90,5 +95,7 @@ export function formatActivityDescription(entry: ActivityDisplayEntry) {
       return `${actor} updated ${upman}`;
     case "UPMAN_DELETED":
       return `${actor} deleted ${upman}`;
+    case "PULL_RESOLVED":
+      return `${actor} resolved a pull of ${upman} for ${target}`;
   }
 }

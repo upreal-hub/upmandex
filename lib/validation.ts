@@ -10,6 +10,9 @@ export type Rarity = (typeof RARITIES)[number];
 
 const TWITCH_LOGIN_PATTERN = /^[a-z0-9_]{1,25}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const TWITCH_USER_ID_PATTERN = /^[1-9][0-9]{0,29}$/;
+const TWITCH_REDEMPTION_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function nonEmptyString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") {
@@ -163,4 +166,56 @@ export function validateInventoryPayload(value: unknown):
   }
 
   return { success: true, data: { viewer, slug } };
+}
+
+export function validatePullPayload(value: unknown):
+  | {
+      success: true;
+      data: {
+        requestId: string;
+        viewer: {
+          twitchUserId: string;
+          twitchLogin: string;
+          displayName: string;
+        };
+      };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid pull request" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  const requestId = nonEmptyString(payload.requestId, 64);
+  const viewer = payload.viewer;
+
+  if (!requestId || !TWITCH_REDEMPTION_ID_PATTERN.test(requestId)) {
+    return { success: false, error: "Invalid request ID" };
+  }
+
+  if (!viewer || typeof viewer !== "object" || Array.isArray(viewer)) {
+    return { success: false, error: "Invalid viewer" };
+  }
+
+  const viewerPayload = viewer as Record<string, unknown>;
+  const twitchUserId = nonEmptyString(viewerPayload.twitchUserId, 30);
+  const twitchLogin = normalizeTwitchLogin(viewerPayload.twitchLogin);
+  const displayName = nonEmptyString(viewerPayload.displayName, 120);
+
+  if (
+    !twitchUserId ||
+    !TWITCH_USER_ID_PATTERN.test(twitchUserId) ||
+    !twitchLogin ||
+    !displayName
+  ) {
+    return { success: false, error: "Invalid viewer" };
+  }
+
+  return {
+    success: true,
+    data: {
+      requestId: requestId.toLowerCase(),
+      viewer: { twitchUserId, twitchLogin, displayName },
+    },
+  };
 }

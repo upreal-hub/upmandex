@@ -18,6 +18,12 @@ enum ActivityAction {
   UPMAN_CREATED
   UPMAN_UPDATED
   UPMAN_DELETED
+  PULL_RESOLVED
+}
+
+enum PullResult {
+  NEW
+  DUPLICATE
 }
 
 enum ActivityOrigin {
@@ -28,13 +34,15 @@ enum ActivityOrigin {
 }
 
 model User {
-  id          String      @id @default(cuid())
-  twitchLogin String      @unique
-  displayName String
-  avatar      String?
-  role        UserRole    @default(USER)
-  createdAt   DateTime    @default(now())
-  inventory   Inventory[]
+  id           String      @id @default(cuid())
+  twitchLogin  String      @unique
+  twitchUserId String?     @unique
+  displayName  String
+  avatar       String?
+  role         UserRole    @default(USER)
+  createdAt    DateTime    @default(now())
+  inventory    Inventory[]
+  pullEvents   PullEvent[]
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
 }
@@ -49,9 +57,44 @@ model Upman {
   creatorTwitch String?
   ownersCount   Int         @default(0)
   firstOwner    String?
+  isPullable    Boolean     @default(true)
   createdAt     DateTime    @default(now())
   inventory     Inventory[]
+  pullEvents    PullEvent[]
   activityLogs  ActivityLog[]
+}
+
+model PullRarityRule {
+  rarity  String  @id
+  weight  Int
+  enabled Boolean @default(true)
+}
+
+model PullEvent {
+  id        String         @id @default(cuid())
+  requestId String         @unique
+  result    PullResult
+  origin    ActivityOrigin @default(STREAMERBOT)
+  createdAt DateTime       @default(now())
+
+  userId       String?
+  twitchUserId String
+  twitchLogin  String
+  displayName  String
+
+  upmanId      String?
+  upmanSlug    String
+  upmanName    String
+  upmanRarity  String
+  upmanImage   String
+  upmanCreator String
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  upman Upman? @relation(fields: [upmanId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([upmanId, createdAt])
+  @@index([origin, createdAt])
 }
 
 model Inventory {

@@ -27,6 +27,7 @@ const actionLabels: Record<ActivityAction, string> = {
   UPMAN_CREATED: "Created",
   UPMAN_UPDATED: "Updated",
   UPMAN_DELETED: "Deleted",
+  PULL_RESOLVED: "Pull resolved",
 };
 
 function formatTimestamp(value: Date) {

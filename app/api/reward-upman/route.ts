@@ -1,41 +1,15 @@
-import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 
 import { grantUpman } from "@/lib/inventory";
+import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth";
 import { validateInventoryPayload } from "@/lib/validation";
-
-function isAuthorized(providedSecret: string): boolean {
-  const expectedSecret = process.env.STREAMERBOT_SECRET;
-
-  if (!providedSecret || !expectedSecret) {
-    return false;
-  }
-
-  const provided = Buffer.from(providedSecret);
-  const expected = Buffer.from(expectedSecret);
-
-  return (
-    provided.length === expected.length &&
-    timingSafeEqual(provided, expected)
-  );
-}
-
-function bearerToken(req: Request): string | null {
-  const authorization = req.headers.get("authorization");
-  if (!authorization?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authorization.slice("Bearer ".length).trim();
-  return token || null;
-}
 
 async function rewardUpman(input: {
   secret: string;
   viewer: unknown;
   slug: unknown;
 }) {
-  if (!isAuthorized(input.secret)) {
+  if (!isStreamerBotAuthorized(input.secret)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -101,7 +75,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     return rewardUpman({
-      secret: bearerToken(req) ?? searchParams.get("secret") ?? "",
+      secret: getBearerToken(req) ?? searchParams.get("secret") ?? "",
       viewer: searchParams.get("viewer") ?? "",
       slug: searchParams.get("slug") ?? "",
     });
@@ -122,7 +96,7 @@ export async function POST(req: Request) {
 
     return rewardUpman({
       secret:
-        bearerToken(req) ??
+        getBearerToken(req) ??
         (typeof payload.secret === "string" ? payload.secret : ""),
       viewer: payload.viewer,
       slug: payload.slug,
