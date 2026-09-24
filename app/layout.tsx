@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import AuthProvider from "@/components/SessionProvider";
+import SiteThemeProvider from "@/components/SiteThemeProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,19 +29,17 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
     >
       <body>
 
         <AuthProvider>
-
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-
-            <Navbar />
-
-            {children}
-
-          </div>
-
+          <SiteThemeProvider>
+            <div className="site-frame">
+              <Navbar />
+              {children}
+            </div>
+          </SiteThemeProvider>
         </AuthProvider>
 
       </body>

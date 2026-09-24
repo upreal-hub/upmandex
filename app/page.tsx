@@ -1,5 +1,6 @@
 import Link from "next/link";
-import LatestUpmanCarousel from "@/components/LatestUpmanCarousel";
+
+import HomeFeaturedUpmanCard from "@/components/HomeFeaturedUpmanCard";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -8,207 +9,61 @@ export const revalidate = 0;
 export default async function HomePage() {
   const upmans = await prisma.upman.findMany({
     orderBy: [{ createdAt: "desc" }, { slug: "asc" }],
-    select: {
-      slug: true,
-      name: true,
-      image: true,
-      rarity: true,
-      creator: true,
-      firstOwner: true,
-    },
+    select: { slug: true, name: true, image: true, rarity: true, creator: true, firstOwner: true },
   });
 
   const totalUpmans = upmans.length;
-
-  const totalCreators =
-    new Set(
-      upmans.map(
-        (u) => u.creator
-      )
-    ).size;
-
-  const totalFirstOwners =
-    upmans.filter(
-      (u) => u.firstOwner
-    ).length;
-
-  const latestUpmans = upmans.slice(0, 5);
+  const totalCreators = new Set(upmans.map((upman) => upman.creator)).size;
+  const totalFirstOwners = upmans.filter((upman) => upman.firstOwner).length;
+  const latestUpmans = upmans.slice(0, 3);
 
   return (
-    <main>
-
-      {/* Hero */}
-
-      <div className="text-center py-20 mb-12">
-
-  <p className="text-sky-600 font-bold tracking-[0.3em] uppercase mb-4">
-    ☁️ Welcome to the Skylands ☁️
-  </p>
-
-  <h1 className="text-7xl md:text-8xl xl:text-9xl font-black text-sky-800">
-    UPMANDEX
-  </h1>
-
-  <div className="w-40 h-1 bg-sky-300 mx-auto rounded-full mt-6" />
-
-  <p className="text-2xl mt-8 text-sky-700">
-    Discover • Collect • Create
-  </p>
-
-  <p className="mt-6 text-lg text-sky-600 max-w-3xl mx-auto">
-
-    Explore the floating world of the Upmans.
-    Discover creatures created by artists,
-    collected by viewers,
-    and remembered in the Cloud Pantheon.
-
-  </p>
-
-</div>
-
-      {/* Global Stats */}
-
-      <div className="-colsgrid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-
-        <div className="
-bg-white/80
-backdrop-blur-md
-rounded-3xl
-p-8
-text-center
-shadow-xl
-hover:-translate-y-1
-transition
-">
-
-          <p className="text-5xl font-bold">
-            📦
+    <main className="home-page">
+      <section className="home-hero" aria-labelledby="home-title">
+        <div aria-hidden="true" className="sky-cloud sky-cloud-one" />
+        <div aria-hidden="true" className="sky-cloud sky-cloud-two" />
+        <div aria-hidden="true" className="sky-sparkle sky-sparkle-one">✦</div>
+        <div className="hero-copy">
+          <p className="anniversary-badge">Anniversary edition · 2026</p>
+          <h1 id="home-title">UPMANDEX</h1>
+          <p className="hero-kicker">A sky full of tiny stories.</p>
+          <p className="hero-description">
+            Discover Upmans, the artists who create them, and the community collecting every cloud-dwelling oddity.
           </p>
-
-          <p className="text-3xl font-bold mt-2">
-            {totalUpmans}
-          </p>
-
-          <p className="opacity-70 mt-2">
-            Upmans
-          </p>
-
+          <Link href="/upmans" className="primary-button">Explore the Upmandex <span aria-hidden="true">↗</span></Link>
         </div>
-
-        <div className="
-bg-white/80
-backdrop-blur-md
-rounded-3xl
-p-8
-text-center
-shadow-xl
-hover:-translate-y-1
-transition
-">
-
-          <p className="text-5xl font-bold">
-            🎨
-          </p>
-
-          <p className="text-3xl font-bold mt-2">
-            {totalCreators}
-          </p>
-
-          <p className="opacity-70 mt-2">
-            Creators
-          </p>
-
+        <div className="hero-orbit" aria-hidden="true"><span>☁</span><i>✦</i><b>✧</b></div>
+        <div className="home-facts" aria-label="Upmandex facts">
+          <span><strong>{totalUpmans}</strong> Upmans</span>
+          <span><strong>{totalCreators}</strong> creators</span>
+          <span><strong>{totalFirstOwners}</strong> first explorers</span>
         </div>
+      </section>
 
-        <div className="
-bg-white/80
-backdrop-blur-md
-rounded-3xl
-p-8
-text-center
-shadow-xl
-hover:-translate-y-1
-transition
-">
-
-          <p className="text-5xl font-bold">
-            👑
-          </p>
-
-          <p className="text-3xl font-bold mt-2">
-            {totalFirstOwners}
-          </p>
-
-          <p className="opacity-70 mt-2">
-            First Owners
-          </p>
-
+      <section className="home-destinations" aria-labelledby="destinations-title">
+        <div className="section-heading">
+          <p>Choose a cloud</p>
+          <h2 id="destinations-title">Where would you like to wander?</h2>
         </div>
+        <div className="destination-grid">
+          <Link href="/upmans" className="destination-card destination-card-sky"><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>Meet every known Upman</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/my-collection" className="destination-card destination-card-lavender"><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>See the clouds you have found</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/pantheon" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>Visit the Cloud Pantheon</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/community" className="destination-card destination-card-gold"><span className="destination-icon">☼</span><div><p>04 · Beyond the Dex</p><h3>EXPLORE</h3><span>Creators, friends and community</span></div><b aria-hidden="true">↗</b></Link>
+        </div>
+      </section>
 
-      </div>
-
-      {/* Navigation */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-
-        <Link href="/upmans">
-
-          <div className="
-bg-white/80
-backdrop-blur-md
-rounded-3xl
-p-8
-shadow-xl
-hover:-translate-y-1
-hover:shadow-2xl
-transition-all
-cursor-pointer
-">
-
-            <h2 className="text-3xl font-bold">
-              📖 Explore Upmans
-            </h2>
-
-            <p className="opacity-70 mt-3">
-              Browse every creation in the Upmandex
-            </p>
-
+      {latestUpmans.length > 0 && (
+        <section className="home-featured" aria-labelledby="featured-title">
+          <div className="section-heading section-heading-inline">
+            <div><p>Fresh from the clouds</p><h2 id="featured-title">New in the Upmandex</h2></div>
+            <Link href="/upmans" className="secondary-button">See the full Dex <span aria-hidden="true">→</span></Link>
           </div>
-
-        </Link>
-
-        <Link href="/hall-of-fame">
-
-          <div className="
-bg-white/80
-backdrop-blur-md
-rounded-3xl
-p-8
-shadow-xl
-hover:-translate-y-1
-hover:shadow-2xl
-transition-all
-cursor-pointer
-">
-
-            <h2 className="text-3xl font-bold">
-              👑 Hall of Fame
-            </h2>
-
-            <p className="opacity-70 mt-3">
-              Discover the legends of the community
-            </p>
-
+          <div className="home-upman-grid">
+            {latestUpmans.map((upman) => <HomeFeaturedUpmanCard key={upman.slug} {...upman} />)}
           </div>
-
-        </Link>
-
-      </div>
-
-      <LatestUpmanCarousel
-  upmans={latestUpmans}
-/>
-
+        </section>
+      )}
     </main>
   );
 }
