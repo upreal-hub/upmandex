@@ -24,6 +24,7 @@ export default async function HomePage() {
         <div aria-hidden="true" className="sky-cloud sky-cloud-one" />
         <div aria-hidden="true" className="sky-cloud sky-cloud-two" />
         <div aria-hidden="true" className="sky-cloud sky-cloud-three" />
+        <div aria-hidden="true" className="sky-cloud sky-cloud-four" />
         <div aria-hidden="true" className="sky-sparkle sky-sparkle-one">✦</div>
         <div aria-hidden="true" className="hero-upman hero-upman-dodo">
           <Image src="/upmans/dodoupman.png" alt="" width={320} height={320} priority sizes="(max-width: 620px) 9rem, 20rem" />
@@ -38,9 +39,9 @@ export default async function HomePage() {
         </div>
         <div className="hero-orbit" aria-hidden="true"><span>☁</span><i>✦</i><b>✧</b></div>
         <div className="home-facts" aria-label="Upmandex facts">
-          <span><strong>{totalUpmans}</strong> Upmans</span>
-          <span><strong>{totalCreators}</strong> creators</span>
-          <span><strong>{totalFirstOwners}</strong> first explorers</span>
+          <span className="home-fact"><strong>{totalUpmans}</strong><small>Upmans</small></span>
+          <span className="home-fact"><strong>{totalCreators}</strong><small>creators</small></span>
+          <span className="home-fact"><strong>{totalFirstOwners}</strong><small>first explorers</small></span>
         </div>
       </section>
 
