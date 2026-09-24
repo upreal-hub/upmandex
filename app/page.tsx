@@ -24,7 +24,6 @@ export default async function HomePage() {
         <div aria-hidden="true" className="sky-cloud sky-cloud-two" />
         <div aria-hidden="true" className="sky-sparkle sky-sparkle-one">✦</div>
         <div className="hero-copy">
-          <p className="anniversary-badge">Anniversary edition · 2026</p>
           <h1 id="home-title">UPMANDEX</h1>
           <p className="hero-kicker">A sky full of tiny stories.</p>
           <p className="hero-description">
