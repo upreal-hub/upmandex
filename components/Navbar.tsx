@@ -43,7 +43,7 @@ export default function Navbar() {
     <nav className="site-nav" aria-label="Primary navigation">
       <div className="site-nav-bar">
         <Link href="/" className="brand-mark" aria-label="UPMANDEX home">
-          <span aria-hidden="true" className="brand-cloud">☁</span>UPMANDEX
+          <span aria-hidden="true" className="brand-cloud">☁</span><span className="brand-wordmark">UPMANDEX</span>
         </Link>
 
         <div className="site-nav-desktop">

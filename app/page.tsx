@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import HomeFeaturedUpmanCard from "@/components/HomeFeaturedUpmanCard";
@@ -22,14 +23,18 @@ export default async function HomePage() {
       <section className="home-hero" aria-labelledby="home-title">
         <div aria-hidden="true" className="sky-cloud sky-cloud-one" />
         <div aria-hidden="true" className="sky-cloud sky-cloud-two" />
+        <div aria-hidden="true" className="sky-cloud sky-cloud-three" />
         <div aria-hidden="true" className="sky-sparkle sky-sparkle-one">✦</div>
+        <div aria-hidden="true" className="hero-upman hero-upman-dodo">
+          <Image src="/upmans/dodoupman.png" alt="" width={320} height={320} priority sizes="(max-width: 620px) 9rem, 20rem" />
+        </div>
         <div className="hero-copy">
-          <h1 id="home-title">UPMANDEX</h1>
+          <h1 id="home-title" className="hero-wordmark">UPMANDEX</h1>
           <p className="hero-kicker">A sky full of tiny stories.</p>
           <p className="hero-description">
             Discover Upmans, the artists who create them, and the community collecting every cloud-dwelling oddity.
           </p>
-          <Link href="/upmans" className="primary-button">Explore the Upmandex <span aria-hidden="true">↗</span></Link>
+          <Link href="/upmans" className="primary-button cloud-button">Explore the Upmandex <span aria-hidden="true">↗</span></Link>
         </div>
         <div className="hero-orbit" aria-hidden="true"><span>☁</span><i>✦</i><b>✧</b></div>
         <div className="home-facts" aria-label="Upmandex facts">
@@ -40,6 +45,9 @@ export default async function HomePage() {
       </section>
 
       <section className="home-destinations" aria-labelledby="destinations-title">
+        <div aria-hidden="true" className="destination-upman destination-upman-pandora">
+          <Image src="/upmans/pandoraupman.png" alt="" width={220} height={181} sizes="(max-width: 620px) 5.5rem, 8rem" />
+        </div>
         <div className="section-heading">
           <p>Choose a cloud</p>
           <h2 id="destinations-title">Where would you like to wander?</h2>
