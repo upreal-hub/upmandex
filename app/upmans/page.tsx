@@ -1,89 +1,76 @@
+import { auth } from "@/auth";
+import UpmandexGallery, { type UpmandexEntry } from "@/components/UpmandexGallery";
 import { prisma } from "@/lib/prisma";
-import UpmansGrid from "@/components/UpmansGrid";
+import { normalizeTwitchLogin } from "@/lib/validation";
+
+import styles from "./upmandex.module.css";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function UpmansPage() {
-  const upmans =
-  await prisma.upman.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+  const session = await auth();
+  const twitchLogin = normalizeTwitchLogin(session?.user?.name);
 
-console.log(
-  "UPMANS:",
-  upmans.map(
-    (u) => u.name
-  )
-);
+  const [upmans, viewer] = await Promise.all([
+    prisma.upman.findMany({
+      orderBy: [{ name: "asc" }, { slug: "asc" }],
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        image: true,
+        rarity: true,
+        creator: true,
+        creatorTwitch: true,
+      },
+    }),
+    twitchLogin
+      ? prisma.user.findUnique({
+          where: { twitchLogin },
+          select: { inventory: { select: { upmanId: true } } },
+        })
+      : null,
+  ]);
 
-  const commonCount =
-    upmans.filter(
-      (u) => u.rarity === "Common"
-    ).length;
+  const creatorLogins = upmans
+    .map((upman) => upman.creatorTwitch)
+    .filter((login): login is string => Boolean(login));
 
-  const rareCount =
-    upmans.filter(
-      (u) => u.rarity === "Rare"
-    ).length;
+  const creatorUsers = creatorLogins.length > 0
+    ? await prisma.user.findMany({
+        where: { twitchLogin: { in: creatorLogins } },
+        select: { twitchLogin: true, avatar: true },
+      })
+    : [];
 
-  const epicCount =
-    upmans.filter(
-      (u) => u.rarity === "Epic"
-    ).length;
-
-  const mythicCount =
-    upmans.filter(
-      (u) => u.rarity === "Mythic"
-    ).length;
-
-  const legendaryCount =
-    upmans.filter(
-      (u) => u.rarity === "Legendary"
-    ).length;
+  const avatarsByTwitchLogin = new Map(
+    creatorUsers.map((user) => [user.twitchLogin, user.avatar]),
+  );
+  const ownedUpmanIds = new Set(viewer?.inventory.map((item) => item.upmanId));
+  const entries: UpmandexEntry[] = upmans.map((upman) => ({
+    ...upman,
+    rarity: upman.rarity as UpmandexEntry["rarity"],
+    creatorAvatar: upman.creatorTwitch
+      ? avatarsByTwitchLogin.get(upman.creatorTwitch) ?? null
+      : null,
+    owned: ownedUpmanIds.has(upman.id),
+  }));
 
   return (
-    <main>
+    <main className={`upmandex-page ${styles.page}`}>
+      <header className={styles.header}>
+        <p>Every known cloud creature</p>
+        <h1>UPMANDEX</h1>
+        <span className={styles.count}>{upmans.length} Upman{upmans.length === 1 ? "" : "s"}</span>
+        <p className={styles.intro}>Discover every Upman in the Dex and the people behind them.</p>
+      </header>
 
-      <div className="mb-12">
-
-        <h1 className="text-6xl font-black">
-          UPMANDEX
-        </h1>
-
-        <p className="opacity-70 mt-3">
-          Browse every creation in the collection
-        </p>
-
-      </div>
-
-      <div className="flex gap-8 mb-12 flex-wrap text-lg">
-
-        <span className="text-green-400">
-          🟢 {commonCount}
-        </span>
-
-        <span className="text-blue-400">
-          🔵 {rareCount}
-        </span>
-
-        <span className="text-purple-400">
-          🟣 {epicCount}
-        </span>
-
-        <span className="text-red-400">
-          🔴 {mythicCount}
-        </span>
-
-        <span className="text-yellow-400">
-          🟡 {legendaryCount}
-        </span>
-
-      </div>
-
-      <UpmansGrid
-  upmans={upmans}
-/>
-
+      <UpmandexGallery
+        upmans={entries}
+        collection={viewer ? { ownedCount: viewer.inventory.length, totalCount: upmans.length } : null}
+        showConnectMessage={!session?.user}
+      />
     </main>
   );
 }
