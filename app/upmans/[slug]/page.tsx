@@ -226,7 +226,14 @@ function CreatorView({
           )}
           <div>
             <h2 id="creator-identity-heading" className={styles.creatorName}>{creatorName}</h2>
-            {creatorTwitch && <p className={styles.creatorHandle}>@{creatorTwitch}</p>}
+            {creatorTwitch && (
+              <p className={styles.creatorHandle}>
+                <svg viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+                  <path d="M3 0 0 7v21h7v6l6-6h5l10-10V0H3Zm22 17-6 6h-6l-5 5v-5H3V3h22v14ZM19 7h-3v8h3V7Zm-8 0H8v8h3V7Z" />
+                </svg>
+                <span>@{creatorTwitch}</span>
+              </p>
+            )}
             <p className={styles.creatorContext}>Creator of {currentName}</p>
             <p className={styles.creatorCount}>{upmans.length} Upman{upmans.length === 1 ? "" : "s"} in the UPMANDEX</p>
           </div>
