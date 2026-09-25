@@ -11,6 +11,7 @@ type ActivityEntry = {
   targetLogin: string | null;
   upmanName: string | null;
   upmanSlug: string | null;
+  personDisplayName: string | null;
   createdAt: Date;
 };
 
@@ -28,6 +29,9 @@ const actionLabels: Record<ActivityAction, string> = {
   UPMAN_UPDATED: "Updated",
   UPMAN_DELETED: "Deleted",
   PULL_RESOLVED: "Pull resolved",
+  PERSON_CREATED: "Person created",
+  PERSON_UPDATED: "Person updated",
+  UPMAN_RELATIONSHIPS_UPDATED: "Relationships updated",
 };
 
 function formatTimestamp(value: Date) {

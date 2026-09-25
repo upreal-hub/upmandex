@@ -32,6 +32,7 @@ export default async function AdminPage() {
           targetLogin: true,
           upmanName: true,
           upmanSlug: true,
+          personDisplayName: true,
           createdAt: true,
         },
       }),

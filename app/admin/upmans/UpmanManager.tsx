@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { ADMIN_RARITY_CLASSES } from "../rarity";
 import UpmanEditorModal from "./UpmanEditorModal";
 import { UP_MAN_RARITIES } from "./types";
-import type { ManagedUpman } from "./types";
+import type { ManagedUpman, PersonOption } from "./types";
 
 type SortOption =
   | "name-asc"
@@ -50,7 +50,13 @@ function sortUpmans(upmans: ManagedUpman[], sort: SortOption) {
   });
 }
 
-export default function UpmanManager({ upmans }: { upmans: ManagedUpman[] }) {
+export default function UpmanManager({
+  upmans,
+  people,
+}: {
+  upmans: ManagedUpman[];
+  people: PersonOption[];
+}) {
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("All rarities");
   const [sort, setSort] = useState<SortOption>("newest");
@@ -228,6 +234,7 @@ export default function UpmanManager({ upmans }: { upmans: ManagedUpman[] }) {
         <UpmanEditorModal
           key={editingUpman.id}
           upman={editingUpman}
+          people={people}
           onClose={() => setEditingUpman(null)}
           onComplete={setNotice}
         />

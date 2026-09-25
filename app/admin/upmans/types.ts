@@ -6,9 +6,18 @@ export type ManagedUpman = {
   rarity: string;
   creator: string;
   creatorTwitch: string | null;
+  creatorPersonId: string | null;
+  representedPersonId: string | null;
+  creatorPerson: { id: string; displayName: string } | null;
+  representedPerson: { id: string; displayName: string } | null;
   ownersCount: number;
   firstOwner: string | null;
   createdAt: Date;
+};
+
+export type PersonOption = {
+  id: string;
+  displayName: string;
 };
 
 export const UP_MAN_RARITIES = [

@@ -72,6 +72,7 @@ export default async function ActivityPage({
             { targetLogin: { contains: query, mode: "insensitive" } },
             { upmanSlug: { contains: query, mode: "insensitive" } },
             { upmanName: { contains: query, mode: "insensitive" } },
+            { personDisplayName: { contains: query, mode: "insensitive" } },
           ],
         }
       : {}),
@@ -90,6 +91,7 @@ export default async function ActivityPage({
       targetLogin: true,
       upmanName: true,
       upmanSlug: true,
+      personDisplayName: true,
       createdAt: true,
     },
   });

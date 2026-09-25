@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
 import { UP_MAN_RARITIES } from "./types";
-import type { ManagedUpman } from "./types";
+import type { ManagedUpman, PersonOption } from "./types";
 
 type UpmanEditorModalProps = {
   upman: ManagedUpman;
+  people: PersonOption[];
   onClose: () => void;
   onComplete: (message: string) => void;
 };
@@ -33,6 +35,7 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 
 export default function UpmanEditorModal({
   upman,
+  people,
   onClose,
   onComplete,
 }: UpmanEditorModalProps) {
@@ -40,6 +43,8 @@ export default function UpmanEditorModal({
   const [name, setName] = useState(upman.name);
   const [creator, setCreator] = useState(upman.creator);
   const [rarity, setRarity] = useState(upman.rarity);
+  const [creatorPersonId, setCreatorPersonId] = useState(upman.creatorPersonId ?? "");
+  const [representedPersonId, setRepresentedPersonId] = useState(upman.representedPersonId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -89,6 +94,8 @@ export default function UpmanEditorModal({
           name,
           creator,
           rarity,
+          creatorPersonId: creatorPersonId || null,
+          representedPersonId: representedPersonId || null,
         }),
       });
       const data = await readResponse(response);
@@ -252,6 +259,38 @@ export default function UpmanEditorModal({
               </select>
             </label>
           </div>
+
+          <section className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50/60 p-5" aria-labelledby="relationships-title">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700">Relationships</p>
+                <h3 id="relationships-title" className="mt-1 text-xl font-black text-sky-950">Canonical people</h3>
+                <p className="mt-1 text-sm text-sky-700">These optional links do not rewrite the legacy attribution above.</p>
+              </div>
+              <Link href="/admin/people" className="rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-cyan-50">
+                Manage people
+              </Link>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-bold text-sky-900">
+                Creator Person
+                <select value={creatorPersonId} onChange={(event) => setCreatorPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+                  <option value="">None — legacy creator only</option>
+                  {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+                </select>
+                <span className="text-xs font-medium text-sky-600">Legacy: {upman.creator}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</span>
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-sky-900">
+                Represented Person
+                <select value={representedPersonId} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+                  <option value="">None</option>
+                  {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+                </select>
+                <span className="text-xs font-medium text-sky-600">This is independent from the creator.</span>
+              </label>
+            </div>
+          </section>
 
           {error && (
             <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">

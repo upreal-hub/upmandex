@@ -23,6 +23,16 @@ function nonEmptyString(value: unknown, maxLength: number): string | null {
   return trimmed.length > 0 && trimmed.length <= maxLength ? trimmed : null;
 }
 
+function optionalId(value: unknown): string | null | undefined {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  return typeof value === "string" && /^[a-z0-9]+$/i.test(value) && value.length <= 64
+    ? value
+    : undefined;
+}
+
 export function normalizeTwitchLogin(value: unknown): string | null {
   const login = nonEmptyString(value, 25)?.toLowerCase();
   return login && TWITCH_LOGIN_PATTERN.test(login) ? login : null;
@@ -81,6 +91,8 @@ export function validateUpmanUpdatePayload(value: unknown):
         name: string;
         creator: string;
         rarity: Rarity;
+        creatorPersonId: string | null;
+        representedPersonId: string | null;
       };
     }
   | { success: false; error: string } {
@@ -93,12 +105,24 @@ export function validateUpmanUpdatePayload(value: unknown):
   const name = nonEmptyString(payload.name, 120);
   const creator = nonEmptyString(payload.creator, 120);
   const rarity = validateRarity(payload.rarity);
+  const creatorPersonId = optionalId(payload.creatorPersonId);
+  const representedPersonId = optionalId(payload.representedPersonId);
 
-  if (!slug || !name || !creator || !rarity) {
+  if (
+    !slug ||
+    !name ||
+    !creator ||
+    !rarity ||
+    creatorPersonId === undefined ||
+    representedPersonId === undefined
+  ) {
     return { success: false, error: "Invalid Upman payload" };
   }
 
-  return { success: true, data: { slug, name, creator, rarity } };
+  return {
+    success: true,
+    data: { slug, name, creator, rarity, creatorPersonId, representedPersonId },
+  };
 }
 
 export function validateUploadedUpmanPayload(value: unknown):
@@ -110,6 +134,8 @@ export function validateUploadedUpmanPayload(value: unknown):
         creator: string;
         creatorTwitch: string | null;
         rarity: Rarity;
+        creatorPersonId: string | null;
+        representedPersonId: string | null;
       };
     }
   | { success: false; error: string } {
@@ -123,6 +149,8 @@ export function validateUploadedUpmanPayload(value: unknown):
   const creator = nonEmptyString(payload.creator, 120);
   const rarity = validateRarity(payload.rarity);
   const creatorTwitchValue = payload.creatorTwitch;
+  const creatorPersonId = optionalId(payload.creatorPersonId);
+  const representedPersonId = optionalId(payload.representedPersonId);
 
   let creatorTwitch: string | null = null;
 
@@ -140,14 +168,48 @@ export function validateUploadedUpmanPayload(value: unknown):
     }
   }
 
-  if (!slug || !name || !creator || !rarity) {
+  if (
+    !slug ||
+    !name ||
+    !creator ||
+    !rarity ||
+    creatorPersonId === undefined ||
+    representedPersonId === undefined
+  ) {
     return { success: false, error: "Invalid Upman details" };
   }
 
   return {
     success: true,
-    data: { slug, name, creator, creatorTwitch, rarity },
+    data: {
+      slug,
+      name,
+      creator,
+      creatorTwitch,
+      rarity,
+      creatorPersonId,
+      representedPersonId,
+    },
   };
+}
+
+export function validatePersonPayload(value: unknown):
+  | { success: true; data: { displayName: string; userId: string | null; isPublic: boolean } }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid Person details" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  const displayName = nonEmptyString(payload.displayName, 120);
+  const userId = optionalId(payload.userId);
+  const isPublic = payload.isPublic;
+
+  if (!displayName || userId === undefined || typeof isPublic !== "boolean") {
+    return { success: false, error: "Invalid Person details" };
+  }
+
+  return { success: true, data: { displayName, userId, isPublic } };
 }
 
 export function validateInventoryPayload(value: unknown):

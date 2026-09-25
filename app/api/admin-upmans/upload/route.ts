@@ -42,6 +42,8 @@ export async function POST(request: Request) {
     rarity: formData.get("rarity"),
     creator: formData.get("creator"),
     creatorTwitch: formData.get("creatorTwitch"),
+    creatorPersonId: formData.get("creatorPersonId"),
+    representedPersonId: formData.get("representedPersonId"),
   });
 
   if (!validation.success) {
@@ -72,15 +74,37 @@ export async function POST(request: Request) {
   }
 
   const data = validation.data;
-  const existingUpman = await prisma.upman.findUnique({
-    where: { slug: data.slug },
-    select: { id: true },
-  });
+  const [existingUpman, people] = await Promise.all([
+    prisma.upman.findUnique({
+      where: { slug: data.slug },
+      select: { id: true },
+    }),
+    prisma.person.findMany({
+      where: {
+        id: {
+          in: [data.creatorPersonId, data.representedPersonId].filter(
+            (id): id is string => Boolean(id)
+          ),
+        },
+      },
+      select: { id: true, displayName: true },
+    }),
+  ]);
 
   if (existingUpman) {
     return NextResponse.json(
       { success: false, error: "An Upman with this slug already exists" },
       { status: 409 }
+    );
+  }
+
+  const relationshipIds = [data.creatorPersonId, data.representedPersonId].filter(
+    (id): id is string => Boolean(id)
+  );
+  if (people.length !== new Set(relationshipIds).size) {
+    return NextResponse.json(
+      { success: false, error: "Selected Person not found" },
+      { status: 400 }
     );
   }
 
@@ -109,6 +133,8 @@ export async function POST(request: Request) {
           rarity: data.rarity,
           creator: data.creator,
           creatorTwitch: data.creatorTwitch,
+          creatorPersonId: data.creatorPersonId,
+          representedPersonId: data.representedPersonId,
         },
         select: {
           id: true,
@@ -129,6 +155,19 @@ export async function POST(request: Request) {
           action: "UPMAN_CREATED",
           context: { origin: "ADMIN", actor: authorization.user },
           upman: createdUpman,
+          metadata: relationshipIds.length
+            ? {
+                before: { creatorPerson: null, representedPerson: null },
+                after: {
+                  creatorPerson: data.creatorPersonId
+                    ? people.find((person) => person.id === data.creatorPersonId)?.displayName ?? null
+                    : null,
+                  representedPerson: data.representedPersonId
+                    ? people.find((person) => person.id === data.representedPersonId)?.displayName ?? null
+                    : null,
+                },
+              }
+            : undefined,
         }),
       });
 

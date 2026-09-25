@@ -24,6 +24,7 @@ type DashboardData = {
     targetLogin: string | null;
     upmanName: string | null;
     upmanSlug: string | null;
+    personDisplayName: string | null;
     createdAt: Date;
   }>;
 };

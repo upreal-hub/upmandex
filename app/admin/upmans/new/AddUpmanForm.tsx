@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { UP_MAN_RARITIES } from "../types";
+import type { PersonOption } from "../types";
 
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 
@@ -26,7 +27,7 @@ function isValidPng(file: File): boolean {
   );
 }
 
-export default function AddUpmanForm() {
+export default function AddUpmanForm({ people }: { people: PersonOption[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<File | null>(null);
@@ -37,6 +38,8 @@ export default function AddUpmanForm() {
   const [rarity, setRarity] = useState("Common");
   const [creator, setCreator] = useState("");
   const [creatorTwitch, setCreatorTwitch] = useState("");
+  const [creatorPersonId, setCreatorPersonId] = useState("");
+  const [representedPersonId, setRepresentedPersonId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -86,6 +89,8 @@ export default function AddUpmanForm() {
       formData.set("rarity", rarity);
       formData.set("creator", creator);
       formData.set("creatorTwitch", creatorTwitch);
+      formData.set("creatorPersonId", creatorPersonId);
+      formData.set("representedPersonId", representedPersonId);
 
       const response = await fetch("/api/admin-upmans/upload", {
         method: "POST",
@@ -267,6 +272,35 @@ export default function AddUpmanForm() {
               <span className="text-xs font-medium text-sky-600">
                 Stored in lowercase when provided.
               </span>
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700">Relationships</p>
+              <h2 className="mt-1 text-xl font-black text-sky-950">Canonical people</h2>
+              <p className="mt-1 text-sm text-sky-700">Optional links that stay independent from the legacy creator details.</p>
+            </div>
+            <Link href="/admin/people" className="rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-cyan-50">
+              Manage people
+            </Link>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-bold text-sky-900">
+              Creator Person
+              <select value={creatorPersonId} onChange={(event) => setCreatorPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+                <option value="">None — legacy creator only</option>
+                {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-sky-900">
+              Represented Person
+              <select value={representedPersonId} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+                <option value="">None</option>
+                {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </select>
             </label>
           </div>
         </section>

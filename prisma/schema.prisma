@@ -19,6 +19,9 @@ enum ActivityAction {
   UPMAN_UPDATED
   UPMAN_DELETED
   PULL_RESOLVED
+  PERSON_CREATED
+  PERSON_UPDATED
+  UPMAN_RELATIONSHIPS_UPDATED
 }
 
 enum PullResult {
@@ -45,6 +48,22 @@ model User {
   pullEvents   PullEvent[]
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
+  person           Person?
+}
+
+model Person {
+  id                  String        @id @default(cuid())
+  displayName         String
+  userId              String?       @unique
+  isPublic            Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdUpmans       Upman[]       @relation("UpmanCreatorPerson")
+  representedUpmans   Upman[]       @relation("UpmanRepresentedPerson")
+  activityLogs        ActivityLog[] @relation("ActivityPerson")
+
+  @@index([displayName])
 }
 
 model Upman {
@@ -55,6 +74,8 @@ model Upman {
   rarity        String
   creator       String
   creatorTwitch String?
+  creatorPersonId String?
+  representedPersonId String?
   ownersCount   Int         @default(0)
   firstOwner    String?
   isPullable    Boolean     @default(true)
@@ -62,6 +83,11 @@ model Upman {
   inventory     Inventory[]
   pullEvents    PullEvent[]
   activityLogs  ActivityLog[]
+  creatorPerson Person? @relation("UpmanCreatorPerson", fields: [creatorPersonId], references: [id], onDelete: SetNull)
+  representedPerson Person? @relation("UpmanRepresentedPerson", fields: [representedPersonId], references: [id], onDelete: SetNull)
+
+  @@index([creatorPersonId])
+  @@index([representedPersonId])
 }
 
 model PullRarityRule {
@@ -123,12 +149,15 @@ model ActivityLog {
   upmanId   String?
   upmanSlug String?
   upmanName String?
+  personId String?
+  personDisplayName String?
 
   metadata Json?
 
   actorUser  User?  @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   targetUser User?  @relation("ActivityTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
   upman      Upman? @relation(fields: [upmanId], references: [id], onDelete: SetNull)
+  person     Person? @relation("ActivityPerson", fields: [personId], references: [id], onDelete: SetNull)
 
   @@index([createdAt, id])
   @@index([action, createdAt])
@@ -136,4 +165,5 @@ model ActivityLog {
   @@index([actorUserId, createdAt])
   @@index([targetUserId, createdAt])
   @@index([upmanId, createdAt])
+  @@index([personId, createdAt])
 }
