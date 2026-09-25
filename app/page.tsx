@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import HomeFeaturedUpmanCard from "@/components/HomeFeaturedUpmanCard";
@@ -24,11 +23,7 @@ export default async function HomePage() {
         <div aria-hidden="true" className="sky-cloud sky-cloud-one" />
         <div aria-hidden="true" className="sky-cloud sky-cloud-two" />
         <div aria-hidden="true" className="sky-cloud sky-cloud-three" />
-        <div aria-hidden="true" className="sky-cloud sky-cloud-four" />
         <div aria-hidden="true" className="sky-sparkle sky-sparkle-one">✦</div>
-        <div aria-hidden="true" className="hero-upman hero-upman-dodo">
-          <Image src="/upmans/dodoupman.png" alt="" width={320} height={320} priority sizes="(max-width: 620px) 9rem, 20rem" />
-        </div>
         <div className="hero-copy">
           <h1 id="home-title" className="hero-wordmark">UPMANDEX</h1>
           <p className="hero-kicker">A sky full of tiny stories.</p>
@@ -46,9 +41,6 @@ export default async function HomePage() {
       </section>
 
       <section className="home-destinations" aria-labelledby="destinations-title">
-        <div aria-hidden="true" className="destination-upman destination-upman-pandora">
-          <Image src="/upmans/pandoraupman.png" alt="" width={220} height={181} sizes="(max-width: 620px) 5.5rem, 8rem" />
-        </div>
         <div className="section-heading">
           <p>Choose a cloud</p>
           <h2 id="destinations-title">Where would you like to wander?</h2>
