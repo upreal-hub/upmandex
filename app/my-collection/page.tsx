@@ -1,267 +1,72 @@
-import { redirect } from "next/navigation";
-
 import { auth } from "@/auth";
+import CollectionGallery, { type CollectionEntry } from "@/components/CollectionGallery";
+import LoginButton from "@/components/LoginButton";
 import { prisma } from "@/lib/prisma";
+import { normalizeTwitchLogin } from "@/lib/validation";
 
-import UpmanCard from "@/components/UpmanCard";
+import styles from "./collection.module.css";
 
-export default async function ProfilePage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function MyCollectionPage() {
   const session = await auth();
+  const twitchLogin = normalizeTwitchLogin(session?.user?.name);
 
-  if (!session?.user?.name) {
-    redirect("/");
+  if (!twitchLogin) {
+    return <LoggedOutCollection />;
   }
 
-  const user =
-    await prisma.user.findUnique({
-      where: {
-        twitchLogin:
-          session.user.name.toLowerCase(),
-      },
-
-      include: {
-        inventory: {
-          include: {
-            upman: true,
-          },
-        },
-      },
-    });
+  const [user, upmans] = await Promise.all([
+    prisma.user.findUnique({
+      where: { twitchLogin },
+      select: { twitchLogin: true, displayName: true, avatar: true, inventory: { select: { upmanId: true } } },
+    }),
+    prisma.upman.findMany({
+      orderBy: [{ name: "asc" }, { slug: "asc" }],
+      select: { id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true },
+    }),
+  ]);
 
   if (!user) {
-    redirect("/");
+    return <LoggedOutCollection />;
   }
 
-  const ownedUpmans =
-    user.inventory.map(
-      (item) => item.upman
-    );
-
-  const totalUpmans =
-    await prisma.upman.count();
-
-  const ownedCount =
-    ownedUpmans.length;
-
-  const completion =
-    totalUpmans > 0
-      ? (
-          (ownedCount /
-            totalUpmans) *
-          100
-        ).toFixed(1)
-      : "0";
-
-  const mythicCount =
-    ownedUpmans.filter(
-      (u) =>
-        u.rarity ===
-        "Mythic"
-    ).length;
-
-  const legendaryCount =
-    ownedUpmans.filter(
-      (u) =>
-        u.rarity ===
-        "Legendary"
-    ).length;
-
-  const latestDiscovery =
-    ownedUpmans[
-      ownedUpmans.length - 1
-    ];
+  const creatorLogins = upmans.map((upman) => upman.creatorTwitch).filter((login): login is string => Boolean(login));
+  const creators = creatorLogins.length > 0 ? await prisma.user.findMany({ where: { twitchLogin: { in: creatorLogins } }, select: { twitchLogin: true, avatar: true } }) : [];
+  const avatarsByLogin = new Map(creators.map((creator) => [creator.twitchLogin, creator.avatar]));
+  const ownedIds = new Set(user.inventory.map((item) => item.upmanId));
+  const entries: CollectionEntry[] = upmans.map((upman) => ({
+    ...upman,
+    rarity: upman.rarity as CollectionEntry["rarity"],
+    creatorAvatar: upman.creatorTwitch ? avatarsByLogin.get(upman.creatorTwitch) ?? null : null,
+    owned: ownedIds.has(upman.id),
+  }));
 
   return (
-    <main>
-      <div
-        className="
-          bg-white/80
-          backdrop-blur-md
-          rounded-[40px]
-          shadow-2xl
-          p-10
-          mb-12
-        "
-      >
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-
-          <div className="flex items-center gap-6">
-
-            {user.avatar ? (
-              <img
-                src={user.avatar}
-                alt={
-                  user.displayName
-                }
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  border-4
-                  border-sky-300
-                "
-              />
-            ) : (
-              <div
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  bg-sky-100
-                  flex
-                  items-center
-                  justify-center
-                  text-5xl
-                "
-              >
-                👤
-              </div>
-            )}
-
-            <div>
-
-              <p className="uppercase tracking-[0.3em] text-sky-500 text-sm">
-                ☁️ Explorer Profile
-              </p>
-
-              <h1 className="text-5xl font-black text-sky-800 mt-2">
-                {user.displayName}
-              </h1>
-
-              <p className="text-sky-600 mt-2">
-                {ownedCount} discoveries
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="text-center">
-
-            <p className="text-4xl font-black text-sky-800">
-              {completion}%
-            </p>
-
-            <p className="text-sky-600">
-              Collection Complete
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="mt-8">
-
-          <div className="w-full h-5 bg-sky-100 rounded-full overflow-hidden">
-
-            <div
-              className="
-                h-full
-                bg-sky-400
-                rounded-full
-              "
-              style={{
-                width: `${completion}%`,
-              }}
-            />
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            📦 Collection
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {ownedCount}
-          </p>
-
-        </div>
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            🔥 Mythics
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {mythicCount}
-          </p>
-
-        </div>
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            👑 Legendaries
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {legendaryCount}
-          </p>
-
-        </div>
-
-      </div>
-
-      {latestDiscovery && (
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6 mb-12">
-
-          <p className="text-sky-500">
-            ✨ Latest Discovery
-          </p>
-
-          <p className="font-black text-sky-800 text-2xl mt-2">
-            {latestDiscovery.name}
-          </p>
-
-        </div>
-
-      )}
-
-      <h2 className="text-4xl font-black text-sky-800 mb-8">
-        🎒 My Collection
-      </h2>
-
-      <div
-        className="
-          grid
-          grid-cols-2
-          md:grid-cols-3
-          xl:grid-cols-5
-          gap-6
-        "
-      >
-
-        {ownedUpmans.map(
-          (upman) => (
-            <UpmanCard
-              key={upman.slug}
-              slug={upman.slug}
-              name={upman.name}
-              image={upman.image}
-              rarity={
-                upman.rarity as
-                  | "Common"
-                  | "Rare"
-                  | "Epic"
-                  | "Mythic"
-                  | "Legendary"
-              }
-            />
-          )
+    <main className={`collection-page ${styles.page}`}>
+      <header className={styles.header}>
+        {user.avatar && (
+          // This is the stored avatar from the authenticated Twitch User record.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.avatar} alt="" className={styles.avatar} />
         )}
+        <div><p>Your part of the cloud world</p><h1>MY COLLECTION</h1><p className={styles.identity}><strong>{user.displayName}</strong> · @{user.twitchLogin}</p></div>
+      </header>
+      <CollectionGallery upmans={entries} ownedCount={user.inventory.length} />
+    </main>
+  );
+}
 
-      </div>
-
+function LoggedOutCollection() {
+  return (
+    <main className={`collection-page ${styles.page}`}>
+      <section className={styles.login}>
+        <p>Your part of the cloud world</p>
+        <h1>MY COLLECTION</h1>
+        <span>Your Upman collection is linked to Twitch. Connect to see every cloud you have found.</span>
+        <LoginButton />
+      </section>
     </main>
   );
 }
