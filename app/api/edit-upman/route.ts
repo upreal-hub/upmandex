@@ -38,9 +38,30 @@ export async function POST(req: Request) {
       );
     }
 
+    const creatorPersonId = updatedUpman.creatorPersonId === undefined
+      ? existingUpman.creatorPersonId
+      : updatedUpman.creatorPersonId;
+    const representedPersonId = updatedUpman.representedPersonId === undefined
+      ? existingUpman.representedPersonId
+      : updatedUpman.representedPersonId;
+
+    if (
+      updatedUpman.rarity === "Common" &&
+      existingUpman.representedPersonId &&
+      (!updatedUpman.confirmRepresentedPersonRemoval || representedPersonId)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Confirm removal of the represented Person before changing this Upman to Common",
+        },
+        { status: 400 }
+      );
+    }
+
     const relationshipIds = [
-      updatedUpman.creatorPersonId,
-      updatedUpman.representedPersonId,
+      creatorPersonId,
+      representedPersonId,
     ].filter((id): id is string => Boolean(id));
     const people = relationshipIds.length
       ? await prisma.person.findMany({
@@ -71,8 +92,8 @@ export async function POST(req: Request) {
           name: updatedUpman.name,
           creator: updatedUpman.creator,
           rarity: updatedUpman.rarity,
-          creatorPersonId: updatedUpman.creatorPersonId,
-          representedPersonId: updatedUpman.representedPersonId,
+          creatorPersonId,
+          representedPersonId,
         },
         select: { id: true, slug: true, name: true },
       });
@@ -100,8 +121,8 @@ export async function POST(req: Request) {
       }
 
       if (
-        existingUpman.creatorPersonId !== updatedUpman.creatorPersonId ||
-        existingUpman.representedPersonId !== updatedUpman.representedPersonId
+        existingUpman.creatorPersonId !== creatorPersonId ||
+        existingUpman.representedPersonId !== representedPersonId
       ) {
         const previousIds = [
           existingUpman.creatorPersonId,
@@ -130,11 +151,11 @@ export async function POST(req: Request) {
                   : null,
               },
               after: {
-                creatorPerson: updatedUpman.creatorPersonId
-                  ? peopleById.get(updatedUpman.creatorPersonId)?.displayName ?? null
+                creatorPerson: creatorPersonId
+                  ? peopleById.get(creatorPersonId)?.displayName ?? null
                   : null,
-                representedPerson: updatedUpman.representedPersonId
-                  ? peopleById.get(updatedUpman.representedPersonId)?.displayName ?? null
+                representedPerson: representedPersonId
+                  ? peopleById.get(representedPersonId)?.displayName ?? null
                   : null,
               },
             },

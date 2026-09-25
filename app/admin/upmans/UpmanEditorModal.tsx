@@ -45,6 +45,7 @@ export default function UpmanEditorModal({
   const [rarity, setRarity] = useState(upman.rarity);
   const [creatorPersonId, setCreatorPersonId] = useState(upman.creatorPersonId ?? "");
   const [representedPersonId, setRepresentedPersonId] = useState(upman.representedPersonId ?? "");
+  const [confirmRepresentedPersonRemoval, setConfirmRepresentedPersonRemoval] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -96,6 +97,7 @@ export default function UpmanEditorModal({
           rarity,
           creatorPersonId: creatorPersonId || null,
           representedPersonId: representedPersonId || null,
+          confirmRepresentedPersonRemoval,
         }),
       });
       const data = await readResponse(response);
@@ -248,7 +250,14 @@ export default function UpmanEditorModal({
               Rarity
               <select
                 value={rarity}
-                onChange={(event) => setRarity(event.target.value)}
+                onChange={(event) => {
+                  const nextRarity = event.target.value;
+                  setRarity(nextRarity);
+                  if (nextRarity === "Common" && representedPersonId) {
+                    setRepresentedPersonId("");
+                    setConfirmRepresentedPersonRemoval(false);
+                  }
+                }}
                 className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
               >
                 {UP_MAN_RARITIES.map((option) => (
@@ -259,6 +268,18 @@ export default function UpmanEditorModal({
               </select>
             </label>
           </div>
+
+          {upman.representedPersonId && rarity === "Common" && (
+            <label className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
+              <input
+                type="checkbox"
+                checked={confirmRepresentedPersonRemoval}
+                onChange={(event) => setConfirmRepresentedPersonRemoval(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-amber-500"
+              />
+              <span>I confirm that making this Upman Common removes its represented Person.</span>
+            </label>
+          )}
 
           <section className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50/60 p-5" aria-labelledby="relationships-title">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -283,11 +304,11 @@ export default function UpmanEditorModal({
               </label>
               <label className="grid gap-2 text-sm font-bold text-sky-900">
                 Represented Person
-                <select value={representedPersonId} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+                <select value={representedPersonId} disabled={rarity === "Common"} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:cursor-not-allowed disabled:opacity-60">
                   <option value="">None</option>
                   {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
                 </select>
-                <span className="text-xs font-medium text-sky-600">This is independent from the creator.</span>
+                <span className="text-xs font-medium text-sky-600">{rarity === "Common" ? "Not applicable — Common Upmans cannot represent a Person." : "This is independent from the creator."}</span>
               </label>
             </div>
           </section>

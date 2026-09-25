@@ -91,8 +91,9 @@ export function validateUpmanUpdatePayload(value: unknown):
         name: string;
         creator: string;
         rarity: Rarity;
-        creatorPersonId: string | null;
-        representedPersonId: string | null;
+        creatorPersonId?: string | null;
+        representedPersonId?: string | null;
+        confirmRepresentedPersonRemoval: boolean;
       };
     }
   | { success: false; error: string } {
@@ -105,23 +106,35 @@ export function validateUpmanUpdatePayload(value: unknown):
   const name = nonEmptyString(payload.name, 120);
   const creator = nonEmptyString(payload.creator, 120);
   const rarity = validateRarity(payload.rarity);
-  const creatorPersonId = optionalId(payload.creatorPersonId);
-  const representedPersonId = optionalId(payload.representedPersonId);
+  const hasCreatorPersonId = Object.hasOwn(payload, "creatorPersonId");
+  const hasRepresentedPersonId = Object.hasOwn(payload, "representedPersonId");
+  const creatorPersonId = hasCreatorPersonId ? optionalId(payload.creatorPersonId) : undefined;
+  const representedPersonId = hasRepresentedPersonId ? optionalId(payload.representedPersonId) : undefined;
+  const confirmRepresentedPersonRemoval = payload.confirmRepresentedPersonRemoval === true;
 
   if (
     !slug ||
     !name ||
     !creator ||
     !rarity ||
-    creatorPersonId === undefined ||
-    representedPersonId === undefined
+    (hasCreatorPersonId && creatorPersonId === undefined) ||
+    (hasRepresentedPersonId && representedPersonId === undefined) ||
+    (rarity === "Common" && representedPersonId !== undefined && representedPersonId !== null)
   ) {
     return { success: false, error: "Invalid Upman payload" };
   }
 
   return {
     success: true,
-    data: { slug, name, creator, rarity, creatorPersonId, representedPersonId },
+    data: {
+      slug,
+      name,
+      creator,
+      rarity,
+      creatorPersonId,
+      representedPersonId,
+      confirmRepresentedPersonRemoval,
+    },
   };
 }
 
@@ -174,7 +187,8 @@ export function validateUploadedUpmanPayload(value: unknown):
     !creator ||
     !rarity ||
     creatorPersonId === undefined ||
-    representedPersonId === undefined
+    representedPersonId === undefined ||
+    (rarity === "Common" && representedPersonId !== null)
   ) {
     return { success: false, error: "Invalid Upman details" };
   }
@@ -191,6 +205,51 @@ export function validateUploadedUpmanPayload(value: unknown):
       representedPersonId,
     },
   };
+}
+
+export function validateUpmanRelationshipPayload(value: unknown):
+  | {
+      success: true;
+      data:
+        | { relation: "creator" | "represented"; source: "unlink" }
+        | { relation: "creator" | "represented"; source: "existing-person"; personId: string }
+        | {
+            relation: "creator" | "represented";
+            source: "create-person";
+            displayName: string;
+            userId: string | null;
+          };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid relationship request" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  const relation = payload.relation;
+  const source = payload.source;
+  if ((relation !== "creator" && relation !== "represented") || typeof source !== "string") {
+    return { success: false, error: "Invalid relationship request" };
+  }
+
+  if (source === "unlink") return { success: true, data: { relation, source } };
+
+  if (source === "existing-person") {
+    const personId = optionalId(payload.personId);
+    return personId
+      ? { success: true, data: { relation, source, personId } }
+      : { success: false, error: "Select a valid Person" };
+  }
+
+  if (source === "create-person") {
+    const displayName = nonEmptyString(payload.displayName, 120);
+    const userId = optionalId(payload.userId);
+    return displayName && userId !== undefined
+      ? { success: true, data: { relation, source, displayName, userId } }
+      : { success: false, error: "Invalid Person details" };
+  }
+
+  return { success: false, error: "Invalid relationship request" };
 }
 
 export function validatePersonPayload(value: unknown):
