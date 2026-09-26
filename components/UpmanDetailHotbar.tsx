@@ -6,16 +6,18 @@ import { useEffect, useState } from "react";
 type DetailView = "UPMAN" | "CREATOR" | "PERSON";
 
 type Props = {
-  active: Exclude<DetailView, "PERSON">;
+  active: DetailView;
   upmanHref: string;
   creatorHref: string;
+  personHref?: string;
 };
 
-export default function UpmanDetailHotbar({ active, upmanHref, creatorHref }: Props) {
-  const [requestedView, setRequestedView] = useState<Exclude<DetailView, "PERSON"> | null>(null);
+export default function UpmanDetailHotbar({ active, upmanHref, creatorHref, personHref }: Props) {
+  const [requestedView, setRequestedView] = useState<DetailView | null>(null);
   const items = [
     { label: "UPMAN" as const, href: upmanHref },
     { label: "CREATOR" as const, href: creatorHref },
+    ...(personHref ? [{ label: "PERSON" as const, href: personHref }] : []),
   ];
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function UpmanDetailHotbar({ active, upmanHref, creatorHref }: Pr
     });
   }, [active, requestedView]);
 
-  function requestSelectedView(view: Exclude<DetailView, "PERSON">) {
+  function requestSelectedView(view: DetailView) {
     if (view === active) {
       return;
     }
