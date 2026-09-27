@@ -11,12 +11,12 @@ const primaryNavigation = [
   { label: "Home", href: "/" },
   { label: "Upmandex", href: "/upmans" },
   { label: "My Collection", href: "/my-collection" },
-  { label: "Art", href: "/pantheon" },
+  { label: "Creators & Friends", href: "/people" },
 ];
 
 const exploreNavigation = [
+  { label: "Art", detail: "Cloud art and the Pantheon", href: "/pantheon" },
   { label: "Projects", detail: "Little worlds in progress" },
-  { label: "Creators & Friends", detail: "Meet the cloud artists", href: "/pantheon" },
   { label: "Community", detail: "Collections and explorers", href: "/community" },
   { label: "About", detail: "The story behind Upmandex" },
 ];
