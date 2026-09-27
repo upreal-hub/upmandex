@@ -7,18 +7,11 @@ import type { AchievementCategory, AchievementFamily, AchievementMilestone, Achi
 
 import styles from "./person.module.css";
 
-const categoryLabels: Record<AchievementCategory, string> = {
-  COLLECTION: "Collection", PULLS: "Pulls", CREATION: "Creation", ART: "Art", GARTIC: "Gartic", STREAM: "Stream", EVENTS: "Events",
-};
+const categories: AchievementCategory[] = ["COLLECTION", "PULLS", "CREATION", "ART", "GARTIC", "STREAM", "EVENTS"];
+const categoryLabels: Record<AchievementCategory, string> = { COLLECTION: "Collection", PULLS: "Pulls", CREATION: "Creation", ART: "Art", GARTIC: "Gartic", STREAM: "Stream", EVENTS: "Events" };
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
-}
-
-function milestoneState(milestone: AchievementMilestone, isCurrentTarget: boolean) {
-  if (milestone.isUnlocked) return styles.nodeUnlocked;
-  if (milestone.isCurrentlyComplete) return styles.nodeEligible;
-  return isCurrentTarget ? styles.nodeTarget : styles.nodeLocked;
 }
 
 function orderedFill(milestones: AchievementMilestone[]) {
@@ -31,13 +24,19 @@ function orderedFill(milestones: AchievementMilestone[]) {
   return ((nextIndex - 1 + Math.max(0, Math.min(1, segment))) / (milestones.length - 1)) * 100;
 }
 
+function nodeState(milestone: AchievementMilestone, isTarget: boolean, isDormant: boolean) {
+  if (isDormant) return styles.nodeDormant;
+  if (milestone.isUnlocked) return styles.nodeUnlocked;
+  if (milestone.isCurrentlyComplete) return styles.nodeEligible;
+  return isTarget ? styles.nodeTarget : styles.nodeLocked;
+}
+
 export default function AchievementsPanel({ progress }: { progress: AchievementProgress }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
   const closeButton = useRef<HTMLButtonElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
-  const availableCategories = [...new Set(progress.families.map((family) => family.category))];
-  const visibleCategories = category === "ALL" ? availableCategories : [category];
+  const visibleCategories = category === "ALL" ? categories : [category];
 
   function close() {
     setIsOpen(false);
@@ -70,15 +69,13 @@ export default function AchievementsPanel({ progress }: { progress: AchievementP
             </header>
             <div className={styles.achievementFilters} aria-label="Achievement categories">
               <button type="button" aria-pressed={category === "ALL"} onClick={() => setCategory("ALL")}>All</button>
-              {availableCategories.map((value) => <button key={value} type="button" aria-pressed={category === value} onClick={() => setCategory(value)}>{categoryLabels[value]}</button>)}
+              {categories.map((value) => <button key={value} type="button" aria-pressed={category === value} onClick={() => setCategory(value)}>{categoryLabels[value]}</button>)}
             </div>
+            <p className={styles.achievementLegend}>Some paths are visible before their tracking source arrives.</p>
             <div className={styles.achievementCategories}>
               {visibleCategories.map((value) => {
                 const families = progress.families.filter((family) => family.category === value);
-                return families.length ? <section key={value} className={`${styles.achievementCategory} ${styles[`category${value}`]}`} aria-labelledby={`achievement-category-${value}`}>
-                  <h3 id={`achievement-category-${value}`}>{categoryLabels[value]}</h3>
-                  <div className={styles.achievementTracks}>{families.map((family) => <AchievementTrack key={family.key} family={family} />)}</div>
-                </section> : null;
+                return families.length ? <AchievementCategorySection key={value} category={value} families={families} /> : null;
               })}
             </div>
           </section>
@@ -87,41 +84,67 @@ export default function AchievementsPanel({ progress }: { progress: AchievementP
   );
 }
 
+function AchievementCategorySection({ category, families }: { category: AchievementCategory; families: AchievementFamily[] }) {
+  return <section className={styles.achievementCategory} data-category={category} aria-labelledby={`achievement-category-${category}`}>
+    <header className={styles.categoryHeading}><span aria-hidden="true">✦</span><h3 id={`achievement-category-${category}`}>{categoryLabels[category]}</h3><i aria-hidden="true" /></header>
+    <div className={styles.achievementTracks}>{families.map((family) => <AchievementTrack key={family.key} family={family} />)}</div>
+  </section>;
+}
+
 function AchievementTrack({ family }: { family: AchievementFamily }) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const milestones = family.milestones.filter((milestone) => milestone.trackable || milestone.isUnlocked);
+  const milestones = family.milestones;
   const isIndependent = family.key === "rarity-completion";
-  const nextIndex = isIndependent ? -1 : milestones.findIndex((milestone) => !milestone.isCurrentlyComplete);
-  const fill = isIndependent ? 0 : orderedFill(milestones);
-  const active = milestones.find((milestone) => milestone.key === activeKey) ?? null;
+  const isDormant = !milestones.some((milestone) => milestone.trackable || milestone.isUnlocked);
+  const nextIndex = isDormant || isIndependent ? -1 : milestones.findIndex((milestone) => !milestone.isCurrentlyComplete);
+  const fill = isDormant || isIndependent ? 0 : orderedFill(milestones);
   const isComplete = milestones.length > 0 && milestones.every((milestone) => milestone.isUnlocked);
   const trackStyle = { "--track-fill": `${fill}%` } as CSSProperties;
 
-  return (
-    <article className={`${styles.achievementTrack} ${isIndependent ? styles.trackIndependent : ""} ${milestones.length === 1 ? styles.trackSingle : ""}`}>
-      <header className={styles.trackHeading}><div><h4>{family.name}</h4><p>{family.description}</p></div>{isComplete && <span className={styles.trackComplete}>Completed</span>}</header>
-      <div className={styles.trackNodes} style={trackStyle}>
-        {!isIndependent && milestones.length > 1 && <span className={styles.trackLine} aria-hidden="true"><span /></span>}
-        {milestones.map((milestone, index) => {
-          const isCurrentTarget = index === nextIndex;
-          const isActive = activeKey === milestone.key;
-          return <div key={milestone.key} className={styles.milestoneNodeWrap}>
-            <button type="button" className={`${styles.milestoneNode} ${milestoneState(milestone, isCurrentTarget)}`} aria-label={`${family.name}: ${milestone.label}`} aria-expanded={isActive}
-              onMouseEnter={() => setActiveKey(milestone.key)} onFocus={() => setActiveKey(milestone.key)}
-              onClick={() => setActiveKey((current) => current === milestone.key ? null : milestone.key)} onKeyDown={(event) => { if (event.key === "Escape") setActiveKey(null); }}>
-              <span aria-hidden="true">{milestone.isUnlocked ? "✓" : milestone.isCurrentlyComplete ? "•" : ""}</span>
-            </button>
-            <span className={styles.milestoneLabel}>{milestone.label}</span>
-          </div>;
-        })}
-      </div>
-      <p className={styles.trackProgress}>{isComplete ? "All milestones earned" : nextIndex >= 0 ? <><strong>{milestones[nextIndex].current} / {milestones[nextIndex].target}</strong> toward {milestones[nextIndex].label}</> : "Each rarity can be completed independently."}</p>
-      {active && <MilestoneDetails family={family} milestone={active} />}
-    </article>
-  );
+  return <article className={`${styles.achievementTrack} ${isIndependent ? styles.trackIndependent : ""} ${isDormant ? styles.trackDormant : ""} ${milestones.length === 1 ? styles.trackSingle : ""}`}>
+    <header className={styles.trackHeading}><div><h4>{family.name}</h4><p>{family.description}</p></div>{isComplete && <span className={styles.trackComplete}>Completed</span>}</header>
+    <div className={styles.trackNodes} style={trackStyle}>
+      {!isIndependent && milestones.length > 1 && <span className={styles.trackLine} aria-hidden="true"><span /></span>}
+      {milestones.map((milestone, index) => <MilestoneNode
+        key={milestone.key}
+        family={family}
+        milestone={milestone}
+        index={index}
+        total={milestones.length}
+        isTarget={index === nextIndex}
+        isDormant={isDormant}
+        active={activeKey === milestone.key}
+        onActivate={() => setActiveKey((current) => current === milestone.key ? null : milestone.key)}
+        onPreview={() => setActiveKey(milestone.key)}
+        onDismiss={() => setActiveKey(null)}
+      />)}
+    </div>
+    <p className={styles.trackProgress}>{isDormant ? "Tracking coming later" : isComplete ? "All milestones earned" : nextIndex >= 0 ? <><strong>{milestones[nextIndex].current} / {milestones[nextIndex].target}</strong> toward {milestones[nextIndex].label}</> : "Each rarity can be completed independently."}</p>
+  </article>;
 }
 
-function MilestoneDetails({ family, milestone }: { family: AchievementFamily; milestone: AchievementMilestone }) {
-  const state = milestone.isUnlocked ? "Unlocked" : milestone.isCurrentlyComplete ? "Currently eligible — sync badges to record it" : "Locked";
-  return <aside className={styles.milestoneDetails} aria-live="polite"><p>{family.name} <span>—</span> {milestone.label}</p><strong>{milestone.current} / {milestone.target}</strong><span>{state}</span>{milestone.unlockedAt && <small>Unlocked {formatDate(milestone.unlockedAt)}</small>}</aside>;
+function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, active, onActivate, onPreview, onDismiss }: {
+  family: AchievementFamily; milestone: AchievementMilestone; index: number; total: number; isTarget: boolean; isDormant: boolean; active: boolean; onActivate: () => void; onPreview: () => void; onDismiss: () => void;
+}) {
+  const detailId = `achievement-${milestone.key}`;
+  const position = index === 0 ? styles.popoverStart : index === total - 1 ? styles.popoverEnd : styles.popoverCenter;
+  return <div className={styles.milestoneNodeWrap} data-rarity={family.key === "rarity-completion" ? milestone.label : undefined}>
+    <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={`${family.name}: ${milestone.label}`} aria-expanded={active} aria-controls={active ? detailId : undefined}
+      onMouseEnter={onPreview} onFocus={onPreview} onClick={onActivate} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
+      <span aria-hidden="true">{milestone.isUnlocked ? "✓" : milestone.isCurrentlyComplete && !isDormant ? "•" : ""}</span>
+    </button>
+    <span className={styles.milestoneLabel}>{milestone.label}</span>
+    {active && <MilestonePopover id={detailId} family={family} milestone={milestone} isDormant={isDormant} position={position} />}
+  </div>;
+}
+
+function MilestonePopover({ id, family, milestone, isDormant, position }: { id: string; family: AchievementFamily; milestone: AchievementMilestone; isDormant: boolean; position: string }) {
+  const state = isDormant ? "Tracking coming later" : milestone.isUnlocked ? "Unlocked" : milestone.isCurrentlyComplete ? "Threshold reached — awaiting badge sync" : "In progress";
+  return <aside id={id} role="status" className={`${styles.milestonePopover} ${position}`}>
+    <p>{family.name} <span>·</span> {milestone.label}</p>
+    <strong>{family.description}</strong>
+    {!isDormant && <small>{milestone.current} / {milestone.target}</small>}
+    <em>{state}</em>
+    {milestone.unlockedAt && <time dateTime={milestone.unlockedAt}>Unlocked {formatDate(milestone.unlockedAt)}</time>}
+  </aside>;
 }

@@ -199,7 +199,6 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
 
   const families = [...byFamily.values()]
     .map((family) => ({ ...family, milestones: family.milestones.sort((a, b) => definitions.find((definition) => definition.key === a.key)!.order - definitions.find((definition) => definition.key === b.key)!.order) }))
-    .filter((family) => family.milestones.some((milestone) => milestone.trackable || milestone.isUnlocked))
     .sort((a, b) => a.order - b.order);
   const visibleMilestones = families.flatMap((family) => family.milestones.filter((milestone) => milestone.trackable || milestone.isUnlocked));
   const unlocked = visibleMilestones.filter((milestone) => milestone.isUnlocked);
