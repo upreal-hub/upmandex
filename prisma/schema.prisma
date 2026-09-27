@@ -62,8 +62,20 @@ model Person {
   createdUpmans       Upman[]       @relation("UpmanCreatorPerson")
   representedUpmans   Upman[]       @relation("UpmanRepresentedPerson")
   activityLogs        ActivityLog[] @relation("ActivityPerson")
+  achievements        PersonAchievement[]
 
   @@index([displayName])
+}
+
+model PersonAchievement {
+  id             String   @id @default(cuid())
+  personId       String
+  achievementKey String
+  unlockedAt     DateTime @default(now())
+  person         Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, achievementKey])
+  @@index([personId, unlockedAt])
 }
 
 model Upman {

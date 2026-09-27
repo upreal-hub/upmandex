@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { getAchievementProgress } from "@/lib/achievements";
 
+import AchievementsPanel from "./AchievementsPanel";
 import CreatedUpmansRail from "./CreatedUpmansRail";
 import styles from "./person.module.css";
 
@@ -46,6 +48,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   if (!person?.isPublic) notFound();
 
+  const achievementProgress = await getAchievementProgress(id);
+
   const hasRepresented = person.representedUpmans.length > 0;
   const hasCreated = person.createdUpmans.length > 0;
 
@@ -59,6 +63,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           {person.user?.twitchLogin && <TwitchIdentity login={person.user.twitchLogin} />}
         </div>
       </section>
+
+      {achievementProgress && <AchievementsPanel progress={achievementProgress} />}
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>

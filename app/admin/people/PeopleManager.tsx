@@ -87,6 +87,26 @@ function PersonEditor({ person, users, onClose }: PersonEditorProps) {
 
 export default function PeopleManager({ people, users }: { people: ManagedPerson[]; users: PersonUserOption[] }) {
   const [editingPerson, setEditingPerson] = useState<ManagedPerson | null | undefined>(undefined);
+  const [syncingPersonId, setSyncingPersonId] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  async function syncAchievements(person: ManagedPerson) {
+    setSyncMessage(null);
+    setSyncingPersonId(person.id);
+    try {
+      const response = await fetch(`/api/admin-people/${person.id}/achievements`, { method: "POST" });
+      const data = (await response.json()) as { success?: boolean; error?: string; progress?: { unlocked: number; available: number } };
+      if (!response.ok || !data.success || !data.progress) throw new Error(data.error ?? "Unable to sync achievements.");
+      setSyncMessage(`${person.displayName}: ${data.progress.unlocked} / ${data.progress.available} achievements unlocked.`);
+      router.refresh();
+    } catch (error) {
+      setSyncMessage(error instanceof Error ? error.message : "Unable to sync achievements.");
+    } finally {
+      setSyncingPersonId(null);
+    }
+  }
+
+  const router = useRouter();
 
   return (
     <main>
@@ -98,13 +118,14 @@ export default function PeopleManager({ people, users }: { people: ManagedPerson
         </div>
         <button type="button" onClick={() => setEditingPerson(null)} className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-600">+ Create Person</button>
       </header>
+      {syncMessage && <p role="status" className="mt-5 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-bold text-sky-800">{syncMessage}</p>}
       <section className="mt-6 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm">
-        <div className="hidden grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_100px] gap-4 border-b border-sky-100 bg-sky-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-sky-600 lg:grid"><span>Person</span><span>Linked User</span><span>Created</span><span>Represented</span><span className="text-right">Action</span></div>
-        {people.length ? <div className="divide-y divide-sky-100">{people.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_100px] lg:gap-4">
+        <div className="hidden grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_210px] gap-4 border-b border-sky-100 bg-sky-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-sky-600 lg:grid"><span>Person</span><span>Linked User</span><span>Created</span><span>Represented</span><span className="text-right">Actions</span></div>
+        {people.length ? <div className="divide-y divide-sky-100">{people.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_210px] lg:gap-4">
           <div><p className="font-black text-sky-950">{person.displayName}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${person.isPublic ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{person.isPublic ? "Public" : "Private"}</span></div>
           <p className="text-sm font-semibold text-sky-800">{person.user ? `${person.user.displayName} (@${person.user.twitchLogin})` : "No linked User"}</p>
           <p className="text-sm font-black text-sky-900">{person.createdUpmansCount}</p><p className="text-sm font-black text-sky-900">{person.representedUpmansCount}</p>
-          <button type="button" onClick={() => setEditingPerson(person)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50 lg:justify-self-end">Edit</button>
+          <div className="flex gap-2 lg:justify-self-end"><button type="button" onClick={() => syncAchievements(person)} disabled={syncingPersonId === person.id} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:opacity-60">{syncingPersonId === person.id ? "Syncing…" : "Sync badges"}</button><button type="button" onClick={() => setEditingPerson(person)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Edit</button></div>
         </article>)}</div> : <div className="px-6 py-14 text-center text-sky-700"><p className="text-xl font-black text-sky-950">No People yet</p><p className="mt-2">Create the first canonical identity when you are ready.</p></div>}
       </section>
       {editingPerson !== undefined && <PersonEditor key={editingPerson?.id ?? "new"} person={editingPerson} users={users} onClose={() => setEditingPerson(undefined)} />}
