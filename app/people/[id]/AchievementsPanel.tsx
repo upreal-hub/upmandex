@@ -31,6 +31,11 @@ function nodeState(milestone: AchievementMilestone, isTarget: boolean, isDormant
   return isTarget ? styles.nodeTarget : styles.nodeLocked;
 }
 
+function milestoneAriaLabel(family: AchievementFamily, milestone: AchievementMilestone, isDormant: boolean) {
+  const state = isDormant ? "tracking coming later" : milestone.isUnlocked ? "unlocked" : milestone.isCurrentlyComplete ? "ready to record" : "in progress";
+  return `${family.name}: ${milestone.label}, ${state}`;
+}
+
 function progressText(family: AchievementFamily, milestone: AchievementMilestone | undefined, isDormant: boolean, isComplete: boolean) {
   if (isDormant) return "Tracking coming later";
   if (family.key === "lucky-one") return isComplete ? "Legendary pulled" : "Legendary not pulled yet";
@@ -163,8 +168,8 @@ function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, a
   const preview = () => { if (!pinned) onPreview(milestone.key); };
   const leave = () => { if (!pinned) onPreview(null); };
   return <div className={styles.milestoneNodeWrap} data-milestone-interaction data-rarity={family.key === "rarity-completion" ? milestone.label : undefined} onMouseEnter={preview} onMouseLeave={leave}>
-    <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={`${family.name}: ${milestone.label}`} aria-expanded={active} aria-controls={active ? detailId : undefined} onFocus={preview} onBlur={leave} onClick={() => { if (pinned) onDismiss(); else { onPreview(null); onPin(milestone.key); } }} onKeyDown={(event) => { if (event.key === "Escape" && active) { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
-      <span aria-hidden="true">{milestone.isUnlocked ? "✓" : milestone.isCurrentlyComplete && !isDormant ? "•" : ""}</span>
+    <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={milestoneAriaLabel(family, milestone, isDormant)} aria-expanded={active} aria-controls={active ? detailId : undefined} onFocus={preview} onBlur={leave} onClick={() => { if (pinned) onDismiss(); else { onPreview(null); onPin(milestone.key); } }} onKeyDown={(event) => { if (event.key === "Escape" && active) { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
+      <span aria-hidden="true">{milestone.isCurrentlyComplete && !milestone.isUnlocked && !isDormant ? "•" : ""}</span>
     </button>
     <span className={styles.milestoneLabel}>{milestone.label}</span>
     {active && <MilestonePopover id={detailId} family={family} milestone={milestone} isDormant={isDormant} position={position} />}
