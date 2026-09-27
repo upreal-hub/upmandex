@@ -56,6 +56,8 @@ model Person {
   displayName         String
   userId              String?       @unique
   isPublic            Boolean       @default(true)
+  equippedTitleAchievementKey String?
+  featuredAchievementKeys     String[]     @default([])
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)

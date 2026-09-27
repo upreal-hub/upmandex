@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import type { AchievementCategory, AchievementFamily, AchievementMilestone, AchievementProgress } from "@/lib/achievements";
 
 import styles from "./person.module.css";
+import AchievementCustomization, { type DisplayAchievement } from "./AchievementCustomization";
 
 const categories: AchievementCategory[] = ["COLLECTION", "PULLS", "CREATION", "ART", "GARTIC", "STREAM", "EVENTS"];
 const categoryLabels: Record<AchievementCategory, string> = { COLLECTION: "Collection", PULLS: "Pulls", CREATION: "Creation", ART: "Art", GARTIC: "Gartic", STREAM: "Stream", EVENTS: "Events" };
@@ -59,7 +60,7 @@ function popoverContent(family: AchievementFamily, milestone: AchievementMilesto
   return { title: family.name.toUpperCase(), copy: family.description, progress: `${milestone.current} / ${milestone.target}` };
 }
 
-export default function AchievementsPanel({ progress }: { progress: AchievementProgress }) {
+export default function AchievementsPanel({ progress, personId, isOwner, unlockedAchievements, featuredAchievements, equippedTitleAchievementKey }: { progress: AchievementProgress; personId: string; isOwner: boolean; unlockedAchievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; equippedTitleAchievementKey: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
   const [pinnedMilestone, setPinnedMilestone] = useState<string | null>(null);
@@ -107,9 +108,10 @@ export default function AchievementsPanel({ progress }: { progress: AchievementP
   return (
     <section className={styles.achievementsSummary} aria-labelledby="achievements-summary-heading">
       <div><p className={styles.eyebrow}>ACHIEVEMENTS</p><h2 id="achievements-summary-heading" className={styles.achievementsTitle}>{progress.summary.unlocked} / {progress.summary.available} unlocked</h2></div>
-      <div className={styles.featuredBadges} aria-label="Recently unlocked achievements">
-        {progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key} title={badge.key}>✦ {badge.label}</span>) : <span className={styles.noBadges}>No milestones unlocked yet</span>}
+      <div className={styles.featuredBadges} aria-label="Featured achievements">
+        {featuredAchievements.length ? featuredAchievements.map((badge) => <span key={badge.key} data-category={badge.category}>✓ {badge.name} · {badge.label}</span>) : progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key}>✦ {badge.label}</span>) : <span className={styles.noBadges}>No milestones unlocked yet</span>}
       </div>
+      {isOwner && <AchievementCustomization personId={personId} achievements={unlockedAchievements} equippedTitleAchievementKey={equippedTitleAchievementKey} featuredAchievementKeys={featuredAchievements.map((achievement) => achievement.key)} />}
       <button ref={openButton} type="button" className={styles.achievementsButton} onClick={() => setIsOpen(true)}>View all</button>
       {isOpen && typeof document !== "undefined" && createPortal(
         <div className={styles.achievementsOverlay} onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>

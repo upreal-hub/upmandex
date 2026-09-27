@@ -1,0 +1,18 @@
+"use client";
+
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import styles from "./person.module.css";
+
+export type DisplayAchievement = { key: string; family: string; name: string; label: string; category: string };
+
+export default function AchievementCustomization({ personId, achievements, equippedTitleAchievementKey, featuredAchievementKeys }: { personId: string; achievements: DisplayAchievement[]; equippedTitleAchievementKey: string | null; featuredAchievementKeys: string[] }) {
+  const router = useRouter(); const [open, setOpen] = useState(false); const [title, setTitle] = useState(equippedTitleAchievementKey); const [featured, setFeatured] = useState(featuredAchievementKeys); const [error, setError] = useState<string | null>(null); const [saving, setSaving] = useState(false);
+  const titleChoices = useMemo(() => [...achievements].reverse().filter((item, index, items) => items.findIndex((candidate) => candidate.family === item.family) === index), [achievements]);
+  useEffect(() => { if (!open) return; const close = (event: KeyboardEvent) => event.key === "Escape" && !saving && setOpen(false); window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [open, saving]);
+  function toggle(key: string) { setFeatured((current) => current.includes(key) ? current.filter((item) => item !== key) : current.length < 3 ? [...current, key] : current); }
+  async function save() { setSaving(true); setError(null); const response = await fetch(`/api/people/${personId}/achievements`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ equippedTitleAchievementKey: title, featuredAchievementKeys: featured }) }); const data = await response.json().catch(() => null); setSaving(false); if (!response.ok) return setError(data?.error ?? "Unable to save your choices"); setOpen(false); router.refresh(); }
+  return <><button type="button" className={styles.customizeButton} onClick={() => setOpen(true)}>Customize achievements</button>{open && createPortal(<div className={styles.customizationOverlay} onMouseDown={(event) => event.target === event.currentTarget && !saving && setOpen(false)}><section className={styles.customizationDialog} role="dialog" aria-modal="true" aria-labelledby="customize-achievements-title"><header><div><p className={styles.eyebrow}>YOUR PROFILE</p><h2 id="customize-achievements-title">Customize achievements</h2></div><button type="button" onClick={() => setOpen(false)} disabled={saving}>Close</button></header><fieldset><legend>Title</legend><label><input type="radio" checked={title === null} onChange={() => setTitle(null)} /> None</label>{titleChoices.map((item) => <label key={item.key}><input type="radio" checked={title === item.key} onChange={() => setTitle(item.key)} /> {item.name} · {item.label}</label>)}</fieldset><fieldset><legend>Featured achievements <span>{featured.length}/3</span></legend>{achievements.map((item) => <label key={item.key}><input type="checkbox" checked={featured.includes(item.key)} disabled={!featured.includes(item.key) && featured.length >= 3} onChange={() => toggle(item.key)} /> ✓ {item.name} · {item.label}</label>)}</fieldset>{error && <p className={styles.customizationError} role="alert">{error}</p>}<footer><button type="button" onClick={() => setOpen(false)} disabled={saving}>Cancel</button><button type="button" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save choices"}</button></footer></section></div>, document.body)}</>;
+}

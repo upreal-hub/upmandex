@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getAchievementProgress } from "@/lib/achievements";
+import { auth } from "@/auth";
+import { normalizeTwitchLogin } from "@/lib/validation";
 
 import AchievementsPanel from "./AchievementsPanel";
 import CreatedUpmansRail from "./CreatedUpmansRail";
@@ -32,8 +34,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   const person = await prisma.person.findUnique({
     where: { id },
     select: {
+      id: true,
+      userId: true,
       displayName: true,
       isPublic: true,
+      equippedTitleAchievementKey: true,
+      featuredAchievementKeys: true,
       user: { select: { avatar: true, twitchLogin: true } },
       representedUpmans: {
         orderBy: [{ name: "asc" }, { slug: "asc" }],
@@ -49,6 +55,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   if (!person?.isPublic) notFound();
 
   const achievementProgress = await getAchievementProgress(id);
+  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
+  const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
+  const isOwner = Boolean(currentUser && person.userId === currentUser.id);
+  const unlockedAchievements = achievementProgress?.families.flatMap((family) => family.milestones.filter((milestone) => milestone.isUnlocked).map((milestone) => ({ key: milestone.key, family: family.key, name: family.name, label: milestone.label, category: family.category }))) ?? [];
+  const title = unlockedAchievements.find((achievement) => achievement.key === person.equippedTitleAchievementKey) ?? null;
+  const featured = person.featuredAchievementKeys.map((key) => unlockedAchievements.find((achievement) => achievement.key === key)).filter((achievement): achievement is (typeof unlockedAchievements)[number] => Boolean(achievement));
 
   const hasRepresented = person.representedUpmans.length > 0;
   const hasCreated = person.createdUpmans.length > 0;
@@ -60,11 +72,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className={styles.headerCopy}>
           <p className={styles.eyebrow}>PERSON</p>
           <h1 id="person-name" className={styles.name}>{person.displayName}</h1>
+          {title && <p className={styles.equippedTitle} data-category={title.category}>✓ {title.name} <span>· {title.label}</span></p>}
           {person.user?.twitchLogin && <TwitchIdentity login={person.user.twitchLogin} />}
         </div>
       </section>
 
-      {achievementProgress && <AchievementsPanel progress={achievementProgress} />}
+      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} unlockedAchievements={unlockedAchievements} featuredAchievements={featured} equippedTitleAchievementKey={person.equippedTitleAchievementKey} />}
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>

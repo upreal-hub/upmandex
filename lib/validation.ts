@@ -271,6 +271,23 @@ export function validatePersonPayload(value: unknown):
   return { success: true, data: { displayName, userId, isPublic } };
 }
 
+export function validateAchievementCustomizationPayload(value: unknown):
+  | { success: true; data: { equippedTitleAchievementKey: string | null; featuredAchievementKeys: string[] } }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return { success: false, error: "Invalid achievement customization" };
+  const payload = value as Record<string, unknown>;
+  const title = payload.equippedTitleAchievementKey;
+  const featured = payload.featuredAchievementKeys;
+  if ((title !== null && typeof title !== "string") || !Array.isArray(featured) || featured.some((key) => typeof key !== "string" || !key || key.length > 120)) {
+    return { success: false, error: "Invalid achievement customization" };
+  }
+  const featuredAchievementKeys = featured as string[];
+  if (featuredAchievementKeys.length > 3 || new Set(featuredAchievementKeys).size !== featuredAchievementKeys.length) {
+    return { success: false, error: "Choose up to three different achievements" };
+  }
+  return { success: true, data: { equippedTitleAchievementKey: title, featuredAchievementKeys } };
+}
+
 export function validateInventoryPayload(value: unknown):
   | { success: true; data: { viewer: string; slug: string } }
   | { success: false; error: string } {
