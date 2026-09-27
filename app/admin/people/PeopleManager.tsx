@@ -8,21 +8,35 @@ import type { ManagedPerson, PersonUserOption } from "./types";
 
 type AccountAction = "link" | "change" | "unlink";
 
-type PersonEditorProps = {
-  person: ManagedPerson | null;
-  users: PersonUserOption[];
-  onClose: () => void;
-};
-
 function UserAvatar({ user }: { user: PersonUserOption }) {
-  return (
-    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sky-100 font-black text-sky-700">
-      {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.displayName.trim().charAt(0).toUpperCase() || "?"}
-    </span>
-  );
+  return <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sky-100 font-black text-sky-700">{user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.displayName.trim().charAt(0).toUpperCase() || "?"}</span>;
 }
 
-function PersonEditor({ person, users, onClose }: PersonEditorProps) {
+function PersonAvatar({ person }: { person: ManagedPerson }) {
+  return person.user ? <UserAvatar user={person.user} /> : <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-100 font-black text-sky-700">☁</span>;
+}
+
+function useEscapeToClose(onClose: () => void, isPending: boolean) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isPending, onClose]);
+}
+
+function Dialog({ children, onClose, isPending, labelledBy, size = "max-w-2xl" }: { children: React.ReactNode; onClose: () => void; isPending: boolean; labelledBy: string; size?: string }) {
+  useEscapeToClose(onClose, isPending);
+  if (typeof document === "undefined") return null;
+  return createPortal(<div role="presentation" onClick={() => !isPending && onClose()} className="fixed inset-0 z-50 flex items-center justify-center bg-sky-950/30 p-3 backdrop-blur-sm sm:p-6"><section role="dialog" aria-modal="true" aria-labelledby={labelledBy} onClick={(event) => event.stopPropagation()} className={"max-h-[calc(100dvh-1.5rem)] w-full overflow-y-auto rounded-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-7 " + size}>{children}</section></div>, document.body);
+}
+
+function PersonFacts({ person }: { person: ManagedPerson }) {
+  return <dl className="mt-3 grid grid-cols-2 gap-2 text-sm text-sky-800 sm:grid-cols-3"><div><dt className="font-bold text-sky-500">Created Upmans</dt><dd className="font-black">{person.createdUpmansCount}</dd></div><div><dt className="font-bold text-sky-500">Represented Upmans</dt><dd className="font-black">{person.representedUpmansCount}</dd></div><div><dt className="font-bold text-sky-500">Achievements</dt><dd className="font-black">{person.achievementsCount}</dd></div><div><dt className="font-bold text-sky-500">Equipped title</dt><dd className="font-black">{person.hasEquippedTitle ? "Yes" : "No"}</dd></div><div><dt className="font-bold text-sky-500">Featured</dt><dd className="font-black">{person.featuredAchievementsCount}</dd></div><div><dt className="font-bold text-sky-500">Linked User</dt><dd className="font-black">{person.user ? "Yes" : "No"}</dd></div></dl>;
+}
+
+function PersonEditor({ person, users, onClose }: { person: ManagedPerson | null; users: PersonUserOption[]; onClose: () => void }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(person?.displayName ?? "");
   const [userId, setUserId] = useState(person?.userId ?? "");
@@ -30,52 +44,20 @@ function PersonEditor({ person, users, onClose }: PersonEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [, startTransition] = useTransition();
-
-  if (typeof document === "undefined") return null;
-
   async function save(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSaving(true);
+    event.preventDefault(); setError(null); setIsSaving(true);
     try {
-      const response = await fetch(person ? `/api/admin-people/${person.id}` : "/api/admin-people", {
-        method: person ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, userId: userId || null, isPublic }),
-      });
+      const response = await fetch(person ? "/api/admin-people/" + person.id : "/api/admin-people", { method: person ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ displayName, userId: userId || null, isPublic }) });
       const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "Unable to save this Person.");
-        return;
-      }
-      onClose();
-      startTransition(() => router.refresh());
-    } catch {
-      setError("Unable to save this Person. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+      if (!response.ok) { setError(data.error ?? "Unable to save this Person."); return; }
+      onClose(); startTransition(() => router.refresh());
+    } catch { setError("Unable to save this Person. Please try again."); } finally { setIsSaving(false); }
   }
-
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-950/30 p-3 backdrop-blur-sm sm:p-6" onClick={() => !isSaving && onClose()} role="presentation">
-      <section role="dialog" aria-modal="true" aria-labelledby="person-editor-title" onClick={(event) => event.stopPropagation()} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-7">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Person</p><h2 id="person-editor-title" className="mt-1 text-3xl font-black text-sky-950">{person ? "Edit Person" : "Create Person"}</h2></div><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Close</button></div>
-        <form onSubmit={save} className="mt-6 grid gap-4">
-          <label className="grid gap-2 text-sm font-bold text-sky-900">Display name<input required maxLength={120} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label>
-          <label className="grid gap-2 text-sm font-bold text-sky-900">Linked User <span className="font-medium text-sky-500">Optional</span><select value={userId} onChange={(event) => setUserId(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"><option value="">None</option>{users.map((user) => <option key={user.id} value={user.id} disabled={Boolean(user.linkedPerson && user.linkedPerson.id !== person?.id)}>{user.displayName} (@{user.twitchLogin}){user.linkedPerson && user.linkedPerson.id !== person?.id ? ` — linked to ${user.linkedPerson.displayName}` : ""}</option>)}</select></label>
-          <label className="flex items-center gap-3 rounded-xl bg-sky-50 px-3 py-3 text-sm font-bold text-sky-900"><input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="h-4 w-4 accent-sky-500" />Public Person</label>
-          {error && <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}
-          <div className="mt-2 flex justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button><button type="submit" disabled={isSaving} className="rounded-xl bg-sky-500 px-4 py-2 font-black text-white disabled:opacity-60">{isSaving ? "Saving…" : person ? "Save changes" : "Create Person"}</button></div>
-        </form>
-      </section>
-    </div>,
-    document.body
-  );
+  return <Dialog onClose={onClose} isPending={isSaving} labelledBy="person-editor-title" size="max-w-xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Person</p><h2 id="person-editor-title" className="mt-1 text-3xl font-black text-sky-950">{person ? "Edit Person" : "Create Person"}</h2></div><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Close</button></div><form onSubmit={save} className="mt-6 grid gap-4"><label className="grid gap-2 text-sm font-bold text-sky-900">Display name<input required maxLength={120} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><label className="grid gap-2 text-sm font-bold text-sky-900">Linked User <span className="font-medium text-sky-500">Optional</span><select value={userId} onChange={(event) => setUserId(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"><option value="">None</option>{users.map((user) => <option key={user.id} value={user.id} disabled={Boolean(user.linkedPerson && user.linkedPerson.id !== person?.id)}>{user.displayName} (@{user.twitchLogin}){user.linkedPerson && user.linkedPerson.id !== person?.id ? " — linked to " + user.linkedPerson.displayName : ""}</option>)}</select></label><label className="flex items-center gap-3 rounded-xl bg-sky-50 px-3 py-3 text-sm font-bold text-sky-900"><input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="h-4 w-4 accent-sky-500" />Public Person</label>{error && <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}<div className="mt-2 flex justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button><button type="submit" disabled={isSaving} className="rounded-xl bg-sky-500 px-4 py-2 font-black text-white disabled:opacity-60">{isSaving ? "Saving…" : person ? "Save changes" : "Create Person"}</button></div></form></Dialog>;
 }
 
-function AccountDialog({ person, users, initialAction, onClose, onSuccess }: { person: ManagedPerson; users: PersonUserOption[]; initialAction: AccountAction; onClose: () => void; onSuccess: (message: string) => void }) {
-  const [action, setAction] = useState(initialAction);
+function AccountDialog({ person, users, onClose, onSuccess }: { person: ManagedPerson; users: PersonUserOption[]; onClose: () => void; onSuccess: (message: string) => void }) {
+  const [action, setAction] = useState<AccountAction>(person.user ? "change" : "link");
   const [query, setQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -83,91 +65,84 @@ function AccountDialog({ person, users, initialAction, onClose, onSuccess }: { p
   const [, startTransition] = useTransition();
   const router = useRouter();
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
-  const filteredUsers = useMemo(() => {
-    const value = query.trim().toLowerCase();
-    return users.filter((user) => !value || `${user.displayName} ${user.twitchLogin}`.toLowerCase().includes(value));
-  }, [query, users]);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isSaving) onClose();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isSaving, onClose]);
-
+  const filteredUsers = useMemo(() => { const value = query.trim().toLowerCase(); return users.filter((user) => !value || (user.displayName + " " + user.twitchLogin).toLowerCase().includes(value)); }, [query, users]);
+  const unlink = action === "unlink";
   async function submit() {
-    if (action !== "unlink" && !selectedUser) {
-      setError("Select an available Twitch User first.");
-      return;
-    }
-    setError(null);
-    setIsSaving(true);
+    if (!unlink && !selectedUser) { setError("Select an available Twitch User first."); return; }
+    setError(null); setIsSaving(true);
     try {
-      const response = await fetch(`/api/admin-people/${person.id}/link`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: action === "unlink" ? null : selectedUser?.id }) });
+      const response = await fetch("/api/admin-people/" + person.id + "/link", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: unlink ? null : selectedUser?.id }) });
       const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "Unable to update the linked User.");
-        return;
-      }
-      const message = action === "link" ? "Twitch User linked." : action === "change" ? "Linked Twitch User changed." : "Twitch User unlinked.";
-      onSuccess(message);
-      startTransition(() => router.refresh());
-    } catch {
-      setError("Unable to update the linked User. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+      if (!response.ok) { setError(data.error ?? "Unable to update the linked User."); return; }
+      onSuccess(unlink ? "Twitch User unlinked." : action === "change" ? "Linked Twitch User changed." : "Twitch User linked."); startTransition(() => router.refresh());
+    } catch { setError("Unable to update the linked User. Please try again."); } finally { setIsSaving(false); }
   }
+  const title = unlink ? "Unlink Twitch/User" : action === "change" ? "Change Twitch/User" : "Link Twitch/User";
+  return <Dialog onClose={onClose} isPending={isSaving} labelledBy="person-account-title"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Person account</p><h2 id="person-account-title" className="mt-1 text-3xl font-black text-sky-950">{title}</h2><p className="mt-2 text-sm text-sky-700">Person: <strong>{person.displayName}</strong></p></div><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Close</button></div>{person.user && <section className="mt-5 rounded-2xl border border-sky-100 bg-sky-50 p-4"><p className="text-xs font-black uppercase tracking-wide text-sky-500">Current</p><div className="mt-2 flex items-center gap-3"><UserAvatar user={person.user} /><p className="font-black text-sky-950">{person.user.displayName} <span className="font-semibold text-sky-600">(@{person.user.twitchLogin})</span></p></div></section>}{person.user && !unlink && <div className="mt-5 flex gap-2"><button type="button" onClick={() => { setAction("change"); setError(null); }} className="rounded-xl bg-sky-500 px-3 py-2 text-sm font-black text-white">Change User</button><button type="button" onClick={() => { setAction("unlink"); setError(null); }} className="rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-black text-rose-700">Unlink User</button></div>}{unlink ? <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-black">This removes the authenticated ownership/Twitch identity from this Person.</p><ul className="mt-2 list-disc space-y-1 pl-5"><li>The Person remains.</li><li>The User and its Inventory remain unchanged.</li><li>Created and represented Upman relationships remain unchanged.</li></ul></section> : <><p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">{action === "change" ? "Changing the linked User changes which authenticated account controls this Person. Inventory stays with each User and is never moved." : "Choose an existing Twitch User to link. No User or Twitch identity will be created."}</p><label className="mt-5 grid gap-2 text-sm font-bold text-sky-900">Find an existing Twitch User<input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Twitch login or display name" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-sky-100 bg-white">{filteredUsers.map((user) => { const occupied = Boolean(user.linkedPerson && user.linkedPerson.id !== person.id); const current = user.id === person.userId; const state = occupied ? "Linked to " + user.linkedPerson?.displayName : current ? "Current" : "Available"; return <button type="button" key={user.id} disabled={occupied || current} onClick={() => { setSelectedUserId(user.id); setError(null); }} className={"flex w-full items-center gap-3 border-b border-sky-50 px-3 py-3 text-left text-sm last:border-b-0 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 " + (selectedUserId === user.id ? "bg-cyan-50" : "hover:bg-sky-50")}><UserAvatar user={user} /><span className="min-w-0 flex-1"><strong className="block truncate text-sky-950">{user.displayName}</strong><span className="block truncate text-sky-600">@{user.twitchLogin}</span></span><span className={"rounded-full px-2 py-1 text-xs font-black " + (occupied ? "bg-slate-200 text-slate-700" : current ? "bg-cyan-100 text-cyan-800" : "bg-emerald-100 text-emerald-800")}>{state}</span></button>; })}{filteredUsers.length === 0 && <p className="px-4 py-8 text-center text-sm text-sky-700">No Users match this search.</p>}</div>{selectedUser && <section className="mt-5 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-sky-900"><p className="text-xs font-black uppercase tracking-wide text-cyan-700">New</p><p className="mt-1 font-black">{selectedUser.displayName} (@{selectedUser.twitchLogin})</p></section>}</>}{error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}<div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button><button type="button" disabled={isSaving || (!unlink && !selectedUser)} onClick={submit} className={"rounded-xl px-4 py-2 font-black text-white disabled:opacity-60 " + (unlink ? "bg-rose-600 hover:bg-rose-700" : "bg-sky-500 hover:bg-sky-600")}>{isSaving ? "Saving…" : unlink ? "Unlink User" : action === "change" ? "Change User" : "Link User"}</button></div></Dialog>;
+}
 
-  if (typeof document === "undefined") return null;
-  const isUnlink = action === "unlink";
-  const title = isUnlink ? "Unlink Twitch/User" : action === "change" ? "Change Twitch/User" : "Link Twitch/User";
+function DeletePersonDialog({ person, onClose, onSuccess }: { person: ManagedPerson; onClose: () => void; onSuccess: () => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const blocked = person.createdUpmansCount > 0 || person.representedUpmansCount > 0 || person.achievementsCount > 0 || person.hasEquippedTitle || person.featuredAchievementsCount > 0;
+  async function remove() {
+    setError(null); setIsDeleting(true);
+    try {
+      const response = await fetch("/api/admin-people/" + person.id + "/delete", { method: "DELETE" });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) { setError(data.error ?? "Unable to delete this Person."); return; }
+      onSuccess(); startTransition(() => router.refresh());
+    } catch { setError("Unable to delete this Person. Please try again."); } finally { setIsDeleting(false); }
+  }
+  return <Dialog onClose={onClose} isPending={isDeleting} labelledBy="delete-person-title"><p className="text-xs font-black uppercase tracking-[0.2em] text-rose-600">Protected deletion</p><h2 id="delete-person-title" className="mt-1 text-3xl font-black text-sky-950">Delete Person</h2><p className="mt-3 text-sm text-sky-700">Person: <strong>{person.displayName}</strong></p><section className="mt-5 rounded-2xl border border-sky-100 bg-sky-50 p-4"><p className="text-xs font-black uppercase tracking-wide text-sky-500">Dependencies</p><PersonFacts person={person} /></section>{blocked ? <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-black">Cannot delete this Person safely.</p><p className="mt-2">This Person still has created or represented Upmans, achievements, or profile achievement customization. Merge or reassign those relationships first.</p></section> : <section className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p className="font-black">This Person record will be deleted.</p><p className="mt-2">Any linked User account is not deleted. Its Inventory is not deleted.</p></section>}{error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}<div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={isDeleting} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Close</button>{!blocked && <button type="button" disabled={isDeleting} onClick={remove} className="rounded-xl bg-rose-600 px-4 py-2 font-black text-white hover:bg-rose-700 disabled:opacity-60">{isDeleting ? "Deleting…" : "Delete Person"}</button>}</div></Dialog>;
+}
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-950/30 p-3 backdrop-blur-sm sm:p-6" role="presentation" onClick={() => !isSaving && onClose()}>
-      <section role="dialog" aria-modal="true" aria-labelledby="person-account-title" onClick={(event) => event.stopPropagation()} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-7">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Person account</p><h2 id="person-account-title" className="mt-1 text-3xl font-black text-sky-950">{title}</h2><p className="mt-2 text-sm text-sky-700">Person: <strong>{person.displayName}</strong></p></div><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Close</button></div>
-        {person.user && <section className="mt-5 rounded-2xl border border-sky-100 bg-sky-50 p-4"><p className="text-xs font-black uppercase tracking-wide text-sky-500">Current</p><div className="mt-2 flex items-center gap-3"><UserAvatar user={person.user} /><p className="font-black text-sky-950">{person.user.displayName} <span className="font-semibold text-sky-600">(@{person.user.twitchLogin})</span></p></div></section>}
-        {person.user && !isUnlink && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => { setAction("change"); setError(null); }} className={`rounded-xl px-3 py-2 text-sm font-black ${action === "change" ? "bg-sky-500 text-white" : "border border-sky-200 bg-white text-sky-800"}`}>Change User</button><button type="button" onClick={() => { setAction("unlink"); setError(null); }} className="rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-black text-rose-700">Unlink User</button></div>}
-        {isUnlink ? <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-black">This removes the authenticated ownership/Twitch identity from this Person.</p><ul className="mt-2 list-disc space-y-1 pl-5"><li>The Person remains.</li><li>The User and its Inventory remain unchanged.</li><li>Created and represented Upman relationships remain unchanged.</li></ul></section> : <><p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">{action === "change" ? "Changing the linked User changes which authenticated account controls this Person. Inventory stays with each User and is never moved." : "Choose an existing Twitch User to link. No User or Twitch identity will be created."}</p><div className="mt-5 grid gap-3"><label className="grid gap-2 text-sm font-bold text-sky-900">Find an existing Twitch User<input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Twitch login or display name" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><div className="max-h-64 overflow-y-auto rounded-2xl border border-sky-100 bg-white">{filteredUsers.map((user) => { const occupied = Boolean(user.linkedPerson && user.linkedPerson.id !== person.id); const current = user.id === person.userId; return <button type="button" key={user.id} disabled={occupied || current} onClick={() => { setSelectedUserId(user.id); setError(null); }} className={`flex w-full items-center gap-3 border-b border-sky-50 px-3 py-3 text-left text-sm last:border-b-0 ${selectedUserId === user.id ? "bg-cyan-50" : "hover:bg-sky-50"} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60`}><UserAvatar user={user} /><span className="min-w-0 flex-1"><strong className="block truncate text-sky-950">{user.displayName}</strong><span className="block truncate text-sky-600">@{user.twitchLogin}</span></span><span className={`rounded-full px-2 py-1 text-xs font-black ${occupied ? "bg-slate-200 text-slate-700" : current ? "bg-cyan-100 text-cyan-800" : "bg-emerald-100 text-emerald-800"}`}>{occupied ? `Linked to ${user.linkedPerson?.displayName}` : current ? "Current" : "Available"}</span></button>; })}{filteredUsers.length === 0 && <p className="px-4 py-8 text-center text-sm text-sky-700">No Users match this search.</p>}</div></div>{selectedUser && <section className="mt-5 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-sky-900"><p className="text-xs font-black uppercase tracking-wide text-cyan-700">New</p><p className="mt-1 font-black">{selectedUser.displayName} <span className="font-semibold">(@{selectedUser.twitchLogin})</span></p><p className="mt-3">{action === "link" ? "Link this existing User to the Person above." : "Replace the current linked User with this existing User."}</p></section>}</>}
-        {error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}
-        <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button><button type="button" disabled={isSaving || (!isUnlink && !selectedUser)} onClick={submit} className={`rounded-xl px-4 py-2 font-black text-white disabled:opacity-60 ${isUnlink ? "bg-rose-600 hover:bg-rose-700" : "bg-sky-500 hover:bg-sky-600"}`}>{isSaving ? "Saving…" : isUnlink ? "Unlink User" : action === "change" ? "Change User" : "Link User"}</button></div>
-      </section>
-    </div>,
-    document.body
-  );
+function MergePersonDialog({ source, people, onClose, onSuccess }: { source: ManagedPerson; people: ManagedPerson[]; onClose: () => void; onSuccess: () => void }) {
+  const [query, setQuery] = useState("");
+  const [targetId, setTargetId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isMerging, setIsMerging] = useState(false);
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const targets = useMemo(() => { const value = query.trim().toLowerCase(); return people.filter((person) => person.id !== source.id && (!value || (person.displayName + " " + (person.user?.twitchLogin ?? "")).toLowerCase().includes(value))); }, [people, query, source.id]);
+  const target = people.find((person) => person.id === targetId) ?? null;
+  const conflict = Boolean(target && source.userId && target.userId && source.userId !== target.userId);
+  const userOutcome = !target ? "" : conflict ? "Both Persons are linked to different User accounts. Resolve the account link before merging." : target.userId && !source.userId ? "TARGET User remains." : !target.userId && source.userId ? "SOURCE User transfers to TARGET." : !target.userId ? "Neither Person has a User; TARGET remains unlinked." : "The canonical User link is preserved.";
+  async function merge() {
+    if (!target || conflict) return;
+    setError(null); setIsMerging(true);
+    try {
+      const response = await fetch("/api/admin-people/merge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: source.id, targetId: target.id }) });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) { setError(data.error ?? "Unable to merge these People."); return; }
+      onSuccess(); startTransition(() => router.refresh());
+    } catch { setError("Unable to merge these People. Please try again."); } finally { setIsMerging(false); }
+  }
+  return <Dialog onClose={onClose} isPending={isMerging} labelledBy="merge-person-title" size="max-w-3xl"><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Person consolidation</p><h2 id="merge-person-title" className="mt-1 text-3xl font-black text-sky-950">Merge Person</h2><section className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4"><p className="text-xs font-black uppercase tracking-wide text-rose-700">Source</p><div className="mt-2 flex items-center gap-3"><PersonAvatar person={source} /><div><p className="font-black text-sky-950">{source.displayName}</p><p className="text-sm text-sky-700">{source.user ? source.user.displayName + " (@" + source.user.twitchLogin + ")" : "No Twitch linked"}</p></div></div><PersonFacts person={source} /></section><p className="my-4 text-center text-2xl font-black text-sky-500" aria-hidden="true">↓</p><p className="text-center text-xs font-black uppercase tracking-[0.2em] text-sky-600">Merge into target</p>{!target ? <div className="mt-4"><label className="grid gap-2 text-sm font-bold text-sky-900">Find a target Person<input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Person name or Twitch login" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-sky-100 bg-white">{targets.map((person) => <button type="button" key={person.id} onClick={() => { setTargetId(person.id); setError(null); }} className="flex w-full items-center gap-3 border-b border-sky-50 px-4 py-3 text-left hover:bg-sky-50 last:border-b-0"><PersonAvatar person={person} /><span className="min-w-0 flex-1"><strong className="block truncate text-sky-950">{person.displayName}</strong><span className="block truncate text-sm text-sky-600">{person.user ? person.user.displayName + " (@" + person.user.twitchLogin + ")" : "No Twitch linked"}</span></span><span className="text-right text-xs font-bold text-sky-700">Created {person.createdUpmansCount}<br />Represented {person.representedUpmansCount}</span></button>)}{targets.length === 0 && <p className="px-4 py-8 text-center text-sm text-sky-700">No other Person matches this search.</p>}</div></div> : <><section className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-4"><p className="text-xs font-black uppercase tracking-wide text-cyan-700">Target will remain</p><div className="mt-2 flex items-center justify-between gap-3"><div className="flex items-center gap-3"><PersonAvatar person={target} /><div><p className="font-black text-sky-950">{target.displayName}</p><p className="text-sm text-sky-700">{target.user ? target.user.displayName + " (@" + target.user.twitchLogin + ")" : "No Twitch linked"}</p></div></div><button type="button" disabled={isMerging} onClick={() => setTargetId("")} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Change target</button></div><PersonFacts person={target} /></section><section className="mt-5 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-sm text-sky-900"><p className="font-black">Preview of backend merge behavior</p><ul className="mt-3 list-disc space-y-1 pl-5"><li><strong>Relationships:</strong> SOURCE created and represented Upmans move to TARGET.</li><li><strong>Achievements:</strong> merged and deduplicated; the earliest legitimate unlock date is preserved.</li><li><strong>Title:</strong> TARGET title has priority; SOURCE may fill an empty TARGET title under backend rules.</li><li><strong>Featured:</strong> TARGET selections have priority; valid SOURCE selections fill remaining slots, deduplicated to a maximum of 3.</li><li><strong>User:</strong> {userOutcome}</li><li><strong>Source:</strong> deleted only after the transaction succeeds.</li></ul></section>{conflict && <section className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p className="font-black">Merge blocked</p><p className="mt-1">Both Persons are linked to different User accounts. Resolve the account link before merging.</p></section>}</>}{error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}<div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={isMerging} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button>{target && <button type="button" disabled={isMerging || conflict} onClick={merge} className="rounded-xl bg-rose-600 px-4 py-2 font-black text-white hover:bg-rose-700 disabled:opacity-60">{isMerging ? "Merging…" : "Merge into " + target.displayName}</button>}</div></Dialog>;
 }
 
 export default function PeopleManager({ people, users }: { people: ManagedPerson[]; users: PersonUserOption[] }) {
   const router = useRouter();
   const [editingPerson, setEditingPerson] = useState<ManagedPerson | null | undefined>(undefined);
   const [accountPerson, setAccountPerson] = useState<ManagedPerson | null>(null);
+  const [deletePerson, setDeletePerson] = useState<ManagedPerson | null>(null);
+  const [mergeSource, setMergeSource] = useState<ManagedPerson | null>(null);
+  const [openActionsFor, setOpenActionsFor] = useState<string | null>(null);
   const [syncingPersonId, setSyncingPersonId] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"ALL" | "UNLINKED" | "LINKED" | "CREATORS" | "REPRESENTED">("ALL");
-  const visiblePeople = people.filter((person) => {
-    const searchable = `${person.displayName} ${person.user?.twitchLogin ?? ""} ${person.user?.displayName ?? ""}`.toLowerCase();
-    const matchesFilter = filter === "ALL" || (filter === "UNLINKED" && !person.userId) || (filter === "LINKED" && Boolean(person.userId)) || (filter === "CREATORS" && person.createdUpmansCount > 0) || (filter === "REPRESENTED" && person.representedUpmansCount > 0);
-    return searchable.includes(query.toLowerCase()) && matchesFilter;
-  });
-
+  const visiblePeople = people.filter((person) => { const searchable = (person.displayName + " " + (person.user?.twitchLogin ?? "") + " " + (person.user?.displayName ?? "")).toLowerCase(); const matchesFilter = filter === "ALL" || (filter === "UNLINKED" && !person.userId) || (filter === "LINKED" && Boolean(person.userId)) || (filter === "CREATORS" && person.createdUpmansCount > 0) || (filter === "REPRESENTED" && person.representedUpmansCount > 0); return searchable.includes(query.toLowerCase()) && matchesFilter; });
   async function syncAchievements(person: ManagedPerson) {
-    setSyncMessage(null);
-    setSyncingPersonId(person.id);
+    setSyncMessage(null); setSyncingPersonId(person.id);
     try {
-      const response = await fetch(`/api/admin-people/${person.id}/achievements`, { method: "POST" });
+      const response = await fetch("/api/admin-people/" + person.id + "/achievements", { method: "POST" });
       const data = (await response.json()) as { success?: boolean; error?: string; progress?: { unlocked: number; available: number } };
       if (!response.ok || !data.success || !data.progress) throw new Error(data.error ?? "Unable to sync achievements.");
-      setSyncMessage(`${person.displayName}: ${data.progress.unlocked} / ${data.progress.available} achievements unlocked.`);
-      router.refresh();
-    } catch (error) {
-      setSyncMessage(error instanceof Error ? error.message : "Unable to sync achievements.");
-    } finally {
-      setSyncingPersonId(null);
-    }
+      setSyncMessage(person.displayName + ": " + data.progress.unlocked + " / " + data.progress.available + " achievements unlocked."); router.refresh();
+    } catch (error) { setSyncMessage(error instanceof Error ? error.message : "Unable to sync achievements."); } finally { setSyncingPersonId(null); }
   }
-
-  return <main><header className="flex flex-col gap-5 border-b border-sky-100 pb-7 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-black uppercase tracking-[0.25em] text-cyan-600">Anniversary Admin</p><h1 className="mt-2 text-4xl font-black tracking-tight text-sky-950 sm:text-5xl">People</h1><p className="mt-3 text-sky-700">{people.length} canonical {people.length === 1 ? "Person" : "People"} available for Admin relationships.</p></div><button type="button" onClick={() => setEditingPerson(null)} className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-600">+ Create Person</button></header>{syncMessage && <p role="status" className="mt-5 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-bold text-sky-800">{syncMessage}</p>}<div className="mt-5 flex flex-wrap gap-2"><input aria-label="Search people" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people..." className="min-w-56 rounded-xl border border-sky-200 px-3 py-2 text-sm" />{(["ALL", "UNLINKED", "LINKED", "CREATORS", "REPRESENTED"] as const).map((value) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-xl px-3 py-2 text-xs font-black ${filter === value ? "bg-sky-500 text-white" : "bg-sky-50 text-sky-800"}`}>{value}</button>)}</div><section className="mt-6 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm"><div className="hidden grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_300px] gap-4 border-b border-sky-100 bg-sky-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-sky-600 lg:grid"><span>Person</span><span>Linked User</span><span>Created</span><span>Represented</span><span className="text-right">Actions</span></div>{visiblePeople.length ? <div className="divide-y divide-sky-100">{visiblePeople.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_300px] lg:gap-4"><div className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sky-100 font-black text-sky-700">{person.user?.avatar ? <img src={person.user.avatar} alt="" className="h-full w-full object-cover" /> : "☁"}</span><div><p className="font-black text-sky-950">{person.displayName}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${person.isPublic ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{person.isPublic ? "Public" : "Private"}</span></div></div><p className="text-sm font-semibold text-sky-800">{person.user ? `${person.user.displayName} (@${person.user.twitchLogin})` : "No Twitch linked"} · Achievements: {person.achievementsCount} · {person.hasEquippedTitle ? "Title equipped" : "No title"} · Featured: {person.featuredAchievementsCount}</p><p className="text-sm font-black text-sky-900">Created: {person.createdUpmansCount}</p><p className="text-sm font-black text-sky-900">Represented: {person.representedUpmansCount}</p><div className="flex flex-wrap gap-2 lg:justify-self-end"><button type="button" onClick={() => setAccountPerson(person)} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100">{person.user ? "Manage account" : "Link User"}</button><button type="button" onClick={() => syncAchievements(person)} disabled={syncingPersonId === person.id} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:opacity-60">{syncingPersonId === person.id ? "Syncing…" : "Sync badges"}</button><button type="button" onClick={() => setEditingPerson(person)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Edit</button></div></article>)}</div> : <div className="px-6 py-14 text-center text-sky-700"><p className="text-xl font-black text-sky-950">{people.length ? "No matching People" : "No People yet"}</p><p className="mt-2">{people.length ? "Try another search or filter." : "Create the first canonical identity when you are ready."}</p></div>}</section>{editingPerson !== undefined && <PersonEditor key={editingPerson?.id ?? "new"} person={editingPerson} users={users} onClose={() => setEditingPerson(undefined)} />}{accountPerson && <AccountDialog key={accountPerson.id} person={accountPerson} users={users} initialAction={accountPerson.user ? "change" : "link"} onClose={() => setAccountPerson(null)} onSuccess={(message) => { setAccountPerson(null); setSyncMessage(`${accountPerson.displayName}: ${message}`); }} />}</main>;
+  return <main><header className="flex flex-col gap-5 border-b border-sky-100 pb-7 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-black uppercase tracking-[0.25em] text-cyan-600">Anniversary Admin</p><h1 className="mt-2 text-4xl font-black tracking-tight text-sky-950 sm:text-5xl">People</h1><p className="mt-3 text-sky-700">{people.length} canonical {people.length === 1 ? "Person" : "People"} available for Admin relationships.</p></div><button type="button" onClick={() => setEditingPerson(null)} className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-600">+ Create Person</button></header>{syncMessage && <p role="status" className="mt-5 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-bold text-sky-800">{syncMessage}</p>}<div className="mt-5 flex flex-wrap gap-2"><input aria-label="Search people" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people..." className="min-w-56 rounded-xl border border-sky-200 px-3 py-2 text-sm" />{(["ALL", "UNLINKED", "LINKED", "CREATORS", "REPRESENTED"] as const).map((value) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={"rounded-xl px-3 py-2 text-xs font-black " + (filter === value ? "bg-sky-500 text-white" : "bg-sky-50 text-sky-800")}>{value}</button>)}</div><section className="mt-6 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm"><div className="hidden grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_300px] gap-4 border-b border-sky-100 bg-sky-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-sky-600 lg:grid"><span>Person</span><span>Linked User</span><span>Created</span><span>Represented</span><span className="text-right">Actions</span></div>{visiblePeople.length ? <div className="divide-y divide-sky-100">{visiblePeople.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_300px] lg:gap-4"><div className="flex items-center gap-3"><PersonAvatar person={person} /><div><p className="font-black text-sky-950">{person.displayName}</p><span className={"mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-black " + (person.isPublic ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700")}>{person.isPublic ? "Public" : "Private"}</span></div></div><p className="text-sm font-semibold text-sky-800">{person.user ? person.user.displayName + " (@" + person.user.twitchLogin + ")" : "No Twitch linked"} · Achievements: {person.achievementsCount} · {person.hasEquippedTitle ? "Title equipped" : "No title"} · Featured: {person.featuredAchievementsCount}</p><p className="text-sm font-black text-sky-900">Created: {person.createdUpmansCount}</p><p className="text-sm font-black text-sky-900">Represented: {person.representedUpmansCount}</p><div className="flex flex-wrap gap-2 lg:justify-self-end"><button type="button" onClick={() => setAccountPerson(person)} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100">{person.user ? "Manage account" : "Link User"}</button><button type="button" onClick={() => syncAchievements(person)} disabled={syncingPersonId === person.id} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:opacity-60">{syncingPersonId === person.id ? "Syncing…" : "Sync badges"}</button><button type="button" onClick={() => setEditingPerson(person)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Edit</button><button type="button" aria-expanded={openActionsFor === person.id} onClick={() => setOpenActionsFor(openActionsFor === person.id ? null : person.id)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">More</button>{openActionsFor === person.id && <div className="basis-full rounded-xl border border-sky-200 bg-sky-50 p-2 text-right"><button type="button" onClick={() => { setOpenActionsFor(null); setMergeSource(person); }} className="rounded-lg px-3 py-2 text-sm font-black text-sky-800 hover:bg-white">Merge…</button><button type="button" onClick={() => { setOpenActionsFor(null); setDeletePerson(person); }} className="rounded-lg px-3 py-2 text-sm font-black text-rose-700 hover:bg-white">Delete…</button></div>}</div></article>)}</div> : <div className="px-6 py-14 text-center text-sky-700"><p className="text-xl font-black text-sky-950">{people.length ? "No matching People" : "No People yet"}</p><p className="mt-2">{people.length ? "Try another search or filter." : "Create the first canonical identity when you are ready."}</p></div>}</section>{editingPerson !== undefined && <PersonEditor key={editingPerson?.id ?? "new"} person={editingPerson} users={users} onClose={() => setEditingPerson(undefined)} />}{accountPerson && <AccountDialog key={accountPerson.id} person={accountPerson} users={users} onClose={() => setAccountPerson(null)} onSuccess={(message) => { setAccountPerson(null); setSyncMessage(accountPerson.displayName + ": " + message); }} />}{deletePerson && <DeletePersonDialog key={deletePerson.id} person={deletePerson} onClose={() => setDeletePerson(null)} onSuccess={() => { setDeletePerson(null); setSyncMessage(deletePerson.displayName + ": Person deleted."); }} />}{mergeSource && <MergePersonDialog key={mergeSource.id} source={mergeSource} people={people} onClose={() => setMergeSource(null)} onSuccess={() => { setMergeSource(null); setSyncMessage(mergeSource.displayName + ": Person merged successfully."); }} />}</main>;
 }
