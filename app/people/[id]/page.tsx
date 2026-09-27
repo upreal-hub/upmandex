@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 
+import CreatedUpmansRail from "./CreatedUpmansRail";
 import styles from "./person.module.css";
 
 const rarityClassNames: Record<string, string> = {
@@ -61,8 +62,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>
-          {hasRepresented && <UpmanSection title="REPRESENTED IN UPMANDEX BY" upmans={person.representedUpmans} kind="represented" />}
-          {hasCreated && <UpmanSection title="UPMANS CREATED" upmans={person.createdUpmans} kind="created" />}
+          {hasRepresented && <UpmanSection title="REPRESENTED IN UPMANDEX BY" upmans={person.representedUpmans} />}
+          {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}
         </div>
       )}
     </main>
@@ -82,18 +83,18 @@ function TwitchIdentity({ login }: { login: string }) {
   </p>;
 }
 
-function UpmanSection({ title, upmans, kind }: { title: string; upmans: PersonUpman[]; kind: "represented" | "created" }) {
-  return <section className={`${styles.section} ${kind === "represented" ? styles.representedSection : styles.createdSection}`} aria-labelledby={`${kind}-heading`}>
-    <h2 id={`${kind}-heading`} className={styles.sectionHeading}>{title}</h2>
-    <div className={kind === "represented" ? styles.representedGrid : styles.createdGrid}>
-      {upmans.map((upman) => <UpmanCard key={upman.slug} upman={upman} compact={kind === "created"} />)}
+function UpmanSection({ title, upmans }: { title: string; upmans: PersonUpman[] }) {
+  return <section className={`${styles.section} ${styles.representedSection}`} aria-labelledby="represented-heading">
+    <h2 id="represented-heading" className={styles.sectionHeading}>{title}</h2>
+    <div className={styles.representedGrid}>
+      {upmans.map((upman) => <UpmanCard key={upman.slug} upman={upman} />)}
     </div>
   </section>;
 }
 
-function UpmanCard({ upman, compact = false }: { upman: PersonUpman; compact?: boolean }) {
+function UpmanCard({ upman }: { upman: PersonUpman }) {
   return (
-    <Link href={`/upmans/${upman.slug}`} className={`${styles.upmanCard} ${compact ? styles.createdCard : ""} ${rarityClassNames[upman.rarity] ?? styles.common}`} aria-label={`View ${upman.name}, ${upman.rarity}`}>
+    <Link href={`/upmans/${upman.slug}`} className={`${styles.upmanCard} ${rarityClassNames[upman.rarity] ?? styles.common}`} aria-label={`View ${upman.name}, ${upman.rarity}`}>
       <span className={styles.cardArt}><Image src={upman.image} alt={upman.name} width={300} height={260} sizes="(max-width: 640px) 46vw, (max-width: 1040px) 30vw, 17rem" /></span>
       <span className={styles.cardInfo}><span>{upman.rarity}</span><strong>{upman.name}</strong></span>
     </Link>
