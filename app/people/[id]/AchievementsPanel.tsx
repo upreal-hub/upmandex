@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import type { AchievementCategory, AchievementFamily, AchievementMilestone, AchievementProgress } from "@/lib/achievements";
 
@@ -31,27 +31,73 @@ function nodeState(milestone: AchievementMilestone, isTarget: boolean, isDormant
   return isTarget ? styles.nodeTarget : styles.nodeLocked;
 }
 
+function progressText(family: AchievementFamily, milestone: AchievementMilestone | undefined, isDormant: boolean, isComplete: boolean) {
+  if (isDormant) return "Tracking coming later";
+  if (family.key === "lucky-one") return isComplete ? "Legendary pulled" : "Legendary not pulled yet";
+  if (family.key === "rarity-completion") return "Each rarity is tracked independently.";
+  if (!milestone) return "All milestones earned";
+  if (family.key === "collector") return `${milestone.displayCurrent} / ${milestone.displayTarget} Upmans · next: Collector ${milestone.label}`;
+  if (family.key === "pull-veteran") return `${milestone.current} / ${milestone.target} pulls`;
+  if (family.key === "duplicate-magnet") return `${milestone.current} / ${milestone.target} duplicates`;
+  if (family.key === "upman-creator") return `${milestone.current} / ${milestone.target} Upmans created`;
+  return `${milestone.current} / ${milestone.target}`;
+}
+
+function popoverContent(family: AchievementFamily, milestone: AchievementMilestone, isDormant: boolean) {
+  if (isDormant) return { title: family.name.toUpperCase(), copy: family.description, progress: "Tracking coming later" };
+  if (family.key === "collector") return { title: `COLLECTOR — ${milestone.label}`, copy: milestone.label === "50%" ? "Own half of the normal UPMANDEX." : `Own ${milestone.label} of the normal UPMANDEX.`, progress: `${milestone.displayCurrent} / ${milestone.displayTarget} Upmans` };
+  if (family.key === "rarity-completion") return { title: `${milestone.label.toUpperCase()} COLLECTOR`, copy: `Collect every ${milestone.label} Upman.`, progress: `${milestone.current} / ${milestone.target} ${milestone.label} Upmans` };
+  if (family.key === "pull-veteran") return { title: `PULL VETERAN — ${milestone.label}`, copy: `Complete ${milestone.label} tracked UPMANDEX pulls.`, progress: `${milestone.current} / ${milestone.target} pulls` };
+  if (family.key === "duplicate-magnet") return { title: `DUPLICATE MAGNET — ${milestone.label}`, copy: `Pull ${milestone.label} duplicates.`, progress: `${milestone.current} / ${milestone.target} duplicates` };
+  if (family.key === "upman-creator") return { title: `UPMAN CREATOR — ${milestone.label}`, copy: `Create ${milestone.label} Upmans added to the UPMANDEX.`, progress: `${milestone.current} / ${milestone.target} Upmans created` };
+  if (family.key === "lucky-one") return { title: "LUCKY ONE", copy: "Pull a Legendary Upman.", progress: milestone.isCurrentlyComplete ? "Legendary pulled" : "Legendary not pulled yet" };
+  return { title: family.name.toUpperCase(), copy: family.description, progress: `${milestone.current} / ${milestone.target}` };
+}
+
 export default function AchievementsPanel({ progress }: { progress: AchievementProgress }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
+  const [pinnedMilestone, setPinnedMilestone] = useState<string | null>(null);
+  const [hoveredMilestone, setHoveredMilestone] = useState<string | null>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
+  const activeMilestone = pinnedMilestone ?? hoveredMilestone;
   const visibleCategories = category === "ALL" ? categories : [category];
 
-  function close() {
+  const dismissMilestone = useCallback(() => {
+    setPinnedMilestone(null);
+    setHoveredMilestone(null);
+  }, []);
+
+  const close = useCallback(() => {
+    dismissMilestone();
     setIsOpen(false);
     requestAnimationFrame(() => openButton.current?.focus());
-  }
+  }, [dismissMilestone]);
 
   useEffect(() => {
     if (!isOpen) return;
     closeButton.current?.focus();
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") close();
+      if (event.key !== "Escape") return;
+      if (activeMilestone) {
+        event.preventDefault();
+        dismissMilestone();
+        return;
+      }
+      close();
+    }
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest("[data-milestone-interaction]")) dismissMilestone();
     }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [activeMilestone, close, dismissMilestone, isOpen]);
 
   return (
     <section className={styles.achievementsSummary} aria-labelledby="achievements-summary-heading">
@@ -75,7 +121,7 @@ export default function AchievementsPanel({ progress }: { progress: AchievementP
             <div className={styles.achievementCategories}>
               {visibleCategories.map((value) => {
                 const families = progress.families.filter((family) => family.category === value);
-                return families.length ? <AchievementCategorySection key={value} category={value} families={families} /> : null;
+                return families.length ? <AchievementCategorySection key={value} category={value} families={families} activeMilestone={activeMilestone} pinnedMilestone={pinnedMilestone} onPreview={setHoveredMilestone} onPin={setPinnedMilestone} onDismiss={dismissMilestone} /> : null;
               })}
             </div>
           </section>
@@ -84,15 +130,14 @@ export default function AchievementsPanel({ progress }: { progress: AchievementP
   );
 }
 
-function AchievementCategorySection({ category, families }: { category: AchievementCategory; families: AchievementFamily[] }) {
+function AchievementCategorySection({ category, families, activeMilestone, pinnedMilestone, onPreview, onPin, onDismiss }: { category: AchievementCategory; families: AchievementFamily[]; activeMilestone: string | null; pinnedMilestone: string | null; onPreview: (key: string | null) => void; onPin: (key: string | null) => void; onDismiss: () => void }) {
   return <section className={styles.achievementCategory} data-category={category} aria-labelledby={`achievement-category-${category}`}>
     <header className={styles.categoryHeading}><span aria-hidden="true">✦</span><h3 id={`achievement-category-${category}`}>{categoryLabels[category]}</h3><i aria-hidden="true" /></header>
-    <div className={styles.achievementTracks}>{families.map((family) => <AchievementTrack key={family.key} family={family} />)}</div>
+    <div className={styles.achievementTracks}>{families.map((family) => <AchievementTrack key={family.key} family={family} activeMilestone={activeMilestone} pinnedMilestone={pinnedMilestone} onPreview={onPreview} onPin={onPin} onDismiss={onDismiss} />)}</div>
   </section>;
 }
 
-function AchievementTrack({ family }: { family: AchievementFamily }) {
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+function AchievementTrack({ family, activeMilestone, pinnedMilestone, onPreview, onPin, onDismiss }: { family: AchievementFamily; activeMilestone: string | null; pinnedMilestone: string | null; onPreview: (key: string | null) => void; onPin: (key: string | null) => void; onDismiss: () => void }) {
   const milestones = family.milestones;
   const isIndependent = family.key === "rarity-completion";
   const isDormant = !milestones.some((milestone) => milestone.trackable || milestone.isUnlocked);
@@ -100,37 +145,25 @@ function AchievementTrack({ family }: { family: AchievementFamily }) {
   const fill = isDormant || isIndependent ? 0 : orderedFill(milestones);
   const isComplete = milestones.length > 0 && milestones.every((milestone) => milestone.isUnlocked);
   const trackStyle = { "--track-fill": `${fill}%` } as CSSProperties;
+  const nextMilestone = nextIndex >= 0 ? milestones[nextIndex] : undefined;
 
   return <article className={`${styles.achievementTrack} ${isIndependent ? styles.trackIndependent : ""} ${isDormant ? styles.trackDormant : ""} ${milestones.length === 1 ? styles.trackSingle : ""}`}>
     <header className={styles.trackHeading}><div><h4>{family.name}</h4><p>{family.description}</p></div>{isComplete && <span className={styles.trackComplete}>Completed</span>}</header>
     <div className={styles.trackNodes} style={trackStyle}>
       {!isIndependent && milestones.length > 1 && <span className={styles.trackLine} aria-hidden="true"><span /></span>}
-      {milestones.map((milestone, index) => <MilestoneNode
-        key={milestone.key}
-        family={family}
-        milestone={milestone}
-        index={index}
-        total={milestones.length}
-        isTarget={index === nextIndex}
-        isDormant={isDormant}
-        active={activeKey === milestone.key}
-        onActivate={() => setActiveKey((current) => current === milestone.key ? null : milestone.key)}
-        onPreview={() => setActiveKey(milestone.key)}
-        onDismiss={() => setActiveKey(null)}
-      />)}
+      {milestones.map((milestone, index) => <MilestoneNode key={milestone.key} family={family} milestone={milestone} index={index} total={milestones.length} isTarget={index === nextIndex} isDormant={isDormant} active={activeMilestone === milestone.key} pinned={pinnedMilestone === milestone.key} onPreview={onPreview} onPin={onPin} onDismiss={onDismiss} />)}
     </div>
-    <p className={styles.trackProgress}>{isDormant ? "Tracking coming later" : isComplete ? "All milestones earned" : nextIndex >= 0 ? <><strong>{milestones[nextIndex].current} / {milestones[nextIndex].target}</strong> toward {milestones[nextIndex].label}</> : "Each rarity can be completed independently."}</p>
+    <p className={styles.trackProgress}>{progressText(family, nextMilestone, isDormant, isComplete)}</p>
   </article>;
 }
 
-function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, active, onActivate, onPreview, onDismiss }: {
-  family: AchievementFamily; milestone: AchievementMilestone; index: number; total: number; isTarget: boolean; isDormant: boolean; active: boolean; onActivate: () => void; onPreview: () => void; onDismiss: () => void;
-}) {
+function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, active, pinned, onPreview, onPin, onDismiss }: { family: AchievementFamily; milestone: AchievementMilestone; index: number; total: number; isTarget: boolean; isDormant: boolean; active: boolean; pinned: boolean; onPreview: (key: string | null) => void; onPin: (key: string | null) => void; onDismiss: () => void }) {
   const detailId = `achievement-${milestone.key}`;
   const position = index === 0 ? styles.popoverStart : index === total - 1 ? styles.popoverEnd : styles.popoverCenter;
-  return <div className={styles.milestoneNodeWrap} data-rarity={family.key === "rarity-completion" ? milestone.label : undefined}>
-    <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={`${family.name}: ${milestone.label}`} aria-expanded={active} aria-controls={active ? detailId : undefined}
-      onMouseEnter={onPreview} onFocus={onPreview} onClick={onActivate} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
+  const preview = () => { if (!pinned) onPreview(milestone.key); };
+  const leave = () => { if (!pinned) onPreview(null); };
+  return <div className={styles.milestoneNodeWrap} data-milestone-interaction data-rarity={family.key === "rarity-completion" ? milestone.label : undefined} onMouseEnter={preview} onMouseLeave={leave}>
+    <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={`${family.name}: ${milestone.label}`} aria-expanded={active} aria-controls={active ? detailId : undefined} onFocus={preview} onBlur={leave} onClick={() => { if (pinned) onDismiss(); else { onPreview(null); onPin(milestone.key); } }} onKeyDown={(event) => { if (event.key === "Escape" && active) { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
       <span aria-hidden="true">{milestone.isUnlocked ? "✓" : milestone.isCurrentlyComplete && !isDormant ? "•" : ""}</span>
     </button>
     <span className={styles.milestoneLabel}>{milestone.label}</span>
@@ -139,12 +172,10 @@ function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, a
 }
 
 function MilestonePopover({ id, family, milestone, isDormant, position }: { id: string; family: AchievementFamily; milestone: AchievementMilestone; isDormant: boolean; position: string }) {
-  const state = isDormant ? "Tracking coming later" : milestone.isUnlocked ? "Unlocked" : milestone.isCurrentlyComplete ? "Threshold reached — awaiting badge sync" : "In progress";
+  const content = popoverContent(family, milestone, isDormant);
+  const state = isDormant ? "Tracking coming later" : milestone.isUnlocked ? "Unlocked" : milestone.isCurrentlyComplete ? "Ready to record" : "In progress";
   return <aside id={id} role="status" className={`${styles.milestonePopover} ${position}`}>
-    <p>{family.name} <span>·</span> {milestone.label}</p>
-    <strong>{family.description}</strong>
-    {!isDormant && <small>{milestone.current} / {milestone.target}</small>}
-    <em>{state}</em>
+    <p>{content.title}</p><strong>{content.copy}</strong><small>{content.progress}</small><em>{state}</em>
     {milestone.unlockedAt && <time dateTime={milestone.unlockedAt}>Unlocked {formatDate(milestone.unlockedAt)}</time>}
   </aside>;
 }

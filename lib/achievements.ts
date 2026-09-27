@@ -37,26 +37,26 @@ type AchievementDefinition = {
 };
 
 const definitions: AchievementDefinition[] = [
-  { key: "collector-10", family: "collector", category: "COLLECTION", name: "Collector", description: "Discover the normal UPMANDEX collection.", label: "10%", metric: "collection-percent", target: 10, order: 10 },
-  { key: "collector-50", family: "collector", category: "COLLECTION", name: "Collector", description: "Discover the normal UPMANDEX collection.", label: "50%", metric: "collection-percent", target: 50, order: 20 },
-  { key: "collector-100", family: "collector", category: "COLLECTION", name: "Collector", description: "Discover the normal UPMANDEX collection.", label: "100%", metric: "collection-percent", target: 100, order: 30 },
-  ...["Common", "Rare", "Epic", "Mythic", "Legendary"].map((rarity, index) => ({ key: `rarity-${rarity.toLowerCase()}`, family: "rarity-completion", category: "COLLECTION" as const, name: "Rarity Hunter", description: "Complete each currently eligible rarity set.", label: rarity, metric: "rarity-completion" as const, target: 1, rarity, order: 40 + index })),
-  { key: "pull-veteran-10", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Resolve pulls through the new UPMANDEX Pull System.", label: "10", metric: "pull-count", target: 10, order: 10 },
-  { key: "pull-veteran-100", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Resolve pulls through the new UPMANDEX Pull System.", label: "100", metric: "pull-count", target: 100, order: 20 },
-  { key: "pull-veteran-500", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Resolve pulls through the new UPMANDEX Pull System.", label: "500", metric: "pull-count", target: 500, order: 30 },
-  { key: "lucky-one", family: "lucky-one", category: "PULLS", name: "Lucky One", description: "Pull a Legendary Upman through the new Pull System.", label: "Legendary", metric: "legendary-pull", target: 1, order: 40 },
-  { key: "duplicate-magnet-10", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Find duplicate pulls through the new Pull System.", label: "10", metric: "duplicate-pulls", target: 10, order: 50 },
-  { key: "duplicate-magnet-50", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Find duplicate pulls through the new Pull System.", label: "50", metric: "duplicate-pulls", target: 50, order: 60 },
-  { key: "duplicate-magnet-100", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Find duplicate pulls through the new Pull System.", label: "100", metric: "duplicate-pulls", target: 100, order: 70 },
-  { key: "upman-creator-1", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create canonical Upmans for the UPMANDEX.", label: "1", metric: "creation-count", target: 1, order: 10 },
-  { key: "upman-creator-10", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create canonical Upmans for the UPMANDEX.", label: "10", metric: "creation-count", target: 10, order: 20 },
-  { key: "upman-creator-50", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create canonical Upmans for the UPMANDEX.", label: "50", metric: "creation-count", target: 50, order: 30 },
+  { key: "collector-10", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "10%", metric: "collection-percent", target: 10, order: 10 },
+  { key: "collector-50", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "50%", metric: "collection-percent", target: 50, order: 20 },
+  { key: "collector-100", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "100%", metric: "collection-percent", target: 100, order: 30 },
+  ...["Common", "Rare", "Epic", "Mythic", "Legendary"].map((rarity, index) => ({ key: `rarity-${rarity.toLowerCase()}`, family: "rarity-completion", category: "COLLECTION" as const, name: "Rarity Hunter", description: "Collect every Upman of each rarity.", label: rarity, metric: "rarity-completion" as const, target: 1, rarity, order: 40 + index })),
+  { key: "pull-veteran-10", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Pull Upmans through the UPMANDEX.", label: "10", metric: "pull-count", target: 10, order: 10 },
+  { key: "pull-veteran-100", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Pull Upmans through the UPMANDEX.", label: "100", metric: "pull-count", target: 100, order: 20 },
+  { key: "pull-veteran-500", family: "pull-veteran", category: "PULLS", name: "Pull Veteran", description: "Pull Upmans through the UPMANDEX.", label: "500", metric: "pull-count", target: 500, order: 30 },
+  { key: "lucky-one", family: "lucky-one", category: "PULLS", name: "Lucky One", description: "Pull a Legendary Upman.", label: "Legendary", metric: "legendary-pull", target: 1, order: 40 },
+  { key: "duplicate-magnet-10", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Pull duplicate Upmans.", label: "10", metric: "duplicate-pulls", target: 10, order: 50 },
+  { key: "duplicate-magnet-50", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Pull duplicate Upmans.", label: "50", metric: "duplicate-pulls", target: 50, order: 60 },
+  { key: "duplicate-magnet-100", family: "duplicate-magnet", category: "PULLS", name: "Duplicate Magnet", description: "Pull duplicate Upmans.", label: "100", metric: "duplicate-pulls", target: 100, order: 70 },
+  { key: "upman-creator-1", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "1", metric: "creation-count", target: 1, order: 10 },
+  { key: "upman-creator-10", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "10", metric: "creation-count", target: 10, order: 20 },
+  { key: "upman-creator-50", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "50", metric: "creation-count", target: 50, order: 30 },
   ...[
-    ["artist-1", "artist", "ART", "Artist", "Publish drawings for the UPMANDEX.", "1", 1], ["artist-10", "artist", "ART", "Artist", "Publish drawings for the UPMANDEX.", "10", 10], ["artist-100", "artist", "ART", "Artist", "Publish drawings for the UPMANDEX.", "100", 100],
-    ["gartic-regular-1", "gartic-regular", "GARTIC", "Gartic Regular", "Participate in Gartic Phone sessions.", "1", 1], ["gartic-regular-10", "gartic-regular", "GARTIC", "Gartic Regular", "Participate in Gartic Phone sessions.", "10", 10], ["gartic-regular-50", "gartic-regular", "GARTIC", "Gartic Regular", "Participate in Gartic Phone sessions.", "50", 50],
-    ["gartic-gallery-1", "gartic-gallery", "GARTIC", "Gartic Gallery", "Keep or publish Gartic drawings.", "1", 1], ["gartic-gallery-10", "gartic-gallery", "GARTIC", "Gartic Gallery", "Keep or publish Gartic drawings.", "10", 10], ["gartic-gallery-50", "gartic-gallery", "GARTIC", "Gartic Gallery", "Keep or publish Gartic drawings.", "50", 50],
-    ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during streams.", "100", 100],
-    ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Participate in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Participate in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Participate in UPMANDEX events.", "50", 50],
+    ["artist-1", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "1", 1], ["artist-10", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "10", 10], ["artist-100", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "100", 100],
+    ["gartic-regular-1", "gartic-regular", "GARTIC", "Gartic Regular", "Take part in Gartic Phone sessions.", "1", 1], ["gartic-regular-10", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "10", 10], ["gartic-regular-50", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "50", 50],
+    ["gartic-gallery-1", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "1", 1], ["gartic-gallery-10", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "10", 10], ["gartic-gallery-50", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "50", 50],
+    ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "100", 100],
+    ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "50", 50],
     ["event-collector-1", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "1", 1], ["event-collector-10", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "10", 10], ["event-collector-25", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "25", 25],
   ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: "unavailable" as const, target: target as number, order: 100 + index })),
 ];
@@ -66,6 +66,8 @@ export type AchievementMilestone = {
   label: string;
   current: number;
   target: number;
+  displayCurrent: number;
+  displayTarget: number;
   trackable: boolean;
   isCurrentlyComplete: boolean;
   isUnlocked: boolean;
@@ -177,6 +179,8 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
       label: definition.label,
       current: value,
       target,
+      displayCurrent: definition.metric === "collection-percent" ? context.collectionOwned : value,
+      displayTarget: definition.metric === "collection-percent" ? Math.ceil((context.collectionTotal * definition.target) / 100) : target,
       trackable: isTrackable(definition, context),
       isCurrentlyComplete: target > 0 && value >= target,
       isUnlocked: Boolean(unlockedAt),
