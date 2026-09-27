@@ -1,5 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { validatePersonPayload } from "@/lib/validation";
@@ -41,6 +42,10 @@ export async function POST(request: Request) {
       });
       return created;
     });
+
+    if (data.userId) {
+      await safelySyncPersonAchievements(person.id);
+    }
 
     return NextResponse.json({ success: true, person }, { status: 201 });
   } catch (error) {

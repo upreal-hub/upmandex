@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getUpmanBlobPath, isPngFile, UPMAN_IMAGE_MAX_BYTES } from "@/lib/blob";
 import { requireAdmin } from "@/lib/authorization";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { validateUploadedUpmanPayload } from "@/lib/validation";
 
@@ -173,6 +174,10 @@ export async function POST(request: Request) {
 
       return createdUpman;
     });
+
+    if (data.creatorPersonId) {
+      await safelySyncPersonAchievements(data.creatorPersonId);
+    }
 
     return NextResponse.json({ success: true, upman }, { status: 201 });
   } catch (error) {

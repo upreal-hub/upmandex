@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/authorization";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { validateUpmanUpdatePayload } from "@/lib/validation";
 
@@ -82,6 +83,7 @@ export async function POST(req: Request) {
       existingUpman.name !== updatedUpman.name ||
       existingUpman.creator !== updatedUpman.creator ||
       existingUpman.rarity !== updatedUpman.rarity;
+    const creatorPersonChanged = existingUpman.creatorPersonId !== creatorPersonId;
 
     await prisma.$transaction(async (tx) => {
       const upman = await tx.upman.update({
@@ -163,6 +165,10 @@ export async function POST(req: Request) {
         });
       }
     });
+
+    if (creatorPersonChanged && creatorPersonId) {
+      await safelySyncPersonAchievements(creatorPersonId);
+    }
 
     return NextResponse.json({
       success: true,

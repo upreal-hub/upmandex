@@ -1,5 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { validateSlug, validateUpmanRelationshipPayload } from "@/lib/validation";
@@ -88,7 +89,8 @@ export async function POST(
 
           const previous = data.relation === "creator" ? upman.creatorPerson : upman.representedPerson;
           const nextPersonId = person?.id ?? null;
-          if (previous?.id !== nextPersonId) {
+          const relationshipChanged = previous?.id !== nextPersonId;
+          if (relationshipChanged) {
             const updated = await tx.upman.update({
               where: { id: upman.id },
               data: data.relation === "creator"
@@ -127,7 +129,7 @@ export async function POST(
             });
           }
 
-          return { status: "success" as const, person, personCreated };
+          return { status: "success" as const, person, personCreated, relationshipChanged };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
@@ -136,6 +138,11 @@ export async function POST(
       if (result.status === "person-not-found") return NextResponse.json({ success: false, error: "Selected Person not found" }, { status: 400 });
       if (result.status === "user-not-found") return NextResponse.json({ success: false, error: "Selected User not found" }, { status: 400 });
       if (result.status === "common") return NextResponse.json({ success: false, error: "Common Upmans cannot represent a Person" }, { status: 400 });
+
+      if (data.relation === "creator" && result.relationshipChanged && result.person) {
+        await safelySyncPersonAchievements(result.person.id);
+      }
+
       return NextResponse.json({ success: true, person: result.person, personCreated: result.personCreated });
     } catch (error) {
       const retryable = error instanceof Prisma.PrismaClientKnownRequestError && (error.code === "P2034" || error.code === "P2002");

@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncLinkedPersonAchievementsByLogin } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { resolveTwitchIdentity } from "@/lib/twitch-identity";
 
@@ -118,7 +119,7 @@ export async function resolvePull(
 
   for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
     try {
-      return await prisma.$transaction(
+      const result = await prisma.$transaction<ResolvePullResult>(
         async (tx) => {
           const existingEvent = await tx.pullEvent.findUnique({
             where: { requestId: input.requestId },
@@ -280,6 +281,12 @@ export async function resolvePull(
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
+
+      if (result.status === "resolved") {
+        await safelySyncLinkedPersonAchievementsByLogin(result.viewer.twitchLogin);
+      }
+
+      return result;
     } catch (error) {
       if (!isRetryableTransactionError(error)) {
         throw error;

@@ -1,5 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { validatePersonPayload } from "@/lib/validation";
@@ -32,6 +33,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pe
       ...(existing.userId !== data.userId ? ["linked User"] : []),
       ...(existing.isPublic !== data.isPublic ? ["visibility"] : []),
     ];
+    const linkedUserChanged = existing.userId !== data.userId;
     const person = await prisma.$transaction(async (tx) => {
       const updated = await tx.person.update({ where: { id: personId }, data, select: { id: true, displayName: true } });
       await tx.activityLog.create({
@@ -44,6 +46,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pe
       });
       return updated;
     });
+
+    if (linkedUserChanged && data.userId) {
+      await safelySyncPersonAchievements(person.id);
+    }
 
     return NextResponse.json({ success: true, person });
   } catch (error) {

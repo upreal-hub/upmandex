@@ -235,3 +235,43 @@ export async function syncPersonAchievements(personId: string) {
 
   return getAchievementProgress(personId);
 }
+
+export async function syncLinkedPersonAchievements(userId: string) {
+  const person = await prisma.person.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+
+  return person ? syncPersonAchievements(person.id) : null;
+}
+
+export async function safelySyncPersonAchievements(personId: string) {
+  try {
+    return await syncPersonAchievements(personId);
+  } catch {
+    console.error("Person achievement synchronization failed after canonical activity.");
+    return null;
+  }
+}
+
+export async function safelySyncLinkedPersonAchievements(userId: string) {
+  try {
+    return await syncLinkedPersonAchievements(userId);
+  } catch {
+    console.error("Person achievement synchronization failed after canonical activity.");
+    return null;
+  }
+}
+
+export async function safelySyncLinkedPersonAchievementsByLogin(twitchLogin: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { twitchLogin },
+      select: { id: true },
+    });
+    return user ? await syncLinkedPersonAchievements(user.id) : null;
+  } catch {
+    console.error("Person achievement synchronization failed after canonical activity.");
+    return null;
+  }
+}

@@ -1,6 +1,7 @@
 import { Prisma } from "@/app/generated/prisma/client";
 import type { ActivityContext } from "@/lib/activity";
 import { createActivityLogData } from "@/lib/activity";
+import { safelySyncLinkedPersonAchievementsByLogin } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin, validateSlug } from "@/lib/validation";
 
@@ -57,7 +58,7 @@ export async function grantUpman(
     return { status: "invalid-input" };
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction<GrantUpmanResult>(async (tx) => {
     let user = await tx.user.findUnique({
       where: { twitchLogin: viewer },
       select: { id: true },
@@ -129,6 +130,12 @@ export async function grantUpman(
 
     return { status: "granted", upmanName: upman.name, viewer };
   });
+
+  if (result.status === "granted") {
+    await safelySyncLinkedPersonAchievementsByLogin(viewer);
+  }
+
+  return result;
 }
 
 export async function removeUpman(
