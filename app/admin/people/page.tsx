@@ -22,7 +22,13 @@ export default async function AdminPeoplePage() {
     }),
     prisma.user.findMany({
       orderBy: [{ twitchLogin: "asc" }],
-      select: { id: true, twitchLogin: true, displayName: true, avatar: true },
+      select: {
+        id: true,
+        twitchLogin: true,
+        displayName: true,
+        avatar: true,
+        person: { select: { id: true, displayName: true } },
+      },
     }),
   ]);
 
@@ -40,7 +46,13 @@ export default async function AdminPeoplePage() {
         hasEquippedTitle: Boolean(person.equippedTitleAchievementKey),
         featuredAchievementsCount: person.featuredAchievementKeys.length,
       }))}
-      users={users}
+      users={users.map((user) => ({
+        id: user.id,
+        twitchLogin: user.twitchLogin,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        linkedPerson: user.person,
+      }))}
     />
   );
 }

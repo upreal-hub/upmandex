@@ -3,6 +3,10 @@ export type PersonUserOption = {
   twitchLogin: string;
   displayName: string;
   avatar: string | null;
+  linkedPerson?: {
+    id: string;
+    displayName: string;
+  } | null;
 };
 
 export type ManagedPerson = {
