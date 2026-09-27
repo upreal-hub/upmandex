@@ -55,12 +55,13 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
     },
   });
 
-  if (!person?.isPublic) notFound();
+  if (!person) notFound();
 
   const achievementProgress = await getAchievementProgress(id);
   const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
+  if (!person.isPublic && !isOwner) notFound();
   const unlockedAchievements = achievementProgress?.families.flatMap((family) => family.milestones.map((milestone) => ({ key: milestone.key, family: family.key, name: family.name, label: milestone.label, category: family.category, unlocked: milestone.isUnlocked, trackable: milestone.trackable, cosmetic: {
     title: getAchievementCosmetic(milestone.key, "title"),
     background: getAchievementCosmetic(milestone.key, "background"),

@@ -1,280 +1,34 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { normalizeTwitchLogin } from "@/lib/validation";
 
-import UpmanCard from "@/components/UpmanCard";
+export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const session = await auth();
+  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
+  if (!sessionLogin) redirect("/");
 
-  if (!session?.user?.name) {
-    redirect("/");
-  }
+  const user = await prisma.user.findUnique({
+    where: { twitchLogin: sessionLogin },
+    select: { person: { select: { id: true } } },
+  });
 
-  const user =
-    await prisma.user.findUnique({
-      where: {
-  twitchLogin:
-    session.user.name.toLowerCase(),
-},
-
-      include: {
-        inventory: {
-          include: {
-            upman: true,
-          },
-        },
-      },
-    });
-
-  if (!user) {
-    redirect("/");
-  }
-
-  const ownedUpmans =
-    user.inventory.map(
-      (item) => item.upman
-    );
-
-  const allUpmans =
-  await prisma.upman.findMany();
-
-const ownedSlugs =
-  new Set(
-    ownedUpmans.map(
-      (u) => u.slug
-    )
-  );
-
-  const totalUpmans =
-    await prisma.upman.count();
-
-  const ownedCount =
-    ownedUpmans.length;
-
-  const completion =
-    totalUpmans > 0
-      ? (
-          (ownedCount /
-            totalUpmans) *
-          100
-        ).toFixed(1)
-      : "0";
-
-  const mythicCount =
-    ownedUpmans.filter(
-      (u) =>
-        u.rarity ===
-        "Mythic"
-    ).length;
-
-  const legendaryCount =
-    ownedUpmans.filter(
-      (u) =>
-        u.rarity ===
-        "Legendary"
-    ).length;
-
-  const latestDiscovery =
-    ownedUpmans[
-      ownedUpmans.length - 1
-    ];
+  if (user?.person) redirect(`/people/${user.person.id}`);
 
   return (
-    <main>
-      <div
-        className="
-          bg-white/80
-          backdrop-blur-md
-          rounded-[40px]
-          shadow-2xl
-          p-10
-          mb-12
-        "
-      >
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-
-          <div className="flex items-center gap-6">
-
-            {user.avatar ? (
-              <img
-                src={user.avatar}
-                alt={
-                  user.displayName
-                }
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  border-4
-                  border-sky-300
-                "
-              />
-            ) : (
-              <div
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  bg-sky-100
-                  flex
-                  items-center
-                  justify-center
-                  text-5xl
-                "
-              >
-                👤
-              </div>
-            )}
-
-            <div>
-
-              <p className="uppercase tracking-[0.3em] text-sky-500 text-sm">
-                ☁️ Explorer Profile
-              </p>
-
-              <h1 className="text-5xl font-black text-sky-800 mt-2">
-                {user.displayName}
-              </h1>
-
-              <p className="text-sky-600 mt-2">
-                {ownedCount} discoveries
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="text-center">
-
-            <p className="text-4xl font-black text-sky-800">
-              {completion}%
-            </p>
-
-            <p className="text-sky-600">
-              Collection Complete
-            </p>
-
-          </div>
-
+    <main className="mx-auto w-full max-w-3xl px-6 py-20 text-center">
+      <section className="rounded-[2rem] border border-sky-200 bg-white/80 p-10 shadow-xl backdrop-blur-md">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-600">My Profile</p>
+        <h1 className="mt-3 text-4xl font-black text-sky-900">Your Person profile is not linked yet.</h1>
+        <p className="mx-auto mt-4 max-w-xl text-sky-800">Your collection is still available while an Admin links your Twitch account to a Person.</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <Link href="/my-collection" className="rounded-xl bg-sky-500 px-5 py-3 font-bold text-white">Open My Collection</Link>
+          <Link href="/people" className="rounded-xl border border-sky-300 bg-white px-5 py-3 font-bold text-sky-800">Explore People</Link>
         </div>
-
-        <div className="mt-8">
-
-          <div className="w-full h-5 bg-sky-100 rounded-full overflow-hidden">
-
-            <div
-              className="
-                h-full
-                bg-sky-400
-                rounded-full
-              "
-              style={{
-                width: `${completion}%`,
-              }}
-            />
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            📦 Collection
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {ownedCount}
-          </p>
-
-        </div>
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            🔥 Mythics
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {mythicCount}
-          </p>
-
-        </div>
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6">
-
-          <p className="text-sky-500">
-            👑 Legendaries
-          </p>
-
-          <p className="font-black text-sky-800 text-3xl mt-2">
-            {legendaryCount}
-          </p>
-
-        </div>
-
-      </div>
-
-      {latestDiscovery && (
-
-        <div className="bg-white/80 rounded-3xl shadow-xl p-6 mb-12">
-
-          <p className="text-sky-500">
-            ✨ Latest Discovery
-          </p>
-
-          <p className="font-black text-sky-800 text-2xl mt-2">
-            {latestDiscovery.name}
-          </p>
-
-        </div>
-
-      )}
-
-      <h2 className="text-4xl font-black text-sky-800 mb-8">
-  🎒 My Collection ({ownedCount} / {totalUpmans})
-</h2>
-
-      <div
-        className="
-          grid
-          grid-cols-2
-          md:grid-cols-3
-          xl:grid-cols-5
-          gap-6
-        "
-      >
-
-        {allUpmans.map(
-  (upman) => (
-    <UpmanCard
-      key={upman.slug}
-      slug={upman.slug}
-      name={upman.name}
-      image={upman.image}
-      rarity={
-        upman.rarity as
-          | "Common"
-          | "Rare"
-          | "Epic"
-          | "Mythic"
-          | "Legendary"
-      }
-      owned={ownedSlugs.has(
-        upman.slug
-      )}
-    />
-  )
-)}
-
-      </div>
-
+      </section>
     </main>
   );
 }
