@@ -86,14 +86,14 @@ function UpmanSection({ title, upmans, kind }: { title: string; upmans: PersonUp
   return <section className={`${styles.section} ${kind === "represented" ? styles.representedSection : styles.createdSection}`} aria-labelledby={`${kind}-heading`}>
     <h2 id={`${kind}-heading`} className={styles.sectionHeading}>{title}</h2>
     <div className={kind === "represented" ? styles.representedGrid : styles.createdGrid}>
-      {upmans.map((upman) => <UpmanCard key={upman.slug} upman={upman} />)}
+      {upmans.map((upman) => <UpmanCard key={upman.slug} upman={upman} compact={kind === "created"} />)}
     </div>
   </section>;
 }
 
-function UpmanCard({ upman }: { upman: PersonUpman }) {
+function UpmanCard({ upman, compact = false }: { upman: PersonUpman; compact?: boolean }) {
   return (
-    <Link href={`/upmans/${upman.slug}`} className={`${styles.upmanCard} ${rarityClassNames[upman.rarity] ?? styles.common}`} aria-label={`View ${upman.name}, ${upman.rarity}`}>
+    <Link href={`/upmans/${upman.slug}`} className={`${styles.upmanCard} ${compact ? styles.createdCard : ""} ${rarityClassNames[upman.rarity] ?? styles.common}`} aria-label={`View ${upman.name}, ${upman.rarity}`}>
       <span className={styles.cardArt}><Image src={upman.image} alt={upman.name} width={300} height={260} sizes="(max-width: 640px) 46vw, (max-width: 1040px) 30vw, 17rem" /></span>
       <span className={styles.cardInfo}><span>{upman.rarity}</span><strong>{upman.name}</strong></span>
     </Link>
