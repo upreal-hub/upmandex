@@ -1,0 +1,3 @@
+.titlePolish :global(.header h1), .titlePolish :global(.login h1) {
+  text-shadow: .08rem .1rem 0 color-mix(in srgb, #e5d8ff 66%, transparent), .18rem .22rem .6rem color-mix(in srgb, #8a72d4 16%, transparent);
+}

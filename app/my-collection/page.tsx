@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
 
 import styles from "./collection.module.css";
+import titleStyles from "./collection-title.module.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -44,7 +45,7 @@ export default async function MyCollectionPage() {
   }));
 
   return (
-    <main className={`collection-page ${styles.page}`}>
+    <main className={`collection-page ${styles.page} ${titleStyles.titlePolish}`}>
       <header className={styles.header}>
         {user.avatar && (
           // This is the stored avatar from the authenticated Twitch User record.
@@ -60,7 +61,7 @@ export default async function MyCollectionPage() {
 
 function LoggedOutCollection() {
   return (
-    <main className={`collection-page ${styles.page}`}>
+    <main className={`collection-page ${styles.page} ${titleStyles.titlePolish}`}>
       <section className={styles.login}>
         <p>Your part of the cloud world</p>
         <h1>MY COLLECTION</h1>
