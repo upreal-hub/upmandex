@@ -13,4 +13,7 @@ export type ManagedPerson = {
   user: PersonUserOption | null;
   createdUpmansCount: number;
   representedUpmansCount: number;
+  achievementsCount: number;
+  hasEquippedTitle: boolean;
+  featuredAchievementsCount: number;
 };

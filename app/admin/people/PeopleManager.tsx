@@ -107,6 +107,9 @@ export default function PeopleManager({ people, users }: { people: ManagedPerson
   }
 
   const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"ALL" | "UNLINKED" | "LINKED" | "CREATORS" | "REPRESENTED">("ALL");
+  const visiblePeople = people.filter((person) => `${person.displayName} ${person.user?.twitchLogin ?? ""} ${person.user?.displayName ?? ""}`.toLowerCase().includes(query.toLowerCase()) && (filter === "ALL" || (filter === "UNLINKED" && !person.userId) || (filter === "LINKED" && Boolean(person.userId)) || (filter === "CREATORS" && person.createdUpmansCount > 0) || (filter === "REPRESENTED" && person.representedUpmansCount > 0)));
 
   return (
     <main>
@@ -119,14 +122,15 @@ export default function PeopleManager({ people, users }: { people: ManagedPerson
         <button type="button" onClick={() => setEditingPerson(null)} className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-600">+ Create Person</button>
       </header>
       {syncMessage && <p role="status" className="mt-5 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-bold text-sky-800">{syncMessage}</p>}
+      <div className="mt-5 flex flex-wrap gap-2"><input aria-label="Search people" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people..." className="min-w-56 rounded-xl border border-sky-200 px-3 py-2 text-sm" />{(["ALL", "UNLINKED", "LINKED", "CREATORS", "REPRESENTED"] as const).map((value) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-xl px-3 py-2 text-xs font-black ${filter === value ? "bg-sky-500 text-white" : "bg-sky-50 text-sky-800"}`}>{value}</button>)}</div>
       <section className="mt-6 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm">
         <div className="hidden grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_210px] gap-4 border-b border-sky-100 bg-sky-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-sky-600 lg:grid"><span>Person</span><span>Linked User</span><span>Created</span><span>Represented</span><span className="text-right">Actions</span></div>
-        {people.length ? <div className="divide-y divide-sky-100">{people.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_210px] lg:gap-4">
-          <div><p className="font-black text-sky-950">{person.displayName}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${person.isPublic ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{person.isPublic ? "Public" : "Private"}</span></div>
-          <p className="text-sm font-semibold text-sky-800">{person.user ? `${person.user.displayName} (@${person.user.twitchLogin})` : "No linked User"}</p>
-          <p className="text-sm font-black text-sky-900">{person.createdUpmansCount}</p><p className="text-sm font-black text-sky-900">{person.representedUpmansCount}</p>
+        {visiblePeople.length ? <div className="divide-y divide-sky-100">{visiblePeople.map((person) => <article key={person.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_110px_110px_210px] lg:gap-4">
+          <div className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sky-100 font-black text-sky-700">{person.user?.avatar ? <img src={person.user.avatar} alt="" className="h-full w-full object-cover" /> : "☁"}</span><div><p className="font-black text-sky-950">{person.displayName}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${person.isPublic ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{person.isPublic ? "Public" : "Private"}</span></div></div>
+          <p className="text-sm font-semibold text-sky-800">{person.user ? `${person.user.displayName} (@${person.user.twitchLogin})` : "No Twitch linked"} · Achievements: {person.achievementsCount} · {person.hasEquippedTitle ? "Title equipped" : "No title"} · Featured: {person.featuredAchievementsCount}</p>
+          <p className="text-sm font-black text-sky-900">Created: {person.createdUpmansCount}</p><p className="text-sm font-black text-sky-900">Represented: {person.representedUpmansCount}</p>
           <div className="flex gap-2 lg:justify-self-end"><button type="button" onClick={() => syncAchievements(person)} disabled={syncingPersonId === person.id} className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:opacity-60">{syncingPersonId === person.id ? "Syncing…" : "Sync badges"}</button><button type="button" onClick={() => setEditingPerson(person)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Edit</button></div>
-        </article>)}</div> : <div className="px-6 py-14 text-center text-sky-700"><p className="text-xl font-black text-sky-950">No People yet</p><p className="mt-2">Create the first canonical identity when you are ready.</p></div>}
+        </article>)}</div> : <div className="px-6 py-14 text-center text-sky-700"><p className="text-xl font-black text-sky-950">{people.length ? "No matching People" : "No People yet"}</p><p className="mt-2">{people.length ? "Try another search or filter." : "Create the first canonical identity when you are ready."}</p></div>}
       </section>
       {editingPerson !== undefined && <PersonEditor key={editingPerson?.id ?? "new"} person={editingPerson} users={users} onClose={() => setEditingPerson(undefined)} />}
     </main>
