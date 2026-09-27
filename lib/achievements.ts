@@ -34,9 +34,76 @@ type AchievementDefinition = {
   target: number;
   rarity?: string;
   order: number;
+  cosmetic: AchievementCosmeticBundle;
 };
 
-const definitions: AchievementDefinition[] = [
+export type CosmeticSlot = "title" | "background" | "banner" | "accent";
+
+export type AchievementCosmeticBundle = {
+  title: { label: string; styleKey: string };
+  background: { label: string; styleKey: string };
+  banner: { label: string; styleKey: string };
+  accent: { label: string; styleKey: string };
+};
+
+type AchievementDefinitionInput = Omit<AchievementDefinition, "cosmetic">;
+
+const cosmeticFamilies: Record<AchievementCategory, Omit<AchievementCosmeticBundle, "title"> & { titlePrefix: string }> = {
+  COLLECTION: {
+    titlePrefix: "Sky Collector",
+    background: { label: "Trophy Sky", styleKey: "collection-sky" },
+    banner: { label: "Cloud Horizon", styleKey: "collection-horizon" },
+    accent: { label: "Collection Cyan", styleKey: "collection-cyan" },
+  },
+  PULLS: {
+    titlePrefix: "Cloud Seeker",
+    background: { label: "Twilight Sky", styleKey: "pulls-twilight" },
+    banner: { label: "Pull Aurora", styleKey: "pulls-aurora" },
+    accent: { label: "Pull Violet", styleKey: "pulls-violet" },
+  },
+  CREATION: {
+    titlePrefix: "Cloudsmith",
+    background: { label: "Studio Sky", styleKey: "creation-studio" },
+    banner: { label: "Creator Horizon", styleKey: "creation-horizon" },
+    accent: { label: "Creator Cyan", styleKey: "creation-cyan" },
+  },
+  ART: {
+    titlePrefix: "Sky Artist",
+    background: { label: "Painted Sunset", styleKey: "art-sunset" },
+    banner: { label: "Brushstroke Band", styleKey: "art-band" },
+    accent: { label: "Artist Coral", styleKey: "art-coral" },
+  },
+  GARTIC: {
+    titlePrefix: "Cloud Doodler",
+    background: { label: "Playful Twilight", styleKey: "gartic-twilight" },
+    banner: { label: "Sketchy Horizon", styleKey: "gartic-band" },
+    accent: { label: "Gartic Lilac", styleKey: "gartic-lilac" },
+  },
+  STREAM: {
+    titlePrefix: "Stream Regular",
+    background: { label: "Night Clouds", styleKey: "stream-night" },
+    banner: { label: "Live Signal", styleKey: "stream-band" },
+    accent: { label: "Stream Blue", styleKey: "stream-blue" },
+  },
+  EVENTS: {
+    titlePrefix: "Event Voyager",
+    background: { label: "Celebration Sky", styleKey: "events-sky" },
+    banner: { label: "Golden Clouds", styleKey: "events-gold" },
+    accent: { label: "Trophy Gold", styleKey: "events-gold" },
+  },
+};
+
+function cosmeticFor(definition: AchievementDefinitionInput): AchievementCosmeticBundle {
+  const family = cosmeticFamilies[definition.category];
+  return {
+    title: { label: `${family.titlePrefix} · ${definition.label}`, styleKey: `${definition.category.toLowerCase()}-title` },
+    background: family.background,
+    banner: family.banner,
+    accent: family.accent,
+  };
+}
+
+const rawDefinitions: AchievementDefinitionInput[] = [
   { key: "collector-10", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "10%", metric: "collection-percent", target: 10, order: 10 },
   { key: "collector-50", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "50%", metric: "collection-percent", target: 50, order: 20 },
   { key: "collector-100", family: "collector", category: "COLLECTION", name: "Collector", description: "Own the normal UPMANDEX collection.", label: "100%", metric: "collection-percent", target: 100, order: 30 },
@@ -60,6 +127,24 @@ const definitions: AchievementDefinition[] = [
     ["event-collector-1", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "1", 1], ["event-collector-10", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "10", 10], ["event-collector-25", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "25", 25],
   ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: "unavailable" as const, target: target as number, order: 100 + index })),
 ];
+
+const definitions: AchievementDefinition[] = rawDefinitions.map((definition) => ({ ...definition, cosmetic: cosmeticFor(definition) }));
+
+if (definitions.some((definition) => !definition.cosmetic.title || !definition.cosmetic.background || !definition.cosmetic.banner || !definition.cosmetic.accent)) {
+  throw new Error("Every achievement definition must provide a complete cosmetic bundle.");
+}
+
+export function getAchievementDefinition(key: string) {
+  return definitions.find((definition) => definition.key === key) ?? null;
+}
+
+export function getAchievementCosmetic(key: string, slot: CosmeticSlot) {
+  return getAchievementDefinition(key)?.cosmetic[slot] ?? null;
+}
+
+export function getAchievementCatalog() {
+  return definitions;
+}
 
 export type AchievementMilestone = {
   key: string;

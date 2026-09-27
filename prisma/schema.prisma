@@ -57,6 +57,9 @@ model Person {
   userId              String?       @unique
   isPublic            Boolean       @default(true)
   equippedTitleAchievementKey String?
+  equippedBackgroundAchievementKey String?
+  equippedBannerAchievementKey     String?
+  equippedAccentAchievementKey     String?
   featuredAchievementKeys     String[]     @default([])
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt

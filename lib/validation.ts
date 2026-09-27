@@ -272,20 +272,50 @@ export function validatePersonPayload(value: unknown):
 }
 
 export function validateAchievementCustomizationPayload(value: unknown):
-  | { success: true; data: { equippedTitleAchievementKey: string | null; featuredAchievementKeys: string[] } }
+  | {
+      success: true;
+      data: {
+        equippedTitleAchievementKey: string | null;
+        equippedBackgroundAchievementKey: string | null;
+        equippedBannerAchievementKey: string | null;
+        equippedAccentAchievementKey: string | null;
+        featuredAchievementKeys: string[];
+      };
+    }
   | { success: false; error: string } {
   if (!value || typeof value !== "object" || Array.isArray(value)) return { success: false, error: "Invalid achievement customization" };
   const payload = value as Record<string, unknown>;
+  const allowedKeys = new Set([
+    "equippedTitleAchievementKey",
+    "equippedBackgroundAchievementKey",
+    "equippedBannerAchievementKey",
+    "equippedAccentAchievementKey",
+    "featuredAchievementKeys",
+  ]);
+  if (Object.keys(payload).some((key) => !allowedKeys.has(key))) return { success: false, error: "Invalid achievement customization" };
   const title = payload.equippedTitleAchievementKey;
+  const background = payload.equippedBackgroundAchievementKey;
+  const banner = payload.equippedBannerAchievementKey;
+  const accent = payload.equippedAccentAchievementKey;
   const featured = payload.featuredAchievementKeys;
-  if ((title !== null && typeof title !== "string") || !Array.isArray(featured) || featured.some((key) => typeof key !== "string" || !key || key.length > 120)) {
+  const validAchievementKey = (key: unknown): key is string | null => key === null || (typeof key === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key) && key.length <= 120);
+  if (!validAchievementKey(title) || !validAchievementKey(background) || !validAchievementKey(banner) || !validAchievementKey(accent) || !Array.isArray(featured) || featured.some((key) => !validAchievementKey(key) || key === null)) {
     return { success: false, error: "Invalid achievement customization" };
   }
   const featuredAchievementKeys = featured as string[];
   if (featuredAchievementKeys.length > 3 || new Set(featuredAchievementKeys).size !== featuredAchievementKeys.length) {
     return { success: false, error: "Choose up to three different achievements" };
   }
-  return { success: true, data: { equippedTitleAchievementKey: title, featuredAchievementKeys } };
+  return {
+    success: true,
+    data: {
+      equippedTitleAchievementKey: title,
+      equippedBackgroundAchievementKey: background,
+      equippedBannerAchievementKey: banner,
+      equippedAccentAchievementKey: accent,
+      featuredAchievementKeys,
+    },
+  };
 }
 
 export function validateInventoryPayload(value: unknown):
