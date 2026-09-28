@@ -36,6 +36,17 @@ enum ActivityOrigin {
   SYSTEM
 }
 
+enum PersonLinkPlatform {
+  YOUTUBE
+  INSTAGRAM
+  TIKTOK
+  BLUESKY
+  X
+  GITHUB
+  WEBSITE
+  PORTFOLIO
+}
+
 model User {
   id           String      @id @default(cuid())
   twitchLogin  String      @unique
@@ -70,8 +81,23 @@ model Person {
   achievements        PersonAchievement[]
   artworks            PersonArtwork[]
   projects            PersonProject[]
+  links               PersonLink[]
 
   @@index([displayName])
+}
+
+model PersonLink {
+  id        String             @id @default(cuid())
+  personId  String
+  platform  PersonLinkPlatform
+  url       String
+  position  Int
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  person    Person             @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, platform])
+  @@index([personId, position])
 }
 
 model PersonProject {

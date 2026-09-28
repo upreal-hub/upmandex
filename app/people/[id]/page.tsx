@@ -11,6 +11,7 @@ import AchievementsPanel from "./AchievementsPanel";
 import CreatedUpmansRail from "./CreatedUpmansRail";
 import PersonArtPreview from "./PersonArtPreview";
 import PersonProjects from "./PersonProjects";
+import PersonLinks from "./PersonLinks";
 import styles from "./person.module.css";
 
 const rarityClassNames: Record<string, string> = {
@@ -54,6 +55,10 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       projects: {
         orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
         select: { id: true, title: true, description: true },
+      },
+      links: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: { id: true, platform: true, url: true },
       },
       representedUpmans: {
         orderBy: [{ name: "asc" }, { slug: "asc" }],
@@ -107,6 +112,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
 
       <PersonProjects personId={person.id} projects={person.projects} isOwner={isOwner} />
+
+      <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>
