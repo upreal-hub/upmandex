@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         pathname: "/artworks/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
+        pathname: "/profile-cosmetics/**",
+        search: "",
+      },
     ],
   },
 };

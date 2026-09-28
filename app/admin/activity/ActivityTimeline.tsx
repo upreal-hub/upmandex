@@ -32,6 +32,9 @@ const actionLabels: Record<ActivityAction, string> = {
   PERSON_CREATED: "Person created",
   PERSON_UPDATED: "Person updated",
   UPMAN_RELATIONSHIPS_UPDATED: "Relationships updated",
+  PROFILE_COSMETIC_CREATED: "Profile cosmetic created",
+  PROFILE_COSMETIC_UPDATED: "Profile cosmetic updated",
+  PROFILE_COSMETIC_DELETED: "Profile cosmetic deleted",
 };
 
 function formatTimestamp(value: Date) {

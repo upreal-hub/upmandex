@@ -15,6 +15,7 @@ const navigationItems: NavigationItem[] = [
   { href: "/admin/upmans", icon: "📦", label: "Upmans" },
   { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" },
   { href: "/admin/people", icon: "🧑‍🎨", label: "People" },
+  { href: "/admin/profile-cosmetics", icon: "🎨", label: "Profile Cosmetics" },
   { href: "/admin/viewers", icon: "👥", label: "Viewers" },
   { href: "/admin/activity", icon: "✨", label: "Activity" },
 ];

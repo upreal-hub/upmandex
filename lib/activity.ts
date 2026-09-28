@@ -44,7 +44,8 @@ export type ActivityMetadata =
   | {
       changes: string[];
       linkedUserLogin?: string | null;
-    };
+    }
+  | { assetId: string; assetName: string; assetType: "BACKGROUND" | "BANNER"; cleanupWarning?: boolean };
 
 export function createActivityLogData({
   action,
@@ -125,5 +126,11 @@ export function formatActivityDescription(entry: ActivityDisplayEntry) {
       return `${actor} updated ${personLabel(entry)}`;
     case "UPMAN_RELATIONSHIPS_UPDATED":
       return `${actor} updated relationships for ${upman}`;
+    case "PROFILE_COSMETIC_CREATED":
+      return `${actor} added a profile cosmetic`;
+    case "PROFILE_COSMETIC_UPDATED":
+      return `${actor} updated a profile cosmetic`;
+    case "PROFILE_COSMETIC_DELETED":
+      return `${actor} deleted a profile cosmetic`;
   }
 }

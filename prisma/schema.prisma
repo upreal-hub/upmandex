@@ -22,6 +22,9 @@ enum ActivityAction {
   PERSON_CREATED
   PERSON_UPDATED
   UPMAN_RELATIONSHIPS_UPDATED
+  PROFILE_COSMETIC_CREATED
+  PROFILE_COSMETIC_UPDATED
+  PROFILE_COSMETIC_DELETED
 }
 
 enum PullResult {
@@ -47,43 +50,68 @@ enum PersonLinkPlatform {
   PORTFOLIO
 }
 
+enum ProfileCosmeticAssetType {
+  BACKGROUND
+  BANNER
+}
+
 model User {
-  id           String      @id @default(cuid())
-  twitchLogin  String      @unique
-  twitchUserId String?     @unique
-  displayName  String
-  avatar       String?
-  role         UserRole    @default(USER)
-  createdAt    DateTime    @default(now())
-  inventory    Inventory[]
-  pullEvents   PullEvent[]
+  id               String        @id @default(cuid())
+  twitchLogin      String        @unique
+  twitchUserId     String?       @unique
+  displayName      String
+  avatar           String?
+  role             UserRole      @default(USER)
+  createdAt        DateTime      @default(now())
+  inventory        Inventory[]
+  pullEvents       PullEvent[]
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
   person           Person?
 }
 
 model Person {
-  id                  String        @id @default(cuid())
-  displayName         String
-  userId              String?       @unique
-  isPublic            Boolean       @default(true)
-  equippedTitleAchievementKey String?
+  id                               String                @id @default(cuid())
+  displayName                      String
+  userId                           String?               @unique
+  isPublic                         Boolean               @default(true)
+  equippedTitleAchievementKey      String?
   equippedBackgroundAchievementKey String?
   equippedBannerAchievementKey     String?
   equippedAccentAchievementKey     String?
-  featuredAchievementKeys     String[]     @default([])
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdUpmans       Upman[]       @relation("UpmanCreatorPerson")
-  representedUpmans   Upman[]       @relation("UpmanRepresentedPerson")
-  activityLogs        ActivityLog[] @relation("ActivityPerson")
-  achievements        PersonAchievement[]
-  artworks            PersonArtwork[]
-  projects            PersonProject[]
-  links               PersonLink[]
+  equippedCustomBackgroundId       String?
+  equippedCustomBannerId           String?
+  featuredAchievementKeys          String[]              @default([])
+  createdAt                        DateTime              @default(now())
+  updatedAt                        DateTime              @updatedAt
+  user                             User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdUpmans                    Upman[]               @relation("UpmanCreatorPerson")
+  representedUpmans                Upman[]               @relation("UpmanRepresentedPerson")
+  activityLogs                     ActivityLog[]         @relation("ActivityPerson")
+  achievements                     PersonAchievement[]
+  artworks                         PersonArtwork[]
+  projects                         PersonProject[]
+  links                            PersonLink[]
+  equippedCustomBackground         ProfileCosmeticAsset? @relation("PersonCustomBackground", fields: [equippedCustomBackgroundId], references: [id], onDelete: SetNull)
+  equippedCustomBanner             ProfileCosmeticAsset? @relation("PersonCustomBanner", fields: [equippedCustomBannerId], references: [id], onDelete: SetNull)
 
   @@index([displayName])
+  @@index([equippedCustomBackgroundId])
+  @@index([equippedCustomBannerId])
+}
+
+model ProfileCosmeticAsset {
+  id        String                   @id @default(cuid())
+  type      ProfileCosmeticAssetType
+  name      String
+  image     String
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+
+  backgroundEquippedBy Person[] @relation("PersonCustomBackground")
+  bannerEquippedBy     Person[] @relation("PersonCustomBanner")
+
+  @@index([type, createdAt])
 }
 
 model PersonLink {
@@ -137,24 +165,24 @@ model PersonAchievement {
 }
 
 model Upman {
-  id            String      @id @default(cuid())
-  slug          String      @unique
-  name          String
-  image         String
-  rarity        String
-  creator       String
-  creatorTwitch String?
-  creatorPersonId String?
+  id                  String        @id @default(cuid())
+  slug                String        @unique
+  name                String
+  image               String
+  rarity              String
+  creator             String
+  creatorTwitch       String?
+  creatorPersonId     String?
   representedPersonId String?
-  ownersCount   Int         @default(0)
-  firstOwner    String?
-  isPullable    Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  inventory     Inventory[]
-  pullEvents    PullEvent[]
-  activityLogs  ActivityLog[]
-  creatorPerson Person? @relation("UpmanCreatorPerson", fields: [creatorPersonId], references: [id], onDelete: SetNull)
-  representedPerson Person? @relation("UpmanRepresentedPerson", fields: [representedPersonId], references: [id], onDelete: SetNull)
+  ownersCount         Int           @default(0)
+  firstOwner          String?
+  isPullable          Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  inventory           Inventory[]
+  pullEvents          PullEvent[]
+  activityLogs        ActivityLog[]
+  creatorPerson       Person?       @relation("UpmanCreatorPerson", fields: [creatorPersonId], references: [id], onDelete: SetNull)
+  representedPerson   Person?       @relation("UpmanRepresentedPerson", fields: [representedPersonId], references: [id], onDelete: SetNull)
 
   @@index([creatorPersonId])
   @@index([representedPersonId])
@@ -216,17 +244,17 @@ model ActivityLog {
   targetUserId String?
   targetLogin  String?
 
-  upmanId   String?
-  upmanSlug String?
-  upmanName String?
-  personId String?
+  upmanId           String?
+  upmanSlug         String?
+  upmanName         String?
+  personId          String?
   personDisplayName String?
 
   metadata Json?
 
-  actorUser  User?  @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
-  targetUser User?  @relation("ActivityTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
-  upman      Upman? @relation(fields: [upmanId], references: [id], onDelete: SetNull)
+  actorUser  User?   @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  targetUser User?   @relation("ActivityTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  upman      Upman?  @relation(fields: [upmanId], references: [id], onDelete: SetNull)
   person     Person? @relation("ActivityPerson", fields: [personId], references: [id], onDelete: SetNull)
 
   @@index([createdAt, id])
