@@ -128,7 +128,7 @@ export default function PersonProjects({ personId, projects, isOwner }: { person
   return (
     <section className={styles.section} aria-labelledby="person-projects-heading">
       <div className={styles.heading}>
-        <div><p>PERSONAL CORNER</p><h2 id="person-projects-heading">PROJECTS</h2></div>
+        <div><h2 id="person-projects-heading">PROJECTS</h2></div>
         {isOwner && !formOpen && <button type="button" onClick={beginAdd}>Add project</button>}
       </div>
 

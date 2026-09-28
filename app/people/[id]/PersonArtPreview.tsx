@@ -11,7 +11,7 @@ export default function PersonArtPreview({ personId, personName, artworks, isOwn
   return (
     <section className={styles.preview} aria-labelledby="person-art-heading">
       <div className={styles.sectionHeading}>
-        <div><p>PERSONAL CORNER</p><h2 id="person-art-heading">ART</h2></div>
+        <div><h2 id="person-art-heading">ART</h2></div>
         {artworks.length > 0 && <Link href={`/people/${personId}/art`}>View all art <span aria-hidden="true">→</span></Link>}
       </div>
       {artworks.length ? (

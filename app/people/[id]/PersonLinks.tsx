@@ -77,7 +77,7 @@ export default function PersonLinks({ personId, personName, links, isOwner }: { 
     } catch { setError("Unable to delete link"); } finally { setBusyId(null); }
   }
 
-  if (!links.length && !isOwner) return null;
+  if (!isOwner) return null;
   const formOpen = adding || editingId !== null;
   const renderForm = (editing: boolean) => draft && <form className={styles.form} onSubmit={save}>
     <label>Platform<select value={draft.platform} onChange={(event) => setDraft((current) => current ? { ...current, platform: event.target.value as PersonLinkPlatform } : current)}>
@@ -87,8 +87,10 @@ export default function PersonLinks({ personId, personName, links, isOwner }: { 
     <div className={styles.formActions}><button type="submit" disabled={busyId !== null}>{busyId ? "Saving…" : editing ? "Save link" : "Add link"}</button><button type="button" className={styles.cancel} disabled={busyId !== null} onClick={cancel}>Cancel</button></div>
   </form>;
 
-  return <section className={styles.section} aria-labelledby="person-links-heading">
-    <div className={styles.heading}><div><p>PERSONAL CORNER</p><h2 id="person-links-heading">LINKS</h2></div>{isOwner && !formOpen && availablePlatforms.length > 0 && <button type="button" onClick={openAdd}>Add link</button>}</div>
+  return <details className={styles.manager}>
+    <summary>Manage links <span>{links.length}</span></summary>
+    <section className={styles.section} aria-labelledby="person-links-heading">
+    <div className={styles.heading}><div><h2 id="person-links-heading">Links</h2></div>{!formOpen && availablePlatforms.length > 0 && <button type="button" onClick={openAdd}>Add link</button>}</div>
     {isOwner && adding && renderForm(false)}
     {error && <p className={styles.feedbackError} role="alert">{error}</p>}
     {notice && <p className={styles.feedbackSuccess} role="status">{notice}</p>}
@@ -101,14 +103,15 @@ export default function PersonLinks({ personId, personName, links, isOwner }: { 
             <span><strong>{details.label}</strong><small>{hostname(link.url)}</small></span>
             <span aria-hidden="true" className={styles.external}>↗</span>
           </a>
-          {isOwner && <div className={styles.actions}>
+          <div className={styles.actions}>
             <button type="button" onClick={() => openEdit(link)} disabled={busyId !== null}>Edit</button>
             <button type="button" onClick={() => move(link.id, "earlier")} disabled={index === 0 || busyId !== null} aria-label={`Move ${details.label} earlier`}>Move earlier</button>
             <button type="button" onClick={() => move(link.id, "later")} disabled={index === links.length - 1 || busyId !== null} aria-label={`Move ${details.label} later`}>Move later</button>
             <button type="button" className={styles.delete} onClick={() => remove(link)} disabled={busyId !== null}>Delete</button>
-          </div>}
+          </div>
         </>}
       </article>;
-    })}</div> : isOwner && !formOpen ? <div className={styles.empty}><p>Share the places where people can find your work.</p>{availablePlatforms.length > 0 && <button type="button" onClick={openAdd}>Add link</button>}</div> : null}
-  </section>;
+    })}</div> : !formOpen ? <div className={styles.empty}><p>Share the places where people can find your work.</p>{availablePlatforms.length > 0 && <button type="button" onClick={openAdd}>Add link</button>}</div> : null}
+    </section>
+  </details>;
 }

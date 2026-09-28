@@ -8,10 +8,12 @@ import { auth } from "@/auth";
 import { normalizeTwitchLogin } from "@/lib/validation";
 
 import AchievementsPanel from "./AchievementsPanel";
+import AchievementCustomization from "./AchievementCustomization";
 import CreatedUpmansRail from "./CreatedUpmansRail";
 import PersonArtPreview from "./PersonArtPreview";
 import PersonProjects from "./PersonProjects";
 import PersonLinks from "./PersonLinks";
+import PersonHeroLinks from "./PersonHeroLinks";
 import styles from "./person.module.css";
 
 const rarityClassNames: Record<string, string> = {
@@ -105,22 +107,26 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           {title && <p className={styles.equippedTitle} data-category={title.category}>✓ {title.cosmetic.title?.label ?? title.name} <span>· {title.name} {title.label}</span></p>}
           {person.user?.twitchLogin && <TwitchIdentity login={person.user.twitchLogin} />}
         </div>
+        <div className={styles.heroAside}>
+          <PersonHeroLinks personName={person.displayName} links={person.links} />
+          {isOwner && <AchievementCustomization personId={person.id} achievements={unlockedAchievements} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />}
+        </div>
       </section>
 
-      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} />}
+      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} showCustomization={false} />}
 
-      <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
+      {isOwner && <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />}
 
-      <PersonProjects personId={person.id} projects={person.projects} isOwner={isOwner} />
-
-      <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
-
-      {(hasRepresented || hasCreated) && (
-        <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>
-          {hasRepresented && <UpmanSection title="REPRESENTED IN UPMANDEX BY" upmans={person.representedUpmans} />}
-          {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}
+      {(person.artworks.length || person.projects.length || isOwner) && <section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
+        <header className={styles.zoneHeading}><p>PERSONAL SPACE</p><h2 id="creative-space-heading">Creative space</h2></header>
+        <div className={styles.creativeGrid}>
+          <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
+          <PersonProjects personId={person.id} projects={person.projects} isOwner={isOwner} />
         </div>
-      )}
+      </section>}
+
+      {hasRepresented && <UpmanSection title="MY UPMAN" upmans={person.representedUpmans} />}
+      {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}
     </main>
   );
 }
@@ -141,9 +147,8 @@ function TwitchIdentity({ login }: { login: string }) {
 function UpmanSection({ title, upmans }: { title: string; upmans: PersonUpman[] }) {
   return <section className={`${styles.section} ${styles.representedSection}`} aria-labelledby="represented-heading">
     <h2 id="represented-heading" className={styles.sectionHeading}>{title}</h2>
-    <div className={styles.representedGrid}>
-      {upmans.map((upman) => <UpmanCard key={upman.slug} upman={upman} />)}
-    </div>
+    <div className={styles.representedFeature}><UpmanCard upman={upmans[0]} /></div>
+    {upmans.length > 1 && <div className={styles.representedMore}>{upmans.slice(1).map((upman) => <UpmanCard key={upman.slug} upman={upman} />)}</div>}
   </section>;
 }
 
