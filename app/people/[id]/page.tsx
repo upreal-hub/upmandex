@@ -62,7 +62,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
-  const unlockedAchievements = achievementProgress?.families.flatMap((family) => family.milestones.map((milestone) => ({ key: milestone.key, family: family.key, name: family.name, label: milestone.label, category: family.category, unlocked: milestone.isUnlocked, trackable: milestone.trackable, cosmetic: {
+  const unlockedAchievements = achievementProgress?.families.flatMap((family) => family.milestones.map((milestone) => ({ key: milestone.key, family: family.key, name: family.name, label: milestone.label, category: family.category, unlocked: milestone.isUnlocked, trackable: milestone.trackable, current: milestone.displayCurrent, target: milestone.displayTarget, cosmetic: {
     title: getAchievementCosmetic(milestone.key, "title"),
     background: getAchievementCosmetic(milestone.key, "background"),
     banner: getAchievementCosmetic(milestone.key, "banner"),
@@ -91,7 +91,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         </div>
       </section>
 
-      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} />}
+      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} />}
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>

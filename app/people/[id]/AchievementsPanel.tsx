@@ -60,7 +60,7 @@ function popoverContent(family: AchievementFamily, milestone: AchievementMilesto
   return { title: family.name.toUpperCase(), copy: family.description, progress: `${milestone.current} / ${milestone.target}` };
 }
 
-export default function AchievementsPanel({ progress, personId, isOwner, achievements, featuredAchievements, loadout }: { progress: AchievementProgress; personId: string; isOwner: boolean; achievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; loadout: { equippedTitleAchievementKey: string | null; equippedBackgroundAchievementKey: string | null; equippedBannerAchievementKey: string | null; equippedAccentAchievementKey: string | null } }) {
+export default function AchievementsPanel({ progress, personId, isOwner, achievements, featuredAchievements, identity, loadout }: { progress: AchievementProgress; personId: string; isOwner: boolean; achievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; identity: { displayName: string; avatar: string | null; twitchLogin: string | null }; loadout: { equippedTitleAchievementKey: string | null; equippedBackgroundAchievementKey: string | null; equippedBannerAchievementKey: string | null; equippedAccentAchievementKey: string | null } }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
   const [pinnedMilestone, setPinnedMilestone] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export default function AchievementsPanel({ progress, personId, isOwner, achieve
       <div className={styles.featuredBadges} aria-label="Featured achievements">
         {featuredAchievements.length ? featuredAchievements.map((badge) => <span key={badge.key} data-category={badge.category}>✓ {badge.name} · {badge.label}</span>) : progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key}>✦ {badge.label}</span>) : <span className={styles.noBadges}>No milestones unlocked yet</span>}
       </div>
-      {isOwner && <AchievementCustomization personId={personId} achievements={achievements} loadout={loadout} featuredAchievementKeys={featuredAchievements.map((achievement) => achievement.key)} />}
+      {isOwner && <AchievementCustomization personId={personId} achievements={achievements} identity={identity} loadout={loadout} featuredAchievementKeys={featuredAchievements.map((achievement) => achievement.key)} />}
       <button ref={openButton} type="button" className={styles.achievementsButton} onClick={() => setIsOpen(true)}>View all</button>
       {isOpen && typeof document !== "undefined" && createPortal(
         <div className={styles.achievementsOverlay} onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
