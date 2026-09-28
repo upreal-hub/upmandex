@@ -68,8 +68,21 @@ model Person {
   representedUpmans   Upman[]       @relation("UpmanRepresentedPerson")
   activityLogs        ActivityLog[] @relation("ActivityPerson")
   achievements        PersonAchievement[]
+  artworks            PersonArtwork[]
 
   @@index([displayName])
+}
+
+model PersonArtwork {
+  id        String   @id @default(cuid())
+  personId  String
+  image     String
+  title     String?
+  position  Int
+  createdAt DateTime @default(now())
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId, position])
 }
 
 model PersonAchievement {

@@ -9,6 +9,7 @@ import { normalizeTwitchLogin } from "@/lib/validation";
 
 import AchievementsPanel from "./AchievementsPanel";
 import CreatedUpmansRail from "./CreatedUpmansRail";
+import PersonArtPreview from "./PersonArtPreview";
 import styles from "./person.module.css";
 
 const rarityClassNames: Record<string, string> = {
@@ -44,6 +45,11 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       equippedAccentAchievementKey: true,
       featuredAchievementKeys: true,
       user: { select: { avatar: true, twitchLogin: true } },
+      artworks: {
+        take: 4,
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: { id: true, image: true, title: true },
+      },
       representedUpmans: {
         orderBy: [{ name: "asc" }, { slug: "asc" }],
         select: { slug: true, name: true, image: true, rarity: true },
@@ -92,6 +98,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </section>
 
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} />}
+
+      <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
 
       {(hasRepresented || hasCreated) && (
         <div className={`${styles.sections} ${hasRepresented && hasCreated ? styles.sectionsBoth : styles.sectionsSingle}`}>

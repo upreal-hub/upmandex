@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         pathname: "/upmans/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
+        pathname: "/artworks/**",
+        search: "",
+      },
     ],
   },
 };

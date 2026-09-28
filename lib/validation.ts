@@ -43,6 +43,36 @@ export function validateSlug(value: unknown): string | null {
   return slug && SLUG_PATTERN.test(slug) ? slug : null;
 }
 
+export function validateArtworkTitle(value: unknown): string | null | undefined {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed.length <= 120 ? trimmed || null : undefined;
+}
+
+export function validateArtworkMovePayload(value: unknown):
+  | { success: true; direction: "earlier" | "later" }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object") {
+    return { success: false, error: "Invalid artwork move" };
+  }
+
+  const direction = (value as Record<string, unknown>).direction;
+
+  if (direction !== "earlier" && direction !== "later") {
+    return { success: false, error: "Invalid artwork move" };
+  }
+
+  return { success: true, direction };
+}
+
 export function validateRarity(value: unknown): Rarity | null {
   return typeof value === "string" && RARITIES.includes(value as Rarity)
     ? (value as Rarity)
