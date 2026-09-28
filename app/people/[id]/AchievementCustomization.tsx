@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,15 +28,18 @@ type Loadout = {
   equippedBackgroundAchievementKey: string | null;
   equippedBannerAchievementKey: string | null;
   equippedAccentAchievementKey: string | null;
+  equippedCustomBackgroundId: string | null;
+  equippedCustomBannerId: string | null;
 };
 
 type LoadoutKey = keyof Loadout;
-type SlotConfig = { slot: CosmeticSlot; label: string; property: LoadoutKey };
+type CustomAsset = { id: string; type: "BACKGROUND" | "BANNER"; name: string; image: string };
+type SlotConfig = { slot: CosmeticSlot; label: string; property: LoadoutKey; customProperty?: LoadoutKey };
 
 const slots: SlotConfig[] = [
   { slot: "title", label: "Title", property: "equippedTitleAchievementKey" },
-  { slot: "background", label: "Background", property: "equippedBackgroundAchievementKey" },
-  { slot: "banner", label: "Banner", property: "equippedBannerAchievementKey" },
+  { slot: "background", label: "Background", property: "equippedBackgroundAchievementKey", customProperty: "equippedCustomBackgroundId" },
+  { slot: "banner", label: "Banner", property: "equippedBannerAchievementKey", customProperty: "equippedCustomBannerId" },
   { slot: "accent", label: "Accent", property: "equippedAccentAchievementKey" },
 ];
 
@@ -46,12 +50,14 @@ function initials(name: string) {
 export default function AchievementCustomization({
   personId,
   achievements,
+  customAssets = [],
   identity,
   loadout,
   featuredAchievementKeys,
 }: {
   personId: string;
   achievements: DisplayAchievement[];
+  customAssets?: CustomAsset[];
   identity: { displayName: string; avatar: string | null; twitchLogin: string | null };
   loadout: Loadout;
   featuredAchievementKeys: string[];
@@ -69,6 +75,12 @@ export default function AchievementCustomization({
   const lockedAchievements = useMemo(() => achievements.filter((achievement) => !achievement.unlocked), [achievements]);
   const activeConfig = slots.find((item) => item.slot === activeSlot)!;
   const activeProperty = activeConfig.property;
+  const activeCustomProperty = activeConfig.customProperty;
+  const activeCustomAssets = useMemo(() => {
+    if (!activeCustomProperty) return [];
+    const type = activeSlot === "background" ? "BACKGROUND" : "BANNER";
+    return customAssets.filter((asset) => asset.type === type);
+  }, [activeCustomProperty, activeSlot, customAssets]);
 
   const options = useMemo(() => {
     if (activeSlot !== "accent") return unlockedAchievements;
@@ -117,14 +129,27 @@ export default function AchievementCustomization({
   }
 
   function previewOption(key: string | null) {
-    setPreviewLoadout((current) => ({ ...current, [activeProperty]: previewSelection(key) }));
+    setPreviewLoadout((current) => ({ ...current, [activeProperty]: previewSelection(key), ...(activeCustomProperty ? { [activeCustomProperty]: null } : {}) }));
+    setError(null);
+    setSuccess(null);
+  }
+
+  function previewCustomOption(assetId: string) {
+    if (!activeCustomProperty) return;
+    setPreviewLoadout((current) => ({ ...current, [activeProperty]: null, [activeCustomProperty]: assetId }));
     setError(null);
     setSuccess(null);
   }
 
   async function equipPreview() {
-    const nextLoadout = { ...equippedLoadout, [activeProperty]: previewLoadout[activeProperty] };
-    if (nextLoadout[activeProperty] === equippedLoadout[activeProperty]) return;
+    const nextLoadout: Loadout = {
+      ...equippedLoadout,
+      [activeProperty]: previewLoadout[activeProperty],
+      ...(activeCustomProperty ? { [activeCustomProperty]: previewLoadout[activeCustomProperty] } : {}),
+    };
+    const selectionChanged = nextLoadout[activeProperty] !== equippedLoadout[activeProperty]
+      || Boolean(activeCustomProperty && nextLoadout[activeCustomProperty] !== equippedLoadout[activeCustomProperty]);
+    if (!selectionChanged) return;
 
     setSaving(true);
     setError(null);
@@ -157,7 +182,10 @@ export default function AchievementCustomization({
   const previewBackground = cosmeticFor("background", previewLoadout.equippedBackgroundAchievementKey);
   const previewBanner = cosmeticFor("banner", previewLoadout.equippedBannerAchievementKey);
   const previewAccent = cosmeticFor("accent", previewLoadout.equippedAccentAchievementKey);
-  const isPreviewDifferent = previewLoadout[activeProperty] !== equippedLoadout[activeProperty];
+  const previewCustomBackground = customAssets.find((asset) => asset.id === previewLoadout.equippedCustomBackgroundId && asset.type === "BACKGROUND") ?? null;
+  const previewCustomBanner = customAssets.find((asset) => asset.id === previewLoadout.equippedCustomBannerId && asset.type === "BANNER") ?? null;
+  const isPreviewDifferent = previewLoadout[activeProperty] !== equippedLoadout[activeProperty]
+    || Boolean(activeCustomProperty && previewLoadout[activeCustomProperty] !== equippedLoadout[activeCustomProperty]);
 
   return <>
     <button type="button" className={styles.customizeButton} onClick={openCustomizer}>Customize profile</button>
@@ -169,10 +197,13 @@ export default function AchievementCustomization({
             <button type="button" onClick={() => setOpen(false)} disabled={saving} aria-label="Close profile customizer">Close</button>
           </header>
 
-          <div className={`${styles.customizerPreview} ${styles.page}`} data-background={previewBackground?.styleKey ?? "default"} data-accent={previewAccent?.styleKey ?? "default"} aria-label="Live profile preview">
+          <div className={`${styles.customizerPreview} ${styles.page}`} data-background={previewCustomBackground ? "custom" : previewBackground?.styleKey ?? "default"} data-accent={previewAccent?.styleKey ?? "default"} aria-label="Live profile preview">
+            {previewCustomBackground && <span className={styles.customPreviewBackground} aria-hidden="true"><Image src={previewCustomBackground.image} alt="" fill sizes="34rem" className={styles.customProfileImage} /></span>}
             <div className={styles.profileScene} aria-hidden="true" />
-            <section className={`${styles.header} ${styles.customizerPreviewHeader}`} data-banner={previewBanner?.styleKey ?? "default"}>
-              <div className={styles.headerBanner} aria-hidden="true" />
+            <section className={`${styles.header} ${styles.customizerPreviewHeader}`} data-banner={previewCustomBanner ? "custom" : previewBanner?.styleKey ?? "default"}>
+              {previewCustomBanner
+                ? <span className={styles.customPreviewBanner} aria-hidden="true"><Image src={previewCustomBanner.image} alt="" fill sizes="34rem" className={styles.customProfileImage} /></span>
+                : <div className={styles.headerBanner} aria-hidden="true" />}
               {identity.avatar
                 // This is the linked Twitch avatar URL already used by the public Person header.
                 // eslint-disable-next-line @next/next/no-img-element
@@ -188,6 +219,7 @@ export default function AchievementCustomization({
 
           <section className={styles.slotGallery} aria-labelledby="cosmetic-gallery-title">
             <div className={styles.galleryHeading}><div><p className={styles.eyebrow}>CHOOSE A REWARD</p><h3 id="cosmetic-gallery-title">{activeConfig.label}</h3></div><span>{options.length} unlocked</span></div>
+            {(activeSlot === "background" || activeSlot === "banner") && <p className={styles.sourceHeading}>Achievement {activeConfig.label.toLowerCase()}s</p>}
             <div className={`${styles.galleryOptions} ${styles[`gallery${activeConfig.label}`]}`}>
               <CosmeticOption slot={activeSlot} achievement={null} selected={previewLoadout[activeProperty] === null} equipped={equippedLoadout[activeProperty] === null} onPreview={() => previewOption(null)} />
               {options.map((achievement) => {
@@ -200,6 +232,14 @@ export default function AchievementCustomization({
                 return cosmetic ? <CosmeticOption key={achievement.key} slot={activeSlot} achievement={achievement} selected={selected} equipped={Boolean(equipped)} onPreview={() => previewOption(achievement.key)} /> : null;
               })}
             </div>
+            {activeCustomProperty && <>
+              <p className={styles.sourceHeading}>Custom {activeConfig.label.toLowerCase()}s</p>
+              {activeCustomAssets.length
+                ? <div className={`${styles.galleryOptions} ${styles.customAssetOptions}`}>
+                  {activeCustomAssets.map((asset) => <CustomCosmeticOption key={asset.id} slot={activeSlot as "background" | "banner"} asset={asset} selected={previewLoadout[activeCustomProperty] === asset.id} equipped={equippedLoadout[activeCustomProperty] === asset.id} onPreview={() => previewCustomOption(asset.id)} />)}
+                </div>
+                : <p className={styles.noCustomAssets}>No custom {activeConfig.label.toLowerCase()}s are available yet.</p>}
+            </>}
           </section>
 
           <div className={styles.customizerActions}><p>{isPreviewDifferent ? `Previewing a new ${activeConfig.label.toLowerCase()}.` : "This selection is currently equipped."}</p><button type="button" onClick={equipPreview} disabled={saving || !isPreviewDifferent}>{saving ? "Equipping…" : `Equip ${activeConfig.label}`}</button></div>
@@ -211,6 +251,13 @@ export default function AchievementCustomization({
       </div>, document.body,
     )}
   </>;
+}
+
+function CustomCosmeticOption({ slot, asset, selected, equipped, onPreview }: { slot: "background" | "banner"; asset: CustomAsset; selected: boolean; equipped: boolean; onPreview: () => void }) {
+  return <button type="button" className={`${styles.cosmeticOption} ${styles.customCosmeticOption}`} data-slot={slot} data-selected={selected} data-equipped={equipped} onClick={onPreview} aria-pressed={selected}>
+    <span className={styles.customOptionMedia}><Image src={asset.image} alt="" fill sizes="(max-width: 430px) 100vw, 14rem" className={styles.customProfileImage} /></span>
+    <span className={styles.optionCopy}><strong>{asset.name}</strong><small>Custom {slot}</small><em>{equipped ? "Equipped" : selected ? "Previewing" : "Preview"}</em></span>
+  </button>;
 }
 
 function CosmeticOption({ slot, achievement, selected, equipped, onPreview }: { slot: CosmeticSlot; achievement: DisplayAchievement | null; selected: boolean; equipped: boolean; onPreview: () => void }) {

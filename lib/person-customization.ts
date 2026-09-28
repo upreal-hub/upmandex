@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAchievementCosmetic, getAchievementDefinition, type CosmeticSlot } from "@/lib/achievements";
+import { ProfileCosmeticAssetType } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type PersonCosmeticLoadout = {
@@ -8,6 +9,8 @@ export type PersonCosmeticLoadout = {
   equippedBackgroundAchievementKey: string | null;
   equippedBannerAchievementKey: string | null;
   equippedAccentAchievementKey: string | null;
+  equippedCustomBackgroundId: string | null;
+  equippedCustomBannerId: string | null;
   featuredAchievementKeys: string[];
 };
 
@@ -55,6 +58,26 @@ export async function updatePersonCosmeticLoadout(personId: string, userId: stri
     }
   }
 
+  if (loadout.equippedBackgroundAchievementKey && loadout.equippedCustomBackgroundId) {
+    throw new PersonCustomizationError(400, "Choose either an achievement or custom background");
+  }
+  if (loadout.equippedBannerAchievementKey && loadout.equippedCustomBannerId) {
+    throw new PersonCustomizationError(400, "Choose either an achievement or custom banner");
+  }
+
+  const customAssetIds = [loadout.equippedCustomBackgroundId, loadout.equippedCustomBannerId].filter((id): id is string => typeof id === "string");
+  if (customAssetIds.length) {
+    const customAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true } });
+    if (customAssets.length !== customAssetIds.length) throw new PersonCustomizationError(400, "Choose only existing custom cosmetics");
+    const customAssetTypes = new Map(customAssets.map((asset) => [asset.id, asset.type]));
+    if (loadout.equippedCustomBackgroundId && customAssetTypes.get(loadout.equippedCustomBackgroundId) !== ProfileCosmeticAssetType.BACKGROUND) {
+      throw new PersonCustomizationError(400, "Choose a background asset for your background");
+    }
+    if (loadout.equippedCustomBannerId && customAssetTypes.get(loadout.equippedCustomBannerId) !== ProfileCosmeticAssetType.BANNER) {
+      throw new PersonCustomizationError(400, "Choose a banner asset for your banner");
+    }
+  }
+
   const unlocked = await prisma.personAchievement.findMany({
     where: { personId, achievementKey: { in: [...selectedKeys] } },
     select: { achievementKey: true },
@@ -71,6 +94,8 @@ export async function updatePersonCosmeticLoadout(personId: string, userId: stri
       equippedBackgroundAchievementKey: true,
       equippedBannerAchievementKey: true,
       equippedAccentAchievementKey: true,
+      equippedCustomBackgroundId: true,
+      equippedCustomBannerId: true,
       featuredAchievementKeys: true,
     },
   });

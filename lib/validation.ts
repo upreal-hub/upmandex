@@ -351,6 +351,8 @@ export function validateAchievementCustomizationPayload(value: unknown):
         equippedBackgroundAchievementKey: string | null;
         equippedBannerAchievementKey: string | null;
         equippedAccentAchievementKey: string | null;
+        equippedCustomBackgroundId: string | null;
+        equippedCustomBannerId: string | null;
         featuredAchievementKeys: string[];
       };
     }
@@ -362,6 +364,8 @@ export function validateAchievementCustomizationPayload(value: unknown):
     "equippedBackgroundAchievementKey",
     "equippedBannerAchievementKey",
     "equippedAccentAchievementKey",
+    "equippedCustomBackgroundId",
+    "equippedCustomBannerId",
     "featuredAchievementKeys",
   ]);
   if (Object.keys(payload).some((key) => !allowedKeys.has(key))) return { success: false, error: "Invalid achievement customization" };
@@ -369,9 +373,12 @@ export function validateAchievementCustomizationPayload(value: unknown):
   const background = payload.equippedBackgroundAchievementKey;
   const banner = payload.equippedBannerAchievementKey;
   const accent = payload.equippedAccentAchievementKey;
+  const customBackground = payload.equippedCustomBackgroundId;
+  const customBanner = payload.equippedCustomBannerId;
   const featured = payload.featuredAchievementKeys;
   const validAchievementKey = (key: unknown): key is string | null => key === null || (typeof key === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key) && key.length <= 120);
-  if (!validAchievementKey(title) || !validAchievementKey(background) || !validAchievementKey(banner) || !validAchievementKey(accent) || !Array.isArray(featured) || featured.some((key) => !validAchievementKey(key) || key === null)) {
+  const validCustomAssetId = (id: unknown): id is string | null => id === null || (typeof id === "string" && /^[a-z0-9]{10,128}$/.test(id));
+  if (!validAchievementKey(title) || !validAchievementKey(background) || !validAchievementKey(banner) || !validAchievementKey(accent) || !validCustomAssetId(customBackground) || !validCustomAssetId(customBanner) || !Array.isArray(featured) || featured.some((key) => !validAchievementKey(key) || key === null)) {
     return { success: false, error: "Invalid achievement customization" };
   }
   const featuredAchievementKeys = featured as string[];
@@ -385,6 +392,8 @@ export function validateAchievementCustomizationPayload(value: unknown):
       equippedBackgroundAchievementKey: background,
       equippedBannerAchievementKey: banner,
       equippedAccentAchievementKey: accent,
+      equippedCustomBackgroundId: customBackground,
+      equippedCustomBannerId: customBanner,
       featuredAchievementKeys,
     },
   };

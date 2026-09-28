@@ -68,7 +68,7 @@ function featuredAchievementReward(achievement: DisplayAchievement) {
   return /^\d+(?:%)?$/.test(achievement.label) ? `+${achievement.label}` : achievement.label;
 }
 
-export default function AchievementsPanel({ progress, personId, isOwner, achievements, featuredAchievements, identity, loadout, showCustomization = true }: { progress: AchievementProgress; personId: string; isOwner: boolean; achievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; identity: { displayName: string; avatar: string | null; twitchLogin: string | null }; loadout: { equippedTitleAchievementKey: string | null; equippedBackgroundAchievementKey: string | null; equippedBannerAchievementKey: string | null; equippedAccentAchievementKey: string | null }; showCustomization?: boolean }) {
+export default function AchievementsPanel({ progress, personId, isOwner, achievements, featuredAchievements, identity, loadout, showCustomization = true }: { progress: AchievementProgress; personId: string; isOwner: boolean; achievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; identity: { displayName: string; avatar: string | null; twitchLogin: string | null }; loadout: { equippedTitleAchievementKey: string | null; equippedBackgroundAchievementKey: string | null; equippedBannerAchievementKey: string | null; equippedAccentAchievementKey: string | null; equippedCustomBackgroundId: string | null; equippedCustomBannerId: string | null }; showCustomization?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
   const [pinnedMilestone, setPinnedMilestone] = useState<string | null>(null);

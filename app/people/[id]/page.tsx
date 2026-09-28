@@ -47,7 +47,11 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       equippedBackgroundAchievementKey: true,
       equippedBannerAchievementKey: true,
       equippedAccentAchievementKey: true,
+      equippedCustomBackgroundId: true,
+      equippedCustomBannerId: true,
       featuredAchievementKeys: true,
+      equippedCustomBackground: { select: { id: true, type: true, name: true, image: true } },
+      equippedCustomBanner: { select: { id: true, type: true, name: true, image: true } },
       user: { select: { avatar: true, twitchLogin: true } },
       artworks: {
         take: 4,
@@ -75,7 +79,13 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   if (!person) notFound();
 
-  const achievementProgress = await getAchievementProgress(id);
+  const [achievementProgress, customAssets] = await Promise.all([
+    getAchievementProgress(id),
+    prisma.profileCosmeticAsset.findMany({
+      select: { id: true, type: true, name: true, image: true },
+      orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
+    }),
+  ]);
   const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
@@ -88,18 +98,23 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   } }))) ?? [];
   const title = unlockedAchievements.find((achievement) => achievement.key === person.equippedTitleAchievementKey && achievement.unlocked) ?? null;
   const featured = person.featuredAchievementKeys.map((key) => unlockedAchievements.find((achievement) => achievement.key === key && achievement.unlocked)).filter((achievement): achievement is (typeof unlockedAchievements)[number] => Boolean(achievement));
-  const background = person.equippedBackgroundAchievementKey ? getAchievementCosmetic(person.equippedBackgroundAchievementKey, "background") : null;
-  const banner = person.equippedBannerAchievementKey ? getAchievementCosmetic(person.equippedBannerAchievementKey, "banner") : null;
+  const customBackground = person.equippedCustomBackground;
+  const customBanner = person.equippedCustomBanner;
+  const background = customBackground ? null : person.equippedBackgroundAchievementKey ? getAchievementCosmetic(person.equippedBackgroundAchievementKey, "background") : null;
+  const banner = customBanner ? null : person.equippedBannerAchievementKey ? getAchievementCosmetic(person.equippedBannerAchievementKey, "banner") : null;
   const accent = person.equippedAccentAchievementKey ? getAchievementCosmetic(person.equippedAccentAchievementKey, "accent") : null;
 
   const hasRepresented = person.representedUpmans.length > 0;
   const hasCreated = person.createdUpmans.length > 0;
 
   return (
-    <main className={`person-page ${styles.page}`} data-background={background?.styleKey ?? "default"} data-accent={accent?.styleKey ?? "default"}>
+    <main className={`person-page ${styles.page}`} data-background={customBackground ? "custom" : background?.styleKey ?? "default"} data-accent={accent?.styleKey ?? "default"}>
+      {customBackground && <div className={styles.customProfileBackground} aria-hidden="true"><Image src={customBackground.image} alt="" fill sizes="(max-width: 760px) 100vw, 75rem" className={styles.customProfileImage} /></div>}
       <div className={styles.profileScene} aria-hidden="true" />
-      <section className={styles.header} data-banner={banner?.styleKey ?? "default"} aria-labelledby="person-name">
-        <div className={styles.headerBanner} aria-hidden="true" />
+      <section className={styles.header} data-banner={customBanner ? "custom" : banner?.styleKey ?? "default"} aria-labelledby="person-name">
+        {customBanner
+          ? <div className={styles.customProfileBanner} aria-hidden="true"><Image src={customBanner.image} alt="" fill sizes="(max-width: 760px) 100vw, 75rem" className={styles.customProfileImage} /></div>
+          : <div className={styles.headerBanner} aria-hidden="true" />}
         {person.user?.avatar && <PersonAvatar src={person.user.avatar} displayName={person.displayName} />}
         <div className={styles.headerCopy}>
           <h1 id="person-name" className={styles.name}>{person.displayName}</h1>
@@ -109,13 +124,13 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
           {isOwner && <div className={styles.ownerActions}>
-            <AchievementCustomization personId={person.id} achievements={unlockedAchievements} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />
+            <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />
             <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
           </div>}
         </div>
       </section>
 
-      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} showCustomization={false} />}
+      {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} showCustomization={false} />}
 
       {(person.artworks.length || person.projects.length || isOwner) && <section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
         <header className={styles.zoneHeading}><h2 id="creative-space-heading">Creative space</h2></header>
