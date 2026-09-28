@@ -54,6 +54,7 @@ export default function AchievementCustomization({
   identity,
   loadout,
   featuredAchievementKeys,
+  buttonLabel = "Customize profile",
 }: {
   personId: string;
   achievements: DisplayAchievement[];
@@ -61,6 +62,7 @@ export default function AchievementCustomization({
   identity: { displayName: string; avatar: string | null; twitchLogin: string | null };
   loadout: Loadout;
   featuredAchievementKeys: string[];
+  buttonLabel?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -188,7 +190,7 @@ export default function AchievementCustomization({
     || Boolean(activeCustomProperty && previewLoadout[activeCustomProperty] !== equippedLoadout[activeCustomProperty]);
 
   return <>
-    <button type="button" className={styles.customizeButton} onClick={openCustomizer}>Customize profile</button>
+    <button type="button" className={styles.customizeButton} onClick={openCustomizer}>{buttonLabel}</button>
     {open && createPortal(
       <div className={styles.customizationOverlay} onMouseDown={(event) => event.target === event.currentTarget && !saving && setOpen(false)}>
         <section className={styles.customizationDialog} role="dialog" aria-modal="true" aria-labelledby="customize-profile-title">

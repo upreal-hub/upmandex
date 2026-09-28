@@ -14,6 +14,7 @@ import PersonArtPreview from "./PersonArtPreview";
 import PersonProjects from "./PersonProjects";
 import PersonLinks from "./PersonLinks";
 import PersonHeroLinks from "./PersonHeroLinks";
+import { CustomizeModeOnly, OwnerCustomizeContent, OwnerCustomizeControls, OwnerCustomizeMode } from "./OwnerCustomizeMode";
 import styles from "./person.module.css";
 
 const rarityClassNames: Record<string, string> = {
@@ -106,8 +107,9 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   const hasRepresented = person.representedUpmans.length > 0;
   const hasCreated = person.createdUpmans.length > 0;
+  const hasCreativeContent = person.artworks.length > 0 || person.projects.length > 0;
 
-  return (
+  const profile = (
     <main className={`person-page ${styles.page}`} data-background={customBackground ? "custom" : background?.styleKey ?? "default"} data-accent={accent?.styleKey ?? "default"}>
       {customBackground && <div className={styles.customProfileBackground} aria-hidden="true"><Image src={customBackground.image} alt="" fill sizes="(max-width: 760px) 100vw, 75rem" className={styles.customProfileImage} /></div>}
       <div className={styles.profileScene} aria-hidden="true" />
@@ -124,26 +126,31 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
           {isOwner && <div className={styles.ownerActions}>
-            <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />
-            <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
+            <OwnerCustomizeControls />
+            <CustomizeModeOnly>
+              <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} buttonLabel="Customize cosmetics" />
+              <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
+            </CustomizeModeOnly>
           </div>}
         </div>
       </section>
 
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} showCustomization={false} />}
 
-      {(person.artworks.length || person.projects.length || isOwner) && <section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
+      {(hasCreativeContent || isOwner) && <OwnerCustomizeContent hasPublicContent={hasCreativeContent}><section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
         <header className={styles.zoneHeading}><h2 id="creative-space-heading">Creative space</h2></header>
         <div className={styles.creativeGrid}>
           <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
           <PersonProjects personId={person.id} projects={person.projects} isOwner={isOwner} />
         </div>
-      </section>}
+      </section></OwnerCustomizeContent>}
 
       {hasRepresented && <UpmanSection title="MY UPMAN" upmans={person.representedUpmans} />}
       {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}
     </main>
   );
+
+  return isOwner ? <OwnerCustomizeMode>{profile}</OwnerCustomizeMode> : profile;
 }
 
 function PersonAvatar({ src, displayName }: { src: string; displayName: string }) {

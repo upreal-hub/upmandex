@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useOwnerCustomizeMode } from "./OwnerCustomizeMode";
 import styles from "./person-projects.module.css";
 
 type Project = {
@@ -17,6 +18,8 @@ const emptyDraft: Draft = { title: "", description: "" };
 
 export default function PersonProjects({ personId, projects, isOwner }: { personId: string; projects: Project[]; isOwner: boolean }) {
   const router = useRouter();
+  const { isCustomizeMode } = useOwnerCustomizeMode();
+  const canManage = isOwner && isCustomizeMode;
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
@@ -122,17 +125,17 @@ export default function PersonProjects({ personId, projects, isOwner }: { person
     }
   }
 
-  if (!projects.length && !isOwner) return null;
+  if (!projects.length && !canManage) return null;
 
   const formOpen = adding || editingId !== null;
   return (
     <section className={styles.section} aria-labelledby="person-projects-heading">
       <div className={styles.heading}>
         <div><h2 id="person-projects-heading">PROJECTS</h2></div>
-        {isOwner && !formOpen && <button type="button" onClick={beginAdd}>Add project</button>}
+        {canManage && !formOpen && <button type="button" onClick={beginAdd}>Add project</button>}
       </div>
 
-      {isOwner && formOpen && <form className={styles.form} onSubmit={save}>
+      {canManage && formOpen && <form className={styles.form} onSubmit={save}>
         <label>Project title <span>{draft.title.length}/100</span><input value={draft.title} maxLength={100} required autoFocus onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label>
         <label>Short description <span>{draft.description.length}/1000</span><textarea value={draft.description} maxLength={1000} required rows={4} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} /></label>
         <div className={styles.formActions}><button type="submit" disabled={busyId !== null}>{busyId ? "Saving…" : "Save project"}</button><button type="button" className={styles.cancel} disabled={busyId !== null} onClick={cancelForm}>Cancel</button></div>
@@ -144,14 +147,14 @@ export default function PersonProjects({ personId, projects, isOwner }: { person
       {projects.length ? <div className={styles.notes}>
         {projects.map((project, index) => <article key={project.id} className={styles.note}>
           {editingId === project.id ? null : <><h3>{project.title}</h3><p>{project.description}</p></>}
-          {isOwner && editingId !== project.id && <div className={styles.actions}>
+          {canManage && editingId !== project.id && <div className={styles.actions}>
             <button type="button" onClick={() => beginEdit(project)} disabled={busyId !== null}>Edit</button>
             <button type="button" onClick={() => move(project.id, "earlier")} disabled={index === 0 || busyId !== null} aria-label={`Move ${project.title} earlier`}>Move earlier</button>
             <button type="button" onClick={() => move(project.id, "later")} disabled={index === projects.length - 1 || busyId !== null} aria-label={`Move ${project.title} later`}>Move later</button>
             <button type="button" className={styles.delete} onClick={() => remove(project)} disabled={busyId !== null}>Delete</button>
           </div>}
         </article>)}
-      </div> : isOwner && !formOpen ? <div className={styles.empty}><p>Keep a small note about something you&apos;re building.</p><button type="button" onClick={beginAdd}>Add project</button></div> : null}
+      </div> : canManage && !formOpen ? <div className={styles.empty}><p>Keep a small note about something you&apos;re building.</p><button type="button" onClick={beginAdd}>Add project</button></div> : null}
     </section>
   );
 }
