@@ -108,8 +108,10 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         </div>
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
-          {isOwner && <AchievementCustomization personId={person.id} achievements={unlockedAchievements} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />}
-          {isOwner && <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />}
+          {isOwner && <div className={styles.ownerActions}>
+            <AchievementCustomization personId={person.id} achievements={unlockedAchievements} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />
+            <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
+          </div>}
         </div>
       </section>
 

@@ -60,6 +60,14 @@ function popoverContent(family: AchievementFamily, milestone: AchievementMilesto
   return { title: family.name.toUpperCase(), copy: family.description, progress: `${milestone.current} / ${milestone.target}` };
 }
 
+function featuredAchievementName(achievement: DisplayAchievement) {
+  return /^\d+(?:%)?$/.test(achievement.label) ? `${achievement.name} ${achievement.label}` : achievement.name;
+}
+
+function featuredAchievementReward(achievement: DisplayAchievement) {
+  return /^\d+(?:%)?$/.test(achievement.label) ? `+${achievement.label}` : achievement.label;
+}
+
 export default function AchievementsPanel({ progress, personId, isOwner, achievements, featuredAchievements, identity, loadout, showCustomization = true }: { progress: AchievementProgress; personId: string; isOwner: boolean; achievements: DisplayAchievement[]; featuredAchievements: DisplayAchievement[]; identity: { displayName: string; avatar: string | null; twitchLogin: string | null }; loadout: { equippedTitleAchievementKey: string | null; equippedBackgroundAchievementKey: string | null; equippedBannerAchievementKey: string | null; equippedAccentAchievementKey: string | null }; showCustomization?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<AchievementCategory | "ALL">("ALL");
@@ -69,6 +77,11 @@ export default function AchievementsPanel({ progress, personId, isOwner, achieve
   const openButton = useRef<HTMLButtonElement>(null);
   const activeMilestone = pinnedMilestone ?? hoveredMilestone;
   const visibleCategories = category === "ALL" ? categories : [category];
+  const visibleFeatured = featuredAchievements.length
+    ? featuredAchievements
+    : progress.summary.featured
+      .map((featured) => achievements.find((achievement) => achievement.key === featured.key && achievement.unlocked))
+      .filter((achievement): achievement is DisplayAchievement => Boolean(achievement));
 
   const dismissMilestone = useCallback(() => {
     setPinnedMilestone(null);
@@ -110,7 +123,7 @@ export default function AchievementsPanel({ progress, personId, isOwner, achieve
       <div><p className={styles.eyebrow}>ACHIEVEMENTS</p><h2 id="achievements-summary-heading" className={styles.achievementsTitle}>{progress.summary.unlocked} / {progress.summary.available} unlocked</h2></div>
       <div className={styles.featuredBadges} aria-label="Featured achievements">
         <p>Featured</p>
-        <div>{featuredAchievements.length ? featuredAchievements.map((badge) => <span key={badge.key} data-category={badge.category}><b aria-hidden="true">✦</b><strong>{badge.name}</strong><small>{badge.label}</small></span>) : progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key}><b aria-hidden="true">✦</b><strong>{badge.label}</strong></span>) : <span className={styles.noBadges}>No featured achievements yet</span>}</div>
+        <div>{visibleFeatured.length ? visibleFeatured.map((badge) => <span key={badge.key} data-category={badge.category}><b aria-hidden="true">✦</b><strong>{featuredAchievementName(badge)}</strong><small>{featuredAchievementReward(badge)}</small></span>) : <span className={styles.noBadges}>No featured achievements yet</span>}</div>
       </div>
       {isOwner && showCustomization && <AchievementCustomization personId={personId} achievements={achievements} identity={identity} loadout={loadout} featuredAchievementKeys={featuredAchievements.map((achievement) => achievement.key)} />}
       <button ref={openButton} type="button" className={styles.achievementsButton} onClick={() => setIsOpen(true)}>View all</button>

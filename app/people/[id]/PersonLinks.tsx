@@ -88,7 +88,7 @@ export default function PersonLinks({ personId, personName, links, isOwner }: { 
   </form>;
 
   return <details className={styles.manager}>
-    <summary>Manage links <span>{links.length}</span></summary>
+    <summary>Manage links</summary>
     <section className={styles.section} aria-labelledby="person-links-heading">
     <div className={styles.heading}><div><h2 id="person-links-heading">Links</h2></div>{!formOpen && availablePlatforms.length > 0 && <button type="button" onClick={openAdd}>Add link</button>}</div>
     {isOwner && adding && renderForm(false)}
