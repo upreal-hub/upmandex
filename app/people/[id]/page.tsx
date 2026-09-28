@@ -79,7 +79,9 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className={`person-page ${styles.page}`} data-background={background?.styleKey ?? "default"} data-accent={accent?.styleKey ?? "default"}>
+      <div className={styles.profileScene} aria-hidden="true" />
       <section className={styles.header} data-banner={banner?.styleKey ?? "default"} aria-labelledby="person-name">
+        <div className={styles.headerBanner} aria-hidden="true" />
         {person.user?.avatar && <PersonAvatar src={person.user.avatar} displayName={person.displayName} />}
         <div className={styles.headerCopy}>
           <p className={styles.eyebrow}>PERSON</p>

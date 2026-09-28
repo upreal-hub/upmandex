@@ -48,59 +48,60 @@ export type AchievementCosmeticBundle = {
 
 type AchievementDefinitionInput = Omit<AchievementDefinition, "cosmetic">;
 
-const cosmeticFamilies: Record<AchievementCategory, Omit<AchievementCosmeticBundle, "title"> & { titlePrefix: string }> = {
-  COLLECTION: {
-    titlePrefix: "Sky Collector",
-    background: { label: "Trophy Sky", styleKey: "collection-sky" },
-    banner: { label: "Cloud Horizon", styleKey: "collection-horizon" },
-    accent: { label: "Collection Cyan", styleKey: "collection-cyan" },
-  },
-  PULLS: {
-    titlePrefix: "Cloud Seeker",
-    background: { label: "Twilight Sky", styleKey: "pulls-twilight" },
-    banner: { label: "Pull Aurora", styleKey: "pulls-aurora" },
-    accent: { label: "Pull Violet", styleKey: "pulls-violet" },
-  },
-  CREATION: {
-    titlePrefix: "Cloudsmith",
-    background: { label: "Studio Sky", styleKey: "creation-studio" },
-    banner: { label: "Creator Horizon", styleKey: "creation-horizon" },
-    accent: { label: "Creator Cyan", styleKey: "creation-cyan" },
-  },
-  ART: {
-    titlePrefix: "Sky Artist",
-    background: { label: "Painted Sunset", styleKey: "art-sunset" },
-    banner: { label: "Brushstroke Band", styleKey: "art-band" },
-    accent: { label: "Artist Coral", styleKey: "art-coral" },
-  },
-  GARTIC: {
-    titlePrefix: "Cloud Doodler",
-    background: { label: "Playful Twilight", styleKey: "gartic-twilight" },
-    banner: { label: "Sketchy Horizon", styleKey: "gartic-band" },
-    accent: { label: "Gartic Lilac", styleKey: "gartic-lilac" },
-  },
-  STREAM: {
-    titlePrefix: "Stream Regular",
-    background: { label: "Night Clouds", styleKey: "stream-night" },
-    banner: { label: "Live Signal", styleKey: "stream-band" },
-    accent: { label: "Stream Blue", styleKey: "stream-blue" },
-  },
-  EVENTS: {
-    titlePrefix: "Event Voyager",
-    background: { label: "Celebration Sky", styleKey: "events-sky" },
-    banner: { label: "Golden Clouds", styleKey: "events-gold" },
-    accent: { label: "Trophy Gold", styleKey: "events-gold" },
-  },
+function bundle(key: string, title: string, background: string, banner: string, accent: string): AchievementCosmeticBundle {
+  return {
+    title: { label: title, styleKey: `title-${key}` },
+    background: { label: background, styleKey: `background-${key}` },
+    banner: { label: banner, styleKey: `banner-${key}` },
+    accent: { label: accent, styleKey: `accent-${accent.toLowerCase().replaceAll(" ", "-")}` },
+  };
+}
+
+/** Controlled, composable cosmetics. Person records retain achievement keys, never CSS values. */
+const achievementCosmetics: Record<string, AchievementCosmeticBundle> = {
+  "collector-10": bundle("collector-10", "Cloud Collector", "Morning Sky", "Simple Cloud Line", "Cyan"),
+  "collector-50": bundle("collector-50", "Upman Hoarder", "Lively Cloud Sky", "Hoarder Clouds", "Electric Blue"),
+  "collector-100": bundle("collector-100", "DEX MASTER", "Dex Master Sky", "Monumental Horizon", "White Gold"),
+  "rarity-common": bundle("rarity-common", "Green Hunter", "Verdant Day Sky", "Green Cloud Line", "Common Green"),
+  "rarity-rare": bundle("rarity-rare", "Blue Hunter", "Rare Light-Ray Sky", "Blue Light Streak", "Rare Blue"),
+  "rarity-epic": bundle("rarity-epic", "Purple Hunter", "Epic Twilight", "Purple Star Clouds", "Epic Purple"),
+  "rarity-mythic": bundle("rarity-mythic", "Red Hunter", "Mythic Sunset", "Red Horizon", "Mythic Red"),
+  "rarity-legendary": bundle("rarity-legendary", "Golden Hunter", "Legendary Dawn", "Golden Star Clouds", "Legendary Gold"),
+  "pull-veteran-10": bundle("pull-veteran-10", "First Pulls", "First Pull Sky", "Single Pull Streak", "Cyan"),
+  "pull-veteran-100": bundle("pull-veteran-100", "Pull Veteran", "Veteran Pull Sky", "Crossing Pull Streaks", "Blue Violet"),
+  "pull-veteran-500": bundle("pull-veteran-500", "Pull Addict", "Pull Storm", "Pull Storm Banner", "Bright Cyan"),
+  "lucky-one": bundle("lucky-one", "Lucky One", "Lucky Night", "Golden Sparkle", "Legendary Gold"),
+  "duplicate-magnet-10": bundle("duplicate-magnet-10", "Déjà Vu", "Soft Echo Sky", "Double Motif", "Cyan"),
+  "duplicate-magnet-50": bundle("duplicate-magnet-50", "Again?!", "Echo Pattern Sky", "Repeated Motif", "Epic Purple"),
+  "duplicate-magnet-100": bundle("duplicate-magnet-100", "Duplicate Magnet", "Maximum Echo Sky", "Magnetic Echoes", "Pink"),
+  "upman-creator-1": bundle("upman-creator-1", "Upman Creator", "Sketch Sky", "Sketch Line", "Cyan"),
+  "upman-creator-10": bundle("upman-creator-10", "Upman Maker", "Maker Grid Sky", "Creative Lines", "Rare Blue"),
+  "upman-creator-50": bundle("upman-creator-50", "Upman Factory", "Factory Glow Sky", "Workshop Horizon", "Legendary Gold"),
+  "artist-1": bundle("artist-1", "Artist", "Painted Sky", "Single Brush Band", "Paint Blue"),
+  "artist-10": bundle("artist-10", "Sky Painter", "Expressive Sky", "Color Strokes", "Epic Purple"),
+  "artist-100": bundle("artist-100", "Master Artist", "Masterpiece Sky", "Painterly Horizon", "Legendary Gold"),
+  "gartic-regular-1": bundle("gartic-regular-1", "Doodler", "Doodle Day Sky", "Tiny Scribbles", "Cyan"),
+  "gartic-regular-10": bundle("gartic-regular-10", "Gartic Regular", "Playful Doodle Sky", "Doodle Parade", "Epic Purple"),
+  "gartic-regular-50": bundle("gartic-regular-50", "Gartic Gremlin", "Doodle Chaos Sky", "Gremlin Scribbles", "Pink"),
+  "gartic-gallery-1": bundle("gartic-gallery-1", "On The Fridge", "Framed Day Sky", "Single Frame", "Rare Blue"),
+  "gartic-gallery-10": bundle("gartic-gallery-10", "Gallery Regular", "Gallery Sky", "Frame Sequence", "Epic Purple"),
+  "gartic-gallery-50": bundle("gartic-gallery-50", "Museum Piece", "Museum Light Sky", "Museum Frame", "Legendary Gold"),
+  "checked-in-1": bundle("checked-in-1", "I Was Here", "Quiet Evening", "Check Light", "Cyan"),
+  "checked-in-10": bundle("checked-in-10", "Regular", "Regular Evening", "Little Lights", "Rare Blue"),
+  "checked-in-50": bundle("checked-in-50", "Familiar Face", "Warm Community Night", "Warm Light Cluster", "Epic Purple"),
+  "checked-in-100": bundle("checked-in-100", "Always Here", "Always Here Night", "Moonlit Clouds", "Legendary Gold"),
+  "event-veteran-1": bundle("event-veteran-1", "Been There", "Event Pass Sky", "Single Event Pass", "Cyan"),
+  "event-veteran-10": bundle("event-veteran-10", "Event Regular", "Event Pattern Sky", "Event Pass Pattern", "Epic Purple"),
+  "event-veteran-50": bundle("event-veteran-50", "I Was There", "Event Memory Sky", "Memory Layers", "Legendary Gold"),
+  "event-collector-1": bundle("event-collector-1", "Souvenir Hunter", "Souvenir Sky", "Hidden Souvenir", "Rare Blue"),
+  "event-collector-10": bundle("event-collector-10", "Event Hunter", "Discovery Sky", "Discovery Sequence", "Epic Purple"),
+  "event-collector-25": bundle("event-collector-25", "Event Archivist", "Archive Light Sky", "Archive Layers", "Legendary Gold"),
 };
 
 function cosmeticFor(definition: AchievementDefinitionInput): AchievementCosmeticBundle {
-  const family = cosmeticFamilies[definition.category];
-  return {
-    title: { label: `${family.titlePrefix} · ${definition.label}`, styleKey: `${definition.category.toLowerCase()}-title` },
-    background: family.background,
-    banner: family.banner,
-    accent: family.accent,
-  };
+  const cosmetic = achievementCosmetics[definition.key];
+  if (!cosmetic) throw new Error(`Missing achievement cosmetic bundle for ${definition.key}`);
+  return cosmetic;
 }
 
 const rawDefinitions: AchievementDefinitionInput[] = [
