@@ -9,3 +9,5 @@
 @media (prefers-reduced-motion: reduce) { .previewImage { transition: none; } }
 
 .preview { max-width: none; margin-top: 0; background: color-mix(in srgb, var(--surface-strong) 72%, #dff5ff); }.previewGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.preview { padding: .75rem; border-color: color-mix(in srgb, var(--line) 48%, transparent); background: color-mix(in srgb, var(--surface-strong) 46%, transparent); box-shadow: none; }.sectionHeading { margin: .2rem .25rem .7rem; }

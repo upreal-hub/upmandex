@@ -102,7 +102,6 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className={styles.headerBanner} aria-hidden="true" />
         {person.user?.avatar && <PersonAvatar src={person.user.avatar} displayName={person.displayName} />}
         <div className={styles.headerCopy}>
-          <p className={styles.eyebrow}>PERSON</p>
           <h1 id="person-name" className={styles.name}>{person.displayName}</h1>
           {title && <p className={styles.equippedTitle} data-category={title.category}>✓ {title.cosmetic.title?.label ?? title.name} <span>· {title.name} {title.label}</span></p>}
           {person.user?.twitchLogin && <TwitchIdentity login={person.user.twitchLogin} />}
@@ -110,15 +109,14 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
           {isOwner && <AchievementCustomization personId={person.id} achievements={unlockedAchievements} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} />}
+          {isOwner && <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />}
         </div>
       </section>
 
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey }} showCustomization={false} />}
 
-      {isOwner && <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />}
-
       {(person.artworks.length || person.projects.length || isOwner) && <section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
-        <header className={styles.zoneHeading}><p>PERSONAL SPACE</p><h2 id="creative-space-heading">Creative space</h2></header>
+        <header className={styles.zoneHeading}><h2 id="creative-space-heading">Creative space</h2></header>
         <div className={styles.creativeGrid}>
           <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
           <PersonProjects personId={person.id} projects={person.projects} isOwner={isOwner} />

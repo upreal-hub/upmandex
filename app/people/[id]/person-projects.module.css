@@ -2,3 +2,5 @@
 @media (max-width: 520px) { .section { padding: .95rem; }.heading, .empty { align-items: start; flex-direction: column; }.heading button, .empty button { width: 100%; }.actions button { flex: 1 1 auto; } }
 
 .section { max-width: none; margin-top: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }.note { background: color-mix(in srgb, #fffdf4 82%, var(--surface-strong)); box-shadow: .2rem .25rem 0 color-mix(in srgb, #d7f1fb 60%, transparent); }.heading { margin-bottom: 1rem; }
+
+.heading button { min-height: 1.9rem; padding: .28rem .52rem; font-size: .68rem; background: color-mix(in srgb, var(--surface-strong) 82%, #ccefff); color: color-mix(in srgb, var(--ink) 84%, #247fa7); }.actions { margin-top: .55rem; }.actions button { min-height: 1.65rem; padding: .18rem .34rem; font-size: .58rem; opacity: .72; }.actions button:focus-visible, .actions button:hover { opacity: 1; }

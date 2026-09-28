@@ -109,7 +109,8 @@ export default function AchievementsPanel({ progress, personId, isOwner, achieve
     <section className={styles.achievementsSummary} aria-labelledby="achievements-summary-heading">
       <div><p className={styles.eyebrow}>ACHIEVEMENTS</p><h2 id="achievements-summary-heading" className={styles.achievementsTitle}>{progress.summary.unlocked} / {progress.summary.available} unlocked</h2></div>
       <div className={styles.featuredBadges} aria-label="Featured achievements">
-        {featuredAchievements.length ? featuredAchievements.map((badge) => <span key={badge.key} data-category={badge.category}>✓ {badge.name} · {badge.label}</span>) : progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key}>✦ {badge.label}</span>) : <span className={styles.noBadges}>No milestones unlocked yet</span>}
+        <p>Featured</p>
+        <div>{featuredAchievements.length ? featuredAchievements.map((badge) => <span key={badge.key} data-category={badge.category}><b aria-hidden="true">✦</b><strong>{badge.name}</strong><small>{badge.label}</small></span>) : progress.summary.featured.length ? progress.summary.featured.map((badge) => <span key={badge.key}><b aria-hidden="true">✦</b><strong>{badge.label}</strong></span>) : <span className={styles.noBadges}>No featured achievements yet</span>}</div>
       </div>
       {isOwner && showCustomization && <AchievementCustomization personId={personId} achievements={achievements} identity={identity} loadout={loadout} featuredAchievementKeys={featuredAchievements.map((achievement) => achievement.key)} />}
       <button ref={openButton} type="button" className={styles.achievementsButton} onClick={() => setIsOpen(true)}>View all</button>
