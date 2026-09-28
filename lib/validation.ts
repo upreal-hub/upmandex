@@ -73,6 +73,48 @@ export function validateArtworkMovePayload(value: unknown):
   return { success: true, direction };
 }
 
+export function validatePersonProjectPayload(value: unknown):
+  | { success: true; data: { title: string; description: string } }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid project details" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (Object.keys(payload).some((key) => key !== "title" && key !== "description")) {
+    return { success: false, error: "Invalid project details" };
+  }
+
+  const title = nonEmptyString(payload.title, 100);
+  const description = nonEmptyString(payload.description, 1000);
+  return title && description
+    ? { success: true, data: { title, description } }
+    : { success: false, error: "A project needs a title and description" };
+}
+
+export function validatePersonProjectMutationPayload(value: unknown):
+  | { success: true; data: { type: "update"; title: string; description: string } | { type: "move"; direction: "earlier" | "later" } }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid project request" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (payload.action === "move") {
+    if (Object.keys(payload).some((key) => key !== "action" && key !== "direction")) {
+      return { success: false, error: "Invalid project request" };
+    }
+    return payload.direction === "earlier" || payload.direction === "later"
+      ? { success: true, data: { type: "move", direction: payload.direction } }
+      : { success: false, error: "Invalid project move" };
+  }
+
+  const project = validatePersonProjectPayload(value);
+  return project.success
+    ? { success: true, data: { type: "update", ...project.data } }
+    : project;
+}
+
 export function validateRarity(value: unknown): Rarity | null {
   return typeof value === "string" && RARITIES.includes(value as Rarity)
     ? (value as Rarity)
