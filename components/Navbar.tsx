@@ -16,7 +16,7 @@ const primaryNavigation = [
 
 const exploreNavigation = [
   { label: "Art", detail: "Community art from the cloud world", href: "/art" },
-  { label: "Projects", detail: "Little worlds in progress" },
+  { label: "Projects", detail: "Little worlds in progress", href: "/projects" },
   { label: "Community", detail: "Collections and explorers", href: "/community" },
   { label: "About", detail: "The story behind Upmandex" },
 ];
