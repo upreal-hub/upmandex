@@ -48,7 +48,7 @@ export default async function HomePage() {
         <div className="destination-grid">
           <Link href="/upmans" className="destination-card destination-card-sky"><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>Meet every known Upman</span></div><b aria-hidden="true">↗</b></Link>
           <Link href="/my-collection" className="destination-card destination-card-lavender"><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>See the clouds you have found</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/pantheon" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>Visit the Cloud Pantheon</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/art" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>Explore community galleries</span></div><b aria-hidden="true">↗</b></Link>
           <Link href="/community" className="destination-card destination-card-gold"><span className="destination-icon">☼</span><div><p>04 · Beyond the Dex</p><h3>EXPLORE</h3><span>Creators, friends and community</span></div><b aria-hidden="true">↗</b></Link>
         </div>
       </section>
