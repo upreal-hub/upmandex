@@ -44,7 +44,7 @@ export default async function ProjectsPage() {
                 <p>{project.description}</p>
                 <footer>
                   <Link href={profileHref} className={styles.personLink}>
-                    {project.person.displayName}
+                    by {project.person.displayName}
                     {project.person.user?.twitchLogin && <small>@{project.person.user.twitchLogin}</small>}
                   </Link>
                   <Link href={profileHref} className={styles.profileLink} aria-label={`View ${project.person.displayName}'s profile`}>
