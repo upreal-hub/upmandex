@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
@@ -45,7 +44,7 @@ export default async function ArtPage() {
 
       {artworks.length > 0 ? (
         <section className={styles.gallery} aria-label="Community artwork gallery">
-          {artworks.map((artwork, index) => {
+          {artworks.map((artwork) => {
             const artworkName = artwork.title ?? "Untitled artwork";
             const artistName = artwork.person.displayName;
             const galleryHref = `/people/${artwork.person.id}/art`;
@@ -58,12 +57,13 @@ export default async function ArtPage() {
                   className={styles.artworkImage}
                   aria-label={`View ${artistName}'s full art gallery`}
                 >
-                  <Image
+                  {/* Public artwork preserves its natural dimensions in the art wall. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={artwork.image}
                     alt={`${artworkName} by ${artistName}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 980px) 50vw, 33vw"
-                    preload={index < 3}
+                    loading="lazy"
+                    decoding="async"
                   />
                 </Link>
                 <div className={styles.artworkCaption}>

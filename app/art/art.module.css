@@ -59,44 +59,21 @@
 
 .artwork {
   min-width: 0;
-  padding: .7rem;
-  border: 1px solid color-mix(in srgb, var(--line) 68%, #a8e2f5);
-  border-radius: 1.7rem 1.2rem 1.8rem 1.35rem;
-  background: color-mix(in srgb, var(--surface-strong) 82%, #daf5ff);
-  box-shadow: 0 1rem 2.1rem color-mix(in srgb, #2b89b4 12%, transparent);
-}
-
-.artwork:nth-child(3n + 2) {
-  margin-top: clamp(1rem, 3vw, 2.8rem);
-  border-radius: 1.25rem 1.85rem 1.35rem 1.75rem;
-}
-
-.artwork:nth-child(3n) {
-  margin-top: clamp(.3rem, 1vw, 1rem);
-  border-radius: 1.85rem 1.28rem 1.38rem 1.72rem;
 }
 
 .artworkImage {
-  position: relative;
   display: block;
-  aspect-ratio: 1 / .92;
   overflow: hidden;
-  border-radius: 1.13rem .78rem 1.2rem .9rem;
-  background:
-    radial-gradient(circle at 22% 21%, color-mix(in srgb, var(--cloud) 80%, transparent), transparent 24%),
-    color-mix(in srgb, var(--cloud-soft) 70%, var(--surface-strong));
-}
-
-.artwork:nth-child(3n + 2) .artworkImage {
-  aspect-ratio: .82 / 1;
-}
-
-.artwork:nth-child(3n) .artworkImage {
-  aspect-ratio: 1.16 / 1;
+  border: 1px solid color-mix(in srgb, var(--line) 62%, #a8e2f5);
+  border-radius: 1.25rem .86rem 1.34rem .98rem;
+  background: color-mix(in srgb, var(--surface-strong) 58%, var(--cloud-soft));
+  box-shadow: 0 .8rem 1.6rem color-mix(in srgb, #2b89b4 10%, transparent);
 }
 
 .artworkImage img {
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: auto;
   transition: transform .25s ease;
 }
 
@@ -109,7 +86,7 @@
   align-items: end;
   justify-content: space-between;
   gap: .75rem;
-  padding: .75rem .3rem .2rem;
+  padding: .58rem .28rem 0;
 }
 
 .artworkCaption p {
@@ -138,9 +115,9 @@
 
 .galleryLink {
   flex: 0 0 auto;
-  padding: .36rem .48rem;
-  border-radius: .65rem .52rem .7rem .56rem;
-  background: color-mix(in srgb, #beeefe 42%, transparent);
+  padding: .18rem 0;
+  color: var(--ink-soft);
+  font-size: .7rem;
 }
 
 .artistLink:hover,
@@ -190,16 +167,12 @@
 
 @media (max-width: 900px) {
   .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .artwork:nth-child(3n + 2), .artwork:nth-child(3n) { margin-top: 0; }
-  .artwork:nth-child(even) { margin-top: 1.25rem; }
 }
 
 @media (max-width: 520px) {
   .artPage { width: min(100% - 1.1rem, 32rem); padding-top: 2.5rem; }
   .hero h1 { font-size: clamp(3rem, 15vw, 4.8rem); }
-  .gallery { grid-template-columns: 1fr; gap: 1rem; }
-  .artwork:nth-child(even) { margin-top: 0; }
-  .artwork:nth-child(3n + 2) .artworkImage, .artwork:nth-child(3n) .artworkImage { aspect-ratio: 1 / .92; }
+  .gallery { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
