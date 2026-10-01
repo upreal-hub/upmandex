@@ -267,6 +267,14 @@ model UpmanAcquisitionGrant {
   @@index([upmanId, createdAt])
 }
 
+model StreamContext {
+  id                 String   @id @default("current")
+  isOnline           Boolean  @default(false)
+  twitchCategoryId   String?
+  twitchCategoryName String?
+  updatedAt          DateTime @updatedAt
+}
+
 model PullRarityRule {
   rarity  String  @id
   weight  Int

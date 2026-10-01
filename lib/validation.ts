@@ -528,3 +528,65 @@ export function validateEventRedeemPayload(value: unknown):
     },
   };
 }
+
+export function validateStreamContextPayload(value: unknown):
+  | {
+      success: true;
+      data:
+        | { isOnline: false; twitchCategoryId: null; twitchCategoryName: null }
+        | { isOnline: true; twitchCategoryId: string; twitchCategoryName: string | null };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid stream context" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (
+    Object.keys(payload).some(
+      (key) => key !== "isOnline" && key !== "twitchCategoryId" && key !== "twitchCategoryName"
+    )
+  ) {
+    return { success: false, error: "Invalid stream context" };
+  }
+
+  if (payload.isOnline === false) {
+    const categoryId = payload.twitchCategoryId;
+    const categoryName = payload.twitchCategoryName;
+    if (
+      (categoryId !== undefined && categoryId !== null && categoryId !== "") ||
+      (categoryName !== undefined && categoryName !== null && categoryName !== "")
+    ) {
+      return { success: false, error: "Offline context cannot include a category" };
+    }
+
+    return {
+      success: true,
+      data: { isOnline: false, twitchCategoryId: null, twitchCategoryName: null },
+    };
+  }
+
+  if (payload.isOnline !== true) {
+    return { success: false, error: "Invalid stream context" };
+  }
+
+  const twitchCategoryId = nonEmptyString(payload.twitchCategoryId, 30);
+  if (!twitchCategoryId || !TWITCH_USER_ID_PATTERN.test(twitchCategoryId)) {
+    return { success: false, error: "Invalid Twitch category ID" };
+  }
+
+  const categoryNameValue = payload.twitchCategoryName;
+  const twitchCategoryName =
+    categoryNameValue === undefined || categoryNameValue === null || categoryNameValue === ""
+      ? null
+      : nonEmptyString(categoryNameValue, 120);
+
+  if (twitchCategoryName === null && categoryNameValue !== undefined && categoryNameValue !== null && categoryNameValue !== "") {
+    return { success: false, error: "Invalid Twitch category name" };
+  }
+
+  return {
+    success: true,
+    data: { isOnline: true, twitchCategoryId, twitchCategoryName },
+  };
+}
