@@ -5,6 +5,7 @@ import { createActivityLogData, type ActivityActor } from "@/lib/activity";
 import { safelySyncLinkedPersonAchievementsByLogin } from "@/lib/achievements";
 import { grantResolvedUpman } from "@/lib/inventory";
 import { prisma } from "@/lib/prisma";
+import { isRequiredStreamCategoryActive } from "@/lib/stream-context";
 import { resolveTwitchIdentity, type TwitchIdentityInput } from "@/lib/twitch-identity";
 import { normalizeTwitchLogin } from "@/lib/validation";
 
@@ -50,6 +51,13 @@ export type ResolveUpmanAcquisitionInput = {
 export type ResolveEventRedeemInput = {
   rewardId: string;
   redemptionId: string;
+  viewer: TwitchIdentityInput;
+  context: UpmanAcquisitionContext;
+};
+
+export type ResolveStreamCommandInput = {
+  commandKey: string;
+  messageId: string;
   viewer: TwitchIdentityInput;
   context: UpmanAcquisitionContext;
 };
@@ -301,5 +309,64 @@ export async function resolveEventRedeem(
     idempotencyKey,
     viewer: input.viewer,
     context: input.context,
+  });
+}
+
+export async function resolveStreamCommand(
+  input: ResolveStreamCommandInput
+): Promise<ResolveUpmanAcquisitionResult> {
+  const commandKey = input.commandKey.trim().toLowerCase();
+  const messageId = input.messageId.trim().toLowerCase();
+  if (
+    !/^[a-z0-9][a-z0-9:_-]{0,79}$/.test(commandKey) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(messageId)
+  ) {
+    return { status: "invalid-input" };
+  }
+
+  const idempotencyKey = `stream-command:${messageId}`;
+  const existingGrant = await prisma.upmanAcquisitionGrant.findUnique({
+    where: { idempotencyKey },
+    select: { ruleId: true, rule: { select: { method: true } } },
+  });
+
+  if (existingGrant && existingGrant.rule.method !== "STREAM_COMMAND") {
+    return { status: "rule-not-found" };
+  }
+
+  const rule = existingGrant
+    ? await prisma.upmanAcquisitionRule.findUnique({
+        where: { id: existingGrant.ruleId },
+        select: { id: true, requiredTwitchCategoryId: true },
+      })
+    : await prisma.upmanAcquisitionRule.findFirst({
+        where: {
+          method: "STREAM_COMMAND",
+          externalKey: commandKey,
+        },
+        select: { id: true, requiredTwitchCategoryId: true },
+      });
+
+  if (!rule) {
+    return { status: "rule-not-found" };
+  }
+
+  if (!existingGrant) {
+    if (
+      !rule.requiredTwitchCategoryId ||
+      !(await isRequiredStreamCategoryActive(rule.requiredTwitchCategoryId))
+    ) {
+      return { status: "required-category-mismatch" };
+    }
+  }
+
+  return resolveUpmanAcquisition({
+    ruleId: rule.id,
+    idempotencyKey,
+    viewer: input.viewer,
+    context: {
+      ...input.context,
+      verifiedTwitchCategoryId: rule.requiredTwitchCategoryId,
+    },
   });
 }

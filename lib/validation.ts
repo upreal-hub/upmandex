@@ -13,6 +13,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TWITCH_USER_ID_PATTERN = /^[1-9][0-9]{0,29}$/;
 const TWITCH_REDEMPTION_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const STREAM_COMMAND_KEY_PATTERN = /^[a-z0-9][a-z0-9:_-]{0,79}$/;
 
 function nonEmptyString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") {
@@ -524,6 +525,73 @@ export function validateEventRedeemPayload(value: unknown):
     data: {
       rewardId: rewardId.toLowerCase(),
       redemptionId: redemptionId.toLowerCase(),
+      viewer: { twitchUserId, twitchLogin, displayName },
+    },
+  };
+}
+
+export function validateStreamCommandPayload(value: unknown):
+  | {
+      success: true;
+      data: {
+        commandKey: string;
+        messageId: string;
+        viewer: {
+          twitchUserId: string;
+          twitchLogin: string;
+          displayName: string;
+        };
+      };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid stream command" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (
+    Object.keys(payload).some(
+      (key) => key !== "commandKey" && key !== "messageId" && key !== "viewer"
+    )
+  ) {
+    return { success: false, error: "Invalid stream command" };
+  }
+
+  const commandKey = nonEmptyString(payload.commandKey, 80)?.toLowerCase();
+  const messageId = nonEmptyString(payload.messageId, 64)?.toLowerCase();
+  const viewer = payload.viewer;
+
+  if (
+    !commandKey ||
+    !STREAM_COMMAND_KEY_PATTERN.test(commandKey) ||
+    !messageId ||
+    !TWITCH_REDEMPTION_ID_PATTERN.test(messageId) ||
+    !viewer ||
+    typeof viewer !== "object" ||
+    Array.isArray(viewer)
+  ) {
+    return { success: false, error: "Invalid stream command" };
+  }
+
+  const viewerPayload = viewer as Record<string, unknown>;
+  const twitchUserId = nonEmptyString(viewerPayload.twitchUserId, 30);
+  const twitchLogin = normalizeTwitchLogin(viewerPayload.twitchLogin);
+  const displayName = nonEmptyString(viewerPayload.displayName, 120);
+
+  if (
+    !twitchUserId ||
+    !TWITCH_USER_ID_PATTERN.test(twitchUserId) ||
+    !twitchLogin ||
+    !displayName
+  ) {
+    return { success: false, error: "Invalid viewer" };
+  }
+
+  return {
+    success: true,
+    data: {
+      commandKey,
+      messageId,
       viewer: { twitchUserId, twitchLogin, displayName },
     },
   };
