@@ -28,6 +28,21 @@ export type RemoveUpmanResult =
   | { status: "owners-count-inconsistent" }
   | { status: "transaction-conflict" };
 
+export type ResolvedInventoryUser = {
+  id: string;
+  twitchLogin: string;
+};
+
+export type ExactUpman = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type ExactUpmanGrantResult =
+  | { status: "granted"; upmanName: string; viewer: string }
+  | { status: "already-owned"; upmanName: string; viewer: string };
+
 class OwnersCountIntegrityError extends Error {
   constructor() {
     super("Upman owners count is inconsistent with inventory");
@@ -47,6 +62,55 @@ function waitForTransactionRetry(attempt: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, delay));
 }
 
+export async function grantResolvedUpman(
+  tx: Prisma.TransactionClient,
+  input: {
+    user: ResolvedInventoryUser;
+    upman: ExactUpman;
+  },
+  activityContext?: ActivityContext
+): Promise<ExactUpmanGrantResult> {
+  const created = await tx.inventory.createMany({
+    data: { userId: input.user.id, upmanId: input.upman.id },
+    skipDuplicates: true,
+  });
+
+  if (created.count === 0) {
+    return {
+      status: "already-owned",
+      upmanName: input.upman.name,
+      viewer: input.user.twitchLogin,
+    };
+  }
+
+  await tx.upman.update({
+    where: { id: input.upman.id },
+    data: { ownersCount: { increment: 1 } },
+  });
+
+  await tx.upman.updateMany({
+    where: { id: input.upman.id, firstOwner: null },
+    data: { firstOwner: input.user.twitchLogin },
+  });
+
+  if (activityContext) {
+    await tx.activityLog.create({
+      data: createActivityLogData({
+        action: "UPMAN_GRANTED",
+        context: activityContext,
+        target: input.user,
+        upman: input.upman,
+      }),
+    });
+  }
+
+  return {
+    status: "granted",
+    upmanName: input.upman.name,
+    viewer: input.user.twitchLogin,
+  };
+}
+
 export async function grantUpman(
   input: GrantUpmanInput,
   activityContext?: ActivityContext
@@ -61,7 +125,7 @@ export async function grantUpman(
   const result = await prisma.$transaction<GrantUpmanResult>(async (tx) => {
     let user = await tx.user.findUnique({
       where: { twitchLogin: viewer },
-      select: { id: true },
+      select: { id: true, twitchLogin: true },
     });
 
     if (!user && input.autoCreateUser) {
@@ -71,7 +135,7 @@ export async function grantUpman(
           displayName: input.displayName.trim(),
           avatar: null,
         },
-        select: { id: true },
+        select: { id: true, twitchLogin: true },
       });
     }
 
@@ -88,47 +152,7 @@ export async function grantUpman(
       return { status: "upman-not-found" };
     }
 
-    try {
-      await tx.inventory.create({
-        data: { userId: user.id, upmanId: upman.id },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        return {
-          status: "already-owned",
-          upmanName: upman.name,
-          viewer,
-        };
-      }
-
-      throw error;
-    }
-
-    await tx.upman.update({
-      where: { id: upman.id },
-      data: { ownersCount: { increment: 1 } },
-    });
-
-    await tx.upman.updateMany({
-      where: { id: upman.id, firstOwner: null },
-      data: { firstOwner: viewer },
-    });
-
-    if (activityContext) {
-      await tx.activityLog.create({
-        data: createActivityLogData({
-          action: "UPMAN_GRANTED",
-          context: activityContext,
-          target: { id: user.id, twitchLogin: viewer },
-          upman,
-        }),
-      });
-    }
-
-    return { status: "granted", upmanName: upman.name, viewer };
+    return grantResolvedUpman(tx, { user, upman }, activityContext);
   });
 
   if (result.status === "granted") {

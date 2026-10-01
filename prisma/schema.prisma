@@ -25,6 +25,7 @@ enum ActivityAction {
   PROFILE_COSMETIC_CREATED
   PROFILE_COSMETIC_UPDATED
   PROFILE_COSMETIC_DELETED
+  UPMAN_ACQUISITION_RESOLVED
 }
 
 enum PullResult {
@@ -55,6 +56,23 @@ enum ProfileCosmeticAssetType {
   BANNER
 }
 
+enum UpmanDexVisibility {
+  PUBLIC
+  HIDDEN
+}
+
+enum UpmanAcquisitionMethod {
+  EVENT_REDEEM
+  STREAM_COMMAND
+  SITE_SECRET
+  MANUAL
+}
+
+enum UpmanAcquisitionResult {
+  NEW
+  DUPLICATE
+}
+
 model User {
   id               String        @id @default(cuid())
   twitchLogin      String        @unique
@@ -65,6 +83,7 @@ model User {
   createdAt        DateTime      @default(now())
   inventory        Inventory[]
   pullEvents       PullEvent[]
+  acquisitionGrants UpmanAcquisitionGrant[]
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
   person           Person?
@@ -177,15 +196,75 @@ model Upman {
   ownersCount         Int           @default(0)
   firstOwner          String?
   isPullable          Boolean       @default(true)
+  dexVisibility       UpmanDexVisibility @default(PUBLIC)
   createdAt           DateTime      @default(now())
   inventory           Inventory[]
   pullEvents          PullEvent[]
+  acquisitionRules    UpmanAcquisitionRule[]
+  acquisitionGrants   UpmanAcquisitionGrant[]
   activityLogs        ActivityLog[]
   creatorPerson       Person?       @relation("UpmanCreatorPerson", fields: [creatorPersonId], references: [id], onDelete: SetNull)
   representedPerson   Person?       @relation("UpmanRepresentedPerson", fields: [representedPersonId], references: [id], onDelete: SetNull)
 
   @@index([creatorPersonId])
   @@index([representedPersonId])
+}
+
+model UpmanEvent {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  isEnabled Boolean  @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  acquisitionRules UpmanAcquisitionRule[]
+
+  @@index([isEnabled, startsAt, endsAt])
+}
+
+model UpmanAcquisitionRule {
+  id                       String                   @id @default(cuid())
+  upmanId                  String
+  method                   UpmanAcquisitionMethod
+  externalKey              String?
+  isEnabled                Boolean                  @default(true)
+  eventId                  String?
+  requiredTwitchCategoryId String?
+  siteSecretHash           String?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  upman  Upman       @relation(fields: [upmanId], references: [id], onDelete: Cascade)
+  event  UpmanEvent? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  grants UpmanAcquisitionGrant[]
+
+  @@unique([method, externalKey])
+  @@index([upmanId])
+  @@index([eventId])
+}
+
+model UpmanAcquisitionGrant {
+  id             String                   @id @default(cuid())
+  idempotencyKey String                   @unique
+  ruleId         String
+  userId         String?
+  upmanId        String
+  twitchUserId   String?
+  twitchLogin    String
+  displayName    String
+  result         UpmanAcquisitionResult
+  createdAt      DateTime                 @default(now())
+
+  rule  UpmanAcquisitionRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  user  User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  upman Upman                @relation(fields: [upmanId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId, createdAt])
+  @@index([userId, createdAt])
+  @@index([upmanId, createdAt])
 }
 
 model PullRarityRule {

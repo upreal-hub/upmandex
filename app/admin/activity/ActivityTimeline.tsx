@@ -29,6 +29,7 @@ const actionLabels: Record<ActivityAction, string> = {
   UPMAN_UPDATED: "Updated",
   UPMAN_DELETED: "Deleted",
   PULL_RESOLVED: "Pull resolved",
+  UPMAN_ACQUISITION_RESOLVED: "Acquisition resolved",
   PERSON_CREATED: "Person created",
   PERSON_UPDATED: "Person updated",
   UPMAN_RELATIONSHIPS_UPDATED: "Relationships updated",

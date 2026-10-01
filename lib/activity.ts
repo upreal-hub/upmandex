@@ -38,6 +38,11 @@ export type ActivityMetadata =
       twitchUserId: string;
     }
   | {
+      idempotencyKey: string;
+      acquisitionMethod: "EVENT_REDEEM" | "STREAM_COMMAND" | "SITE_SECRET" | "MANUAL";
+      result: "new" | "duplicate";
+    }
+  | {
       before: { creatorPerson: string | null; representedPerson: string | null };
       after: { creatorPerson: string | null; representedPerson: string | null };
     }
@@ -120,6 +125,8 @@ export function formatActivityDescription(entry: ActivityDisplayEntry) {
       return `${actor} deleted ${upman}`;
     case "PULL_RESOLVED":
       return `${actor} resolved a pull of ${upman} for ${target}`;
+    case "UPMAN_ACQUISITION_RESOLVED":
+      return `${actor} resolved a specific acquisition of ${upman} for ${target}`;
     case "PERSON_CREATED":
       return `${actor} created ${personLabel(entry)}`;
     case "PERSON_UPDATED":
