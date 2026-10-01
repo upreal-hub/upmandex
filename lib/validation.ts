@@ -468,3 +468,63 @@ export function validatePullPayload(value: unknown):
     },
   };
 }
+
+export function validateEventRedeemPayload(value: unknown):
+  | {
+      success: true;
+      data: {
+        rewardId: string;
+        redemptionId: string;
+        viewer: {
+          twitchUserId: string;
+          twitchLogin: string;
+          displayName: string;
+        };
+      };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid event redemption" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  const rewardId = nonEmptyString(payload.rewardId, 64);
+  const redemptionId = nonEmptyString(payload.redemptionId, 64);
+  const viewer = payload.viewer;
+
+  if (
+    !rewardId ||
+    !redemptionId ||
+    !TWITCH_REDEMPTION_ID_PATTERN.test(rewardId) ||
+    !TWITCH_REDEMPTION_ID_PATTERN.test(redemptionId)
+  ) {
+    return { success: false, error: "Invalid Twitch reward redemption" };
+  }
+
+  if (!viewer || typeof viewer !== "object" || Array.isArray(viewer)) {
+    return { success: false, error: "Invalid viewer" };
+  }
+
+  const viewerPayload = viewer as Record<string, unknown>;
+  const twitchUserId = nonEmptyString(viewerPayload.twitchUserId, 30);
+  const twitchLogin = normalizeTwitchLogin(viewerPayload.twitchLogin);
+  const displayName = nonEmptyString(viewerPayload.displayName, 120);
+
+  if (
+    !twitchUserId ||
+    !TWITCH_USER_ID_PATTERN.test(twitchUserId) ||
+    !twitchLogin ||
+    !displayName
+  ) {
+    return { success: false, error: "Invalid viewer" };
+  }
+
+  return {
+    success: true,
+    data: {
+      rewardId: rewardId.toLowerCase(),
+      redemptionId: redemptionId.toLowerCase(),
+      viewer: { twitchUserId, twitchLogin, displayName },
+    },
+  };
+}

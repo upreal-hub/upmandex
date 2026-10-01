@@ -12,7 +12,7 @@ const MAX_TRANSACTION_ATTEMPTS = 3;
 const TWITCH_USER_ID_PATTERN = /^[1-9][0-9]{0,29}$/;
 const IDEMPOTENCY_KEY_PATTERN = /^[a-zA-Z0-9:_-]{1,180}$/;
 
-type AcquisitionContext = {
+export type UpmanAcquisitionContext = {
   origin: ActivityOrigin;
   actor?: ActivityActor | null;
   verifiedTwitchCategoryId?: string | null;
@@ -44,7 +44,14 @@ export type ResolveUpmanAcquisitionInput = {
   ruleId: string;
   idempotencyKey: string;
   viewer: TwitchIdentityInput;
-  context: AcquisitionContext;
+  context: UpmanAcquisitionContext;
+};
+
+export type ResolveEventRedeemInput = {
+  rewardId: string;
+  redemptionId: string;
+  viewer: TwitchIdentityInput;
+  context: UpmanAcquisitionContext;
 };
 
 function isRetryableTransactionError(error: unknown) {
@@ -260,4 +267,39 @@ export async function resolveUpmanAcquisition(
   }
 
   return { status: "transaction-conflict" };
+}
+
+export async function resolveEventRedeem(
+  input: ResolveEventRedeemInput
+): Promise<ResolveUpmanAcquisitionResult> {
+  const idempotencyKey = `event-redeem:${input.redemptionId}`;
+  const existingGrant = await prisma.upmanAcquisitionGrant.findUnique({
+    where: { idempotencyKey },
+    select: { ruleId: true, rule: { select: { method: true } } },
+  });
+
+  if (existingGrant && existingGrant.rule.method !== "EVENT_REDEEM") {
+    return { status: "rule-not-found" };
+  }
+
+  const rule = existingGrant
+    ? { id: existingGrant.ruleId }
+    : await prisma.upmanAcquisitionRule.findFirst({
+        where: {
+          method: "EVENT_REDEEM",
+          externalKey: input.rewardId,
+        },
+        select: { id: true },
+      });
+
+  if (!rule) {
+    return { status: "rule-not-found" };
+  }
+
+  return resolveUpmanAcquisition({
+    ruleId: rule.id,
+    idempotencyKey,
+    viewer: input.viewer,
+    context: input.context,
+  });
 }
