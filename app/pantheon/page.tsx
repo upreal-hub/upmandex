@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function PantheonPage() {
   const upmans = await prisma.upman.findMany({
+    where: publicUpmanWhere,
     select: { creator: true },
   });
 

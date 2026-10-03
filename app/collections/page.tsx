@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import CollectionsGrid from "@/components/CollectionsGrid";
+import { publicInventoryWhere, publicUpmanWhere } from "@/lib/upman-visibility";
 
 export const dynamic =
   "force-dynamic";
@@ -12,7 +13,7 @@ export default async function CollectionsPage() {
   const users =
     await prisma.user.findMany({
       include: {
-        inventory: true,
+        inventory: { where: publicInventoryWhere },
       },
       orderBy: {
         displayName: "asc",
@@ -27,7 +28,7 @@ export default async function CollectionsPage() {
   );
 
   const totalUpmans =
-    await prisma.upman.count();
+    await prisma.upman.count({ where: publicUpmanWhere });
 
   return (
     <main>

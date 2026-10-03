@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { publicInventoryWhere } from "@/lib/upman-visibility";
 
 export async function GET(req: Request) {
   try {
@@ -23,6 +24,7 @@ export async function GET(req: Request) {
       },
       select: {
         inventory: {
+          where: publicInventoryWhere,
           orderBy: { obtainedAt: "asc" },
           select: {
             upman: {

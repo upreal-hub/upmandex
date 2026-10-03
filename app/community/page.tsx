@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { prisma } from "@/lib/prisma";
+import { publicInventoryWhere, publicUpmanWhere } from "@/lib/upman-visibility";
 
 import styles from "./community.module.css";
 
@@ -31,21 +32,21 @@ function formatPercentage(value: number) {
 
 export default async function CommunityPage() {
   const [totalUpmans, collectorCount, discoveries, users, people] = await Promise.all([
-    prisma.upman.count(),
+    prisma.upman.count({ where: publicUpmanWhere }),
     prisma.user.count(),
-    prisma.inventory.count(),
+    prisma.inventory.count({ where: publicInventoryWhere }),
     prisma.user.findMany({
       select: {
         id: true,
         twitchLogin: true,
         displayName: true,
         avatar: true,
-        _count: { select: { inventory: true } },
+        _count: { select: { inventory: { where: publicInventoryWhere } } },
         person: {
           select: {
             id: true,
             isPublic: true,
-            _count: { select: { createdUpmans: true } },
+            _count: { select: { createdUpmans: { where: publicUpmanWhere } } },
           },
         },
       },
@@ -56,7 +57,7 @@ export default async function CommunityPage() {
         id: true,
         displayName: true,
         user: { select: { twitchLogin: true, avatar: true } },
-        _count: { select: { createdUpmans: true } },
+        _count: { select: { createdUpmans: { where: publicUpmanWhere } } },
       },
     }),
   ]);

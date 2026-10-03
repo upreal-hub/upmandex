@@ -13,6 +13,7 @@ const rarityClassNames: Record<string, string> = {
   Mythic: styles.mythic,
   Legendary: styles.legendary,
   Secret: "upman-secret",
+  Event: "upman-event",
 };
 
 type CreatedUpman = {

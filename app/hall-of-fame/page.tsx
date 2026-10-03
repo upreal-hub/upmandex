@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 export default async function HallOfFamePage() {
   const upmans =
-    await prisma.upman.findMany();
+    await prisma.upman.findMany({ where: publicUpmanWhere });
 
   const topCreators = [
     ...new Set(

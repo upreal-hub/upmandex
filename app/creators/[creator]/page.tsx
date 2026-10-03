@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,7 +15,7 @@ export default async function CreatorPage({
   const creatorName = decodeURIComponent(creator);
 
   const creatorUpmans = await prisma.upman.findMany({
-    where: { creator: creatorName },
+    where: { creator: creatorName, ...publicUpmanWhere },
     orderBy: [{ createdAt: "asc" }, { slug: "asc" }],
     select: {
       slug: true,

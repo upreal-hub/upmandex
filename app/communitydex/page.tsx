@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CommunityDexPage() {
   const upmans = await prisma.upman.findMany({
+    where: publicUpmanWhere,
     orderBy: [{ createdAt: "desc" }, { slug: "asc" }],
     select: {
       name: true,
@@ -41,6 +43,10 @@ export default async function CommunityDexPage() {
 
   const secretCount = upmans.filter(
     (u) => u.rarity === "Secret"
+  ).length;
+
+  const eventCount = upmans.filter(
+    (u) => u.rarity === "Event"
   ).length;
 
   const ranking = [...new Set(upmans.map((u) => u.creator))]
@@ -109,7 +115,7 @@ export default async function CommunityDexPage() {
         Rarity Distribution
       </h2>
 
-      <div className="grid grid-cols-6 gap-6">
+      <div className="grid grid-cols-5 gap-6">
 
         <div className="border border-green-500 rounded-lg p-6 text-center">
           <h3 className="font-bold text-green-400">
@@ -156,7 +162,7 @@ export default async function CommunityDexPage() {
           </p>
         </div>
 
-        <div className="border border-cyan-400 rounded-lg bg-gradient-to-br from-cyan-400/20 to-rose-400/20 p-6 text-center">
+        {secretCount > 0 && <div className="border border-cyan-400 rounded-lg bg-gradient-to-br from-cyan-400/20 to-rose-400/20 p-6 text-center">
           <h3 className="font-bold text-cyan-300">
             Secret
           </h3>
@@ -164,6 +170,12 @@ export default async function CommunityDexPage() {
             {secretCount}
           </p>
         </div>
+        }
+
+        {eventCount > 0 && <div className="border border-pink-300 rounded-lg bg-gradient-to-br from-pink-300/30 to-white/30 p-6 text-center">
+          <h3 className="font-bold text-pink-300">EVENT</h3>
+          <p className="text-3xl mt-2">{eventCount}</p>
+        </div>}
 
       </div>
     </main>

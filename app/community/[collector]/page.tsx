@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { normalizeTwitchLogin } from "@/lib/validation";
+import { collectionUpmanWhere, isPublicUpman, publicInventoryWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,6 +16,7 @@ export default async function CollectorPage({ params }: Props) {
   const { collector } = await params;
   const requestedCollector = decodeURIComponent(collector);
   const normalizedLogin = requestedCollector.trim().toLowerCase();
+  const visitorLogin = normalizeTwitchLogin((await auth())?.user?.name);
 
   const inventoryInclude = {
     inventory: {
@@ -46,14 +50,19 @@ export default async function CollectorPage({ params }: Props) {
     );
   }
 
-  const totalUpmans = await prisma.upman.count();
-  const collectors = await prisma.user.findMany({
+  const [totalUpmans, collectors, visitor] = await Promise.all([
+    prisma.upman.count({ where: collectionUpmanWhere(user.id) }),
+    prisma.user.findMany({
     select: {
       id: true,
       displayName: true,
-      _count: { select: { inventory: true } },
+      _count: { select: { inventory: { where: publicInventoryWhere } } },
     },
-  });
+    }),
+    visitorLogin
+      ? prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { inventory: { select: { upmanId: true } } } })
+      : null,
+  ]);
 
   const ranking = collectors
     .sort(
@@ -64,6 +73,7 @@ export default async function CollectorPage({ params }: Props) {
   const rank = ranking.findIndex((entry) => entry.id === user.id) + 1;
 
   const collectedUpmans = user.inventory.map((item) => item.upman);
+  const visitorOwnedUpmanIds = new Set(visitor?.inventory.map((item) => item.upmanId));
   const ownedCount = collectedUpmans.length;
   const completion = totalUpmans > 0
     ? Math.round((ownedCount / totalUpmans) * 100)
@@ -149,13 +159,11 @@ export default async function CollectorPage({ params }: Props) {
               ? "border-red-500"
               : upman.rarity === "Secret"
               ? "border-cyan-400 shadow-[0_0_20px_rgba(53,230,230,0.25)]"
+              : upman.rarity === "Event"
+              ? "border-pink-300 shadow-[0_0_20px_rgba(255,122,200,0.25)]"
               : "border-yellow-500";
 
-          return (
-            <Link
-              key={upman.slug}
-              href={`/upmans/${upman.slug}`}
-            >
+          const card = (
               <div
                 className={`border-2 ${rarityColor} rounded-lg p-4 hover:scale-105 transition duration-200 cursor-pointer`}
               >
@@ -170,11 +178,14 @@ export default async function CollectorPage({ params }: Props) {
                 </p>
 
                 <p className="text-center text-sm opacity-70">
-                  {upman.rarity}
+                  {upman.rarity === "Event" ? "EVENT" : upman.rarity}
                 </p>
               </div>
-            </Link>
           );
+
+          return isPublicUpman(upman.dexVisibility) || visitorOwnedUpmanIds.has(upman.id)
+            ? <Link key={upman.slug} href={`/upmans/${upman.slug}`}>{card}</Link>
+            : <article key={upman.slug}>{card}</article>;
         })}
 
       </div>

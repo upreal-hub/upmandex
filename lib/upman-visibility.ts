@@ -4,6 +4,10 @@ export const publicUpmanWhere = {
   dexVisibility: "PUBLIC",
 } satisfies Prisma.UpmanWhereInput;
 
+export const publicInventoryWhere = {
+  upman: publicUpmanWhere,
+} satisfies Prisma.InventoryWhereInput;
+
 export function collectionUpmanWhere(ownerUserId: string): Prisma.UpmanWhereInput {
   return {
     OR: [

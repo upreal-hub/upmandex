@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getAchievementCosmetic, getAchievementProgress } from "@/lib/achievements";
 import { auth } from "@/auth";
 import { normalizeTwitchLogin } from "@/lib/validation";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 import AchievementsPanel from "./AchievementsPanel";
 import AchievementCustomization from "./AchievementCustomization";
@@ -24,6 +25,7 @@ const rarityClassNames: Record<string, string> = {
   Mythic: styles.mythic,
   Legendary: styles.legendary,
   Secret: "upman-secret",
+  Event: "upman-event",
 };
 
 export const dynamic = "force-dynamic";
@@ -69,10 +71,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         select: { id: true, platform: true, url: true },
       },
       representedUpmans: {
+        where: publicUpmanWhere,
         orderBy: [{ name: "asc" }, { slug: "asc" }],
         select: { slug: true, name: true, image: true, rarity: true },
       },
       createdUpmans: {
+        where: publicUpmanWhere,
         orderBy: [{ name: "asc" }, { slug: "asc" }],
         select: { slug: true, name: true, image: true, rarity: true },
       },
