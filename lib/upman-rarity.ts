@@ -5,6 +5,7 @@ export const UP_MAN_RARITIES = [
   "Mythic",
   "Legendary",
   "Secret",
+  "Event",
 ] as const;
 
 export const PULL_RARITIES = [
@@ -24,4 +25,8 @@ export function isUpmanRarity(value: unknown): value is UpmanRarity {
 
 export function isPullRarity(value: unknown): value is PullRarity {
   return typeof value === "string" && PULL_RARITIES.includes(value as PullRarity);
+}
+
+export function getUpmanRarityLabel(rarity: UpmanRarity) {
+  return rarity === "Event" ? "EVENT" : rarity;
 }

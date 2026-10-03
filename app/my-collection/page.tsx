@@ -3,6 +3,7 @@ import CollectionGallery, { type CollectionEntry } from "@/components/Collection
 import LoginButton from "@/components/LoginButton";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
+import { collectionUpmanWhere } from "@/lib/upman-visibility";
 
 import styles from "./collection.module.css";
 import titleStyles from "./collection-title.module.css";
@@ -18,30 +19,31 @@ export default async function MyCollectionPage() {
     return <LoggedOutCollection />;
   }
 
-  const [user, upmans] = await Promise.all([
-    prisma.user.findUnique({
-      where: { twitchLogin },
-      select: { twitchLogin: true, displayName: true, avatar: true, inventory: { select: { upmanId: true } } },
-    }),
-    prisma.upman.findMany({
-      orderBy: [{ name: "asc" }, { slug: "asc" }],
-      select: { id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true },
-    }),
-  ]);
+  const user = await prisma.user.findUnique({
+    where: { twitchLogin },
+    select: { id: true, twitchLogin: true, displayName: true, avatar: true, inventory: { select: { upmanId: true } } },
+  });
 
   if (!user) {
     return <LoggedOutCollection />;
   }
 
-  const creatorLogins = upmans.map((upman) => upman.creatorTwitch).filter((login): login is string => Boolean(login));
+  const visibleUpmans = await prisma.upman.findMany({
+    where: collectionUpmanWhere(user.id),
+    orderBy: [{ name: "asc" }, { slug: "asc" }],
+    select: { id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true },
+  });
+
+  const creatorLogins = visibleUpmans.map((upman) => upman.creatorTwitch).filter((login): login is string => Boolean(login));
   const creators = creatorLogins.length > 0 ? await prisma.user.findMany({ where: { twitchLogin: { in: creatorLogins } }, select: { twitchLogin: true, avatar: true } }) : [];
   const avatarsByLogin = new Map(creators.map((creator) => [creator.twitchLogin, creator.avatar]));
   const ownedIds = new Set(user.inventory.map((item) => item.upmanId));
-  const entries: CollectionEntry[] = upmans.map((upman) => ({
+  const entries: CollectionEntry[] = visibleUpmans.map((upman) => ({
     ...upman,
     rarity: upman.rarity as CollectionEntry["rarity"],
     creatorAvatar: upman.creatorTwitch ? avatarsByLogin.get(upman.creatorTwitch) ?? null : null,
     owned: ownedIds.has(upman.id),
+    canViewDetails: true,
   }));
 
   return (

@@ -5,4 +5,5 @@ export const ADMIN_RARITY_CLASSES: Record<string, string> = {
   Mythic: "bg-rose-100 text-rose-700",
   Legendary: "bg-amber-100 text-amber-800",
   Secret: "bg-gradient-to-r from-[var(--rarity-secret-cyan)] to-[var(--rarity-secret-coral)] text-white shadow-sm",
+  Event: "bg-gradient-to-r from-[var(--rarity-event-pink)] to-white text-pink-900 shadow-sm",
 };

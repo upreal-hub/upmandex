@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import UpmanCard from "@/components/UpmanCard";
+import { auth } from "@/auth";
+import { normalizeTwitchLogin } from "@/lib/validation";
+import { collectionUpmanWhere, isPublicUpman } from "@/lib/upman-visibility";
+import type { UpmanRarity } from "@/lib/upman-rarity";
 
 export const dynamic =
   "force-dynamic";
@@ -13,19 +17,14 @@ type Props = {
   }>;
 };
 
-type UpmanRarity =
-  | "Common"
-  | "Rare"
-  | "Epic"
-  | "Mythic"
-  | "Legendary"
-  | "Secret";
-
 export default async function ViewerCollection({
   params,
 }: Props) {
   const { viewer } =
     await params;
+
+  const session = await auth();
+  const visitorLogin = normalizeTwitchLogin(session?.user?.name);
 
   const user =
     await prisma.user.findUnique({
@@ -64,8 +63,12 @@ export default async function ViewerCollection({
     (entry) => entry.upman
   );
 
-const allUpmans =
-  await prisma.upman.findMany();
+  const [allUpmans, visitor] = await Promise.all([
+    prisma.upman.findMany({ where: collectionUpmanWhere(user.id) }),
+    visitorLogin
+      ? prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { inventory: { select: { upmanId: true } } } })
+      : null,
+  ]);
 
 const ownedSlugs =
   new Set(
@@ -74,8 +77,9 @@ const ownedSlugs =
     )
   );
 
-const totalUpmans =
-  await prisma.upman.count();
+const totalUpmans = allUpmans.length;
+
+  const visitorOwnedUpmanIds = new Set(visitor?.inventory.map((entry) => entry.upmanId));
 
   const ownedCount =
     ownedUpmans.length;
@@ -129,6 +133,13 @@ const totalUpmans =
       (upman) =>
         upman.rarity ===
         "Secret"
+    ).length;
+
+  const eventCount =
+    ownedUpmans.filter(
+      (upman) =>
+        upman.rarity ===
+        "Event"
     ).length;
 
   const latestDiscovery =
@@ -300,6 +311,10 @@ const totalUpmans =
           ✨ {secretCount} Secret
         </span>
 
+        <span className="bg-gradient-to-r from-[var(--rarity-event-pink)] to-white bg-clip-text text-transparent">
+          ✨ {eventCount} Event
+        </span>
+
       </div>
 
     </div>
@@ -331,6 +346,7 @@ const totalUpmans =
       owned={ownedSlugs.has(
         upman.slug
       )}
+      canViewDetails={isPublicUpman(upman.dexVisibility) || visitorOwnedUpmanIds.has(upman.id)}
     />
   )
 )}

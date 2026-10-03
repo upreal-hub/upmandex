@@ -1,15 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import UpmanDetailHotbar from "@/components/UpmanDetailHotbar";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
+import { publicUpmanWhere, upmanDetailWhere } from "@/lib/upman-visibility";
+import { getUpmanRarityLabel } from "@/lib/upman-rarity";
 
 import styles from "./upman-detail.module.css";
 
-const rarityClassNames: Record<string, string> = { Common: styles.common, Rare: styles.rare, Epic: styles.epic, Mythic: styles.mythic, Legendary: styles.legendary, Secret: "upman-secret" };
-const previewClassNames: Record<string, string> = { Common: styles.previewCommon, Rare: styles.previewRare, Epic: styles.previewEpic, Mythic: styles.previewMythic, Legendary: styles.previewLegendary, Secret: "upman-secret" };
+const rarityClassNames: Record<string, string> = { Common: styles.common, Rare: styles.rare, Epic: styles.epic, Mythic: styles.mythic, Legendary: styles.legendary, Secret: "upman-secret", Event: "upman-event" };
+const previewClassNames: Record<string, string> = { Common: styles.previewCommon, Rare: styles.previewRare, Epic: styles.previewEpic, Mythic: styles.previewMythic, Legendary: styles.previewLegendary, Secret: "upman-secret", Event: "upman-event" };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,7 +20,7 @@ export const revalidate = 0;
 type PublicIdentity = { displayName: string; avatar: string | null; twitchLogin: string | null };
 type DetailUpman = {
   id: string; slug: string; name: string; image: string; rarity: string; creator: string; creatorTwitch: string | null;
-  creatorPersonId: string | null; representedPersonId: string | null;
+  creatorPersonId: string | null; representedPersonId: string | null; dexVisibility: string;
   creatorPerson: { id: string; displayName: string; isPublic: boolean; user: { avatar: string | null; twitchLogin: string } | null } | null;
   representedPerson: { id: string; displayName: string; isPublic: boolean; user: { avatar: string | null; twitchLogin: string } | null } | null;
 };
@@ -27,17 +30,33 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
   const { view } = await searchParams;
   const session = await auth();
   const twitchLogin = normalizeTwitchLogin(session?.user?.name);
-  const upmans: DetailUpman[] = await prisma.upman.findMany({
-    orderBy: [{ name: "asc" }, { slug: "asc" }],
+  const currentUser = twitchLogin
+    ? await prisma.user.findUnique({ where: { twitchLogin }, select: { id: true } })
+    : null;
+  const upman = await prisma.upman.findFirst({
+    where: upmanDetailWhere(slug, currentUser?.id ?? null),
     select: {
-      id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true, creatorPersonId: true, representedPersonId: true,
+      id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true, creatorPersonId: true, representedPersonId: true, dexVisibility: true,
       creatorPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { avatar: true, twitchLogin: true } } } },
       representedPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { avatar: true, twitchLogin: true } } } },
     },
   });
+
+  if (!upman) notFound();
+
+  const publicUpmans: DetailUpman[] = await prisma.upman.findMany({
+    where: publicUpmanWhere,
+    orderBy: [{ name: "asc" }, { slug: "asc" }],
+    select: {
+      id: true, slug: true, name: true, image: true, rarity: true, creator: true, creatorTwitch: true, creatorPersonId: true, representedPersonId: true, dexVisibility: true,
+      creatorPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { avatar: true, twitchLogin: true } } } },
+      representedPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { avatar: true, twitchLogin: true } } } },
+    },
+  });
+  const upmans: DetailUpman[] = upman.dexVisibility === "PUBLIC"
+    ? publicUpmans
+    : [...publicUpmans, upman].sort((left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug));
   const currentIndex = upmans.findIndex((candidate) => candidate.slug === slug);
-  const upman = currentIndex >= 0 ? upmans[currentIndex] : null;
-  if (!upman) return <LostUpman />;
 
   const structuredCreator = upman.creatorPerson?.isPublic ? upman.creatorPerson : null;
   const representedPerson = upman.representedPerson?.isPublic ? upman.representedPerson : null;
@@ -59,7 +78,7 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
     <Link href="/upmans" className={styles.back}><span aria-hidden="true">←</span> Back to Upmandex</Link>
     <section className={styles.hero} aria-labelledby="upman-name">
       <div className={styles.artworkStage}><Image src={upman.image} alt={upman.name} className={styles.artwork} width={640} height={640} priority sizes="(max-width: 500px) 88vw, (max-width: 900px) 62vw, 32rem" /></div>
-      <h1 id="upman-name" className={styles.name}>{upman.name}</h1><span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : ""}`}>{upman.rarity}</span>
+      <h1 id="upman-name" className={styles.name}>{upman.name}</h1><span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : upman.rarity === "Event" ? "rarity-event" : ""}`}>{getUpmanRarityLabel(upman.rarity as Parameters<typeof getUpmanRarityLabel>[0])}</span>
       <p className={styles.creator}><span>Created by</span><span>{creatorIdentity.avatar && <Avatar src={creatorIdentity.avatar} />} {creatorIdentity.displayName}</span></p>
       <UpmanDetailHotbar active={activeView} upmanHref={`/upmans/${upman.slug}`} creatorHref={`/upmans/${upman.slug}?view=creator`} personHref={hasPersonView ? `/upmans/${upman.slug}?view=person` : undefined} />
     </section>
@@ -96,4 +115,3 @@ function CreatorCard({ upman, isCurrent }: { upman: DetailUpman; isCurrent: bool
 function UpmanPreviewCard({ upman }: { upman: DetailUpman }) { return <Link href={`/upmans/${upman.slug}`} className={`${styles.previewCard} ${previewClassNames[upman.rarity] ?? styles.previewCommon}`}><span className={styles.previewArt}><Image src={upman.image} alt={upman.name} width={160} height={150} sizes="(max-width: 760px) 42vw, 10rem" /></span><strong>{upman.name}</strong></Link>; }
 function CollectionContext({ isSignedIn, isOwned }: { isSignedIn: boolean; isOwned: boolean }) { if (!isSignedIn) return <div className={styles.collectionContext}><span className={styles.collectionMark} aria-hidden="true">☁</span><div className={styles.collectionCopy}><strong>Connect with Twitch</strong><p>Connect with Twitch to see whether this Upman is in your collection.</p></div></div>; return <div className={styles.collectionContext}><span className={styles.collectionMark} aria-hidden="true">{isOwned ? "✓" : "☁"}</span><div className={styles.collectionCopy}><strong>{isOwned ? "Collected" : "Not collected yet"}</strong><p>{isOwned ? "This Upman is part of your collection." : "Keep exploring the clouds to find this Upman."}</p>{isOwned && <Link href="/my-collection">View My Collection <span aria-hidden="true">→</span></Link>}</div></div>; }
 function PagerLink({ direction, upman }: { direction: "previous" | "next"; upman: DetailUpman }) { const isPrevious = direction === "previous"; return <Link href={`/upmans/${upman.slug}`} className={styles.pagerLink}><small>{isPrevious ? "← Previous Upman" : "Next Upman →"}</small><strong>{upman.name}</strong></Link>; }
-function LostUpman() { return <main className={`upman-detail-page ${styles.page}`}><section className={styles.lost}><p>Lost in the cloud world</p><h1>This Upman could not be found.</h1><Link href="/upmans" className={styles.back}>← Back to Upmandex</Link></section></main>; }

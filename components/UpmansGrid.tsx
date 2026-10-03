@@ -64,6 +64,7 @@ export default function UpmansGrid({
         Mythic: 4,
         Legendary: 5,
         Secret: 6,
+        Event: 7,
       };
 
       switch (sortBy) {

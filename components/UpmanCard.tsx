@@ -1,19 +1,13 @@
 import Link from "next/link";
-
-type Rarity =
-  | "Common"
-  | "Rare"
-  | "Epic"
-  | "Mythic"
-  | "Legendary"
-  | "Secret";
+import { getUpmanRarityLabel, type UpmanRarity } from "@/lib/upman-rarity";
 
 type Props = {
   slug: string;
   name: string;
   image: string;
-  rarity: Rarity;
+  rarity: UpmanRarity;
   owned?: boolean;
+  canViewDetails?: boolean;
 };
 
 export default function UpmanCard({
@@ -22,6 +16,7 @@ export default function UpmanCard({
   image,
   rarity,
   owned = true,
+  canViewDetails = true,
 }: Props) {
   const rarityStyle = {
     Common: {
@@ -65,10 +60,14 @@ export default function UpmanCard({
       badge:
         "bg-gradient-to-r from-[var(--rarity-secret-cyan)] to-[var(--rarity-secret-coral)] text-white",
     },
+
+    Event: {
+      glow: "hover:shadow-[0_0_45px_rgba(255,122,200,0.4)]",
+      badge: "bg-gradient-to-r from-[var(--rarity-event-pink)] to-white text-pink-900",
+    },
   }[rarity];
 
-  return (
-    <Link href={`/upmans/${slug}`}>
+  const card = (
       <div
         className={`
           bg-white/70
@@ -114,7 +113,7 @@ export default function UpmanCard({
                 ${rarityStyle.badge}
               `}
             >
-              {rarity}
+              {getUpmanRarityLabel(rarity)}
             </span>
           ) : (
             <span
@@ -134,6 +133,7 @@ export default function UpmanCard({
 
         </div>
       </div>
-    </Link>
   );
+
+  return canViewDetails ? <Link href={`/upmans/${slug}`}>{card}</Link> : card;
 }

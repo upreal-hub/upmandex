@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import styles from "./CollectionGallery.module.css";
-import { UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
+import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
 const rarities = ["All", ...UP_MAN_RARITIES] as const;
 const collectionViews = ["Collected", "Missing", "All"] as const;
@@ -22,6 +22,7 @@ export type CollectionEntry = {
   creatorTwitch: string | null;
   creatorAvatar: string | null;
   owned: boolean;
+  canViewDetails?: boolean;
 };
 
 type Props = { upmans: CollectionEntry[]; ownedCount: number };
@@ -33,6 +34,7 @@ const rarityClassNames: Record<Rarity, string> = {
   Mythic: styles.mythic,
   Legendary: styles.legendary,
   Secret: "upman-secret",
+  Event: "upman-event",
 };
 
 export default function CollectionGallery({ upmans, ownedCount }: Props) {
@@ -97,22 +99,7 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
 
       {filtered.length > 0 ? (
         <div className={styles.gallery}>
-          {filtered.map((upman) => (
-            <Link key={upman.slug} href={`/upmans/${upman.slug}`} className={`${styles.entry} ${rarityClassNames[upman.rarity]} ${upman.owned ? "" : styles.missing}`} aria-label={`View ${upman.name}, ${upman.rarity}${upman.owned ? ", collected" : ", missing"}`}>
-              <div className={styles.artwork}><Image src={upman.image} alt={upman.name} width={320} height={300} sizes="(max-width: 620px) 45vw, (max-width: 900px) 30vw, 22vw" /></div>
-              <div className={styles.info}>
-                <span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : ""}`}>{upman.rarity}</span>
-                <h2>{upman.name}</h2>
-                <p>Created by <strong>{upman.creator}</strong></p>
-                {upman.creatorTwitch && <p className={styles.creatorIdentity}>{upman.creatorAvatar && (
-                  // This URL is stored on the matching Twitch-authenticated User record.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={upman.creatorAvatar} alt="" />
-                )}<span>@{upman.creatorTwitch}</span></p>}
-                {!upman.owned && <span className={styles.missingLabel}>Missing</span>}
-              </div>
-            </Link>
-          ))}
+          {filtered.map((upman) => <CollectionEntryCard key={upman.slug} upman={upman} />)}
         </div>
       ) : view === "Collected" ? (
         <div className={styles.empty}><p>Your collection is waiting for its first Upman.</p><Link href="/upmans">Explore the Upmandex <span aria-hidden="true">→</span></Link></div>
@@ -121,4 +108,26 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
       )}
     </>
   );
+}
+
+function CollectionEntryCard({ upman }: { upman: CollectionEntry }) {
+  const className = `${styles.entry} ${rarityClassNames[upman.rarity]} ${upman.owned ? "" : styles.missing}`;
+  const content = <>
+    <div className={styles.artwork}><Image src={upman.image} alt={upman.name} width={320} height={300} sizes="(max-width: 620px) 45vw, (max-width: 900px) 30vw, 22vw" /></div>
+    <div className={styles.info}>
+      <span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : upman.rarity === "Event" ? "rarity-event" : ""}`}>{getUpmanRarityLabel(upman.rarity)}</span>
+      <h2>{upman.name}</h2>
+      <p>Created by <strong>{upman.creator}</strong></p>
+      {upman.creatorTwitch && <p className={styles.creatorIdentity}>{upman.creatorAvatar && (
+        // This URL is stored on the matching Twitch-authenticated User record.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={upman.creatorAvatar} alt="" />
+      )}<span>@{upman.creatorTwitch}</span></p>}
+      {!upman.owned && <span className={styles.missingLabel}>Missing</span>}
+    </div>
+  </>;
+
+  return upman.canViewDetails === false
+    ? <article className={className} aria-label={`${upman.name}, ${getUpmanRarityLabel(upman.rarity)}, collected by this explorer`}>{content}</article>
+    : <Link href={`/upmans/${upman.slug}`} className={className} aria-label={`View ${upman.name}, ${getUpmanRarityLabel(upman.rarity)}${upman.owned ? ", collected" : ", missing"}`}>{content}</Link>;
 }

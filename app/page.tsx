@@ -2,12 +2,14 @@ import Link from "next/link";
 
 import HomeFeaturedUpmanCard from "@/components/HomeFeaturedUpmanCard";
 import { prisma } from "@/lib/prisma";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
   const upmans = await prisma.upman.findMany({
+    where: publicUpmanWhere,
     orderBy: [{ createdAt: "desc" }, { slug: "asc" }],
     select: { slug: true, name: true, image: true, rarity: true, creator: true, firstOwner: true },
   });

@@ -16,6 +16,7 @@
   --display-font: "Arial Rounded MT Bold", "Trebuchet MS", var(--font-geist-sans), sans-serif;
   --rarity-secret-cyan: #35E6E6;
   --rarity-secret-coral: #FF7A72;
+  --rarity-event-pink: #FF7AC8;
 }
 
 html[data-theme="night"] {
@@ -64,6 +65,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .rarity-secret { color: #fff; background: linear-gradient(135deg, var(--rarity-secret-cyan), var(--rarity-secret-coral)); box-shadow: 0 0 .8rem color-mix(in srgb, var(--rarity-secret-cyan) 45%, transparent); }
 .home-upman-secret { --upman-accent: var(--rarity-secret-cyan); }
 .upman-secret { --upman-accent: var(--rarity-secret-cyan); --rarity-accent: var(--rarity-secret-cyan); --preview-accent: var(--rarity-secret-cyan); --card-accent: var(--rarity-secret-cyan); }
+.rarity-event { color: #8a245d; background: linear-gradient(135deg, var(--rarity-event-pink), #fff); box-shadow: 0 0 .8rem color-mix(in srgb, var(--rarity-event-pink) 45%, transparent); }
+.home-upman-event { --upman-accent: var(--rarity-event-pink); }
+.upman-event { --upman-accent: var(--rarity-event-pink); --rarity-accent: var(--rarity-event-pink); --preview-accent: var(--rarity-event-pink); --card-accent: var(--rarity-event-pink); }
 [class*="entry"].upman-secret, [class*="previewCard"].upman-secret, [class*="creatorCard"].upman-secret, .upman-detail-page.upman-secret { --upman-accent: var(--rarity-secret-cyan); --rarity-accent: var(--rarity-secret-cyan); --preview-accent: var(--rarity-secret-cyan); }
 [class*="upmanCard"].upman-secret { background: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-cyan)), color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-coral))); }
 [class*="rarityItem"].upman-secret { --rarity-accent: var(--rarity-secret-cyan); background: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-cyan)), color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-coral))); }

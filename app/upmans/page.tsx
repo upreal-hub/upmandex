@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import UpmandexGallery, { type UpmandexEntry } from "@/components/UpmandexGallery";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 
 import styles from "./upmandex.module.css";
 
@@ -14,6 +15,7 @@ export default async function UpmansPage() {
 
   const [upmans, viewer] = await Promise.all([
     prisma.upman.findMany({
+      where: publicUpmanWhere,
       orderBy: [{ name: "asc" }, { slug: "asc" }],
       select: {
         id: true,
@@ -28,7 +30,7 @@ export default async function UpmansPage() {
     twitchLogin
       ? prisma.user.findUnique({
           where: { twitchLogin },
-          select: { inventory: { select: { upmanId: true } } },
+          select: { inventory: { where: { upman: publicUpmanWhere }, select: { upmanId: true } } },
         })
       : null,
   ]);
