@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
 import { ADMIN_RARITY_CLASSES } from "../../rarity";
+import { UP_MAN_RARITIES } from "@/lib/upman-rarity";
 
 type Person = { id: string; displayName: string; userId: string | null; user: { twitchLogin: string } | null };
 type User = { id: string; twitchLogin: string; displayName: string; avatar: string | null; person: { id: string; displayName: string } | null };
@@ -17,7 +18,7 @@ type Upman = {
 type Relation = "creator" | "represented";
 type Status = "All" | "Needs attention" | "Complete" | "Missing represented viewer" | "Missing creator";
 
-const rarities = ["All", "Common", "Rare", "Epic", "Mythic", "Legendary"];
+const rarities = ["All", ...UP_MAN_RARITIES];
 const statuses: Status[] = ["All", "Needs attention", "Complete", "Missing represented viewer", "Missing creator"];
 
 function needsViewer(upman: Upman) {

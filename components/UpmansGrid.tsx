@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import UpmanCard from "./UpmanCard";
+import { UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
 type Upman = {
   slug: string;
@@ -62,6 +63,7 @@ export default function UpmansGrid({
         Epic: 3,
         Mythic: 4,
         Legendary: 5,
+        Secret: 6,
       };
 
       switch (sortBy) {
@@ -233,11 +235,7 @@ export default function UpmansGrid({
           "
         >
           <option>All</option>
-          <option>Common</option>
-          <option>Rare</option>
-          <option>Epic</option>
-          <option>Mythic</option>
-          <option>Legendary</option>
+          {UP_MAN_RARITIES.map((option) => <option key={option}>{option}</option>)}
         </select>
 
       </div>
@@ -259,14 +257,7 @@ export default function UpmansGrid({
               slug={upman.slug}
               name={upman.name}
               image={upman.image}
-              rarity={
-                upman.rarity as
-                  | "Common"
-                  | "Rare"
-                  | "Epic"
-                  | "Mythic"
-                  | "Legendary"
-              }
+              rarity={upman.rarity as UpmanRarity}
             />
           )
         )}

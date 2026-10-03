@@ -39,6 +39,10 @@ export default async function CommunityDexPage() {
     (u) => u.rarity === "Legendary"
   ).length;
 
+  const secretCount = upmans.filter(
+    (u) => u.rarity === "Secret"
+  ).length;
+
   const ranking = [...new Set(upmans.map((u) => u.creator))]
     .map((creator) => ({
       creator,
@@ -105,7 +109,7 @@ export default async function CommunityDexPage() {
         Rarity Distribution
       </h2>
 
-      <div className="grid grid-cols-5 gap-6">
+      <div className="grid grid-cols-6 gap-6">
 
         <div className="border border-green-500 rounded-lg p-6 text-center">
           <h3 className="font-bold text-green-400">
@@ -149,6 +153,15 @@ export default async function CommunityDexPage() {
           </h3>
           <p className="text-3xl mt-2">
             {legendaryCount}
+          </p>
+        </div>
+
+        <div className="border border-cyan-400 rounded-lg bg-gradient-to-br from-cyan-400/20 to-rose-400/20 p-6 text-center">
+          <h3 className="font-bold text-cyan-300">
+            Secret
+          </h3>
+          <p className="text-3xl mt-2">
+            {secretCount}
           </p>
         </div>
 

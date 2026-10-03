@@ -14,6 +14,8 @@
   --cloud-soft: rgba(255, 255, 255, 0.42);
   --navy: #164873;
   --display-font: "Arial Rounded MT Bold", "Trebuchet MS", var(--font-geist-sans), sans-serif;
+  --rarity-secret-cyan: #35E6E6;
+  --rarity-secret-coral: #FF7A72;
 }
 
 html[data-theme="night"] {
@@ -57,6 +59,15 @@ body {
 }
 
 button, a { -webkit-tap-highlight-color: transparent; }
+
+/* Shared Secret rarity palette. Secret remains an acquisition-independent rarity. */
+.rarity-secret { color: #fff; background: linear-gradient(135deg, var(--rarity-secret-cyan), var(--rarity-secret-coral)); box-shadow: 0 0 .8rem color-mix(in srgb, var(--rarity-secret-cyan) 45%, transparent); }
+.home-upman-secret { --upman-accent: var(--rarity-secret-cyan); }
+.upman-secret { --upman-accent: var(--rarity-secret-cyan); --rarity-accent: var(--rarity-secret-cyan); --preview-accent: var(--rarity-secret-cyan); --card-accent: var(--rarity-secret-cyan); }
+[class*="entry"].upman-secret, [class*="previewCard"].upman-secret, [class*="creatorCard"].upman-secret, .upman-detail-page.upman-secret { --upman-accent: var(--rarity-secret-cyan); --rarity-accent: var(--rarity-secret-cyan); --preview-accent: var(--rarity-secret-cyan); }
+[class*="upmanCard"].upman-secret { background: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-cyan)), color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-coral))); }
+[class*="rarityItem"].upman-secret { --rarity-accent: var(--rarity-secret-cyan); background: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-cyan)), color-mix(in srgb, var(--surface-strong) 72%, var(--rarity-secret-coral))); }
+[class*="rarityButton"].upman-secret { --control-accent: var(--rarity-secret-cyan); background: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 75%, var(--rarity-secret-cyan)), color-mix(in srgb, var(--surface-strong) 75%, var(--rarity-secret-coral))); }
 button:focus-visible, a:focus-visible { outline: 3px solid #efb43d; outline-offset: 4px; }
 
 /* Shared Anniversary navigation */

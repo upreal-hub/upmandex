@@ -5,16 +5,15 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import styles from "./UpmandexGallery.module.css";
+import { UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
-const rarities = ["All", "Common", "Rare", "Epic", "Mythic", "Legendary"] as const;
-
-type Rarity = Exclude<(typeof rarities)[number], "All">;
+const rarities = ["All", ...UP_MAN_RARITIES] as const;
 
 export type UpmandexEntry = {
   slug: string;
   name: string;
   image: string;
-  rarity: Rarity;
+  rarity: UpmanRarity;
   creator: string;
   creatorTwitch: string | null;
   creatorAvatar: string | null;
@@ -27,12 +26,13 @@ type Props = {
   showConnectMessage: boolean;
 };
 
-const rarityClassNames: Record<Rarity, string> = {
+const rarityClassNames: Record<UpmanRarity, string> = {
   Common: styles.common,
   Rare: styles.rare,
   Epic: styles.epic,
   Mythic: styles.mythic,
   Legendary: styles.legendary,
+  Secret: styles.secret,
 };
 
 export default function UpmandexGallery({ upmans, collection, showConnectMessage }: Props) {
@@ -46,7 +46,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
         counts[upman.rarity] += 1;
         return counts;
       },
-      { All: 0, Common: 0, Rare: 0, Epic: 0, Mythic: 0, Legendary: 0 },
+      { All: 0, Common: 0, Rare: 0, Epic: 0, Mythic: 0, Legendary: 0, Secret: 0 },
     );
   }, [upmans]);
 
@@ -132,7 +132,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
                 <Image src={upman.image} alt={upman.name} width={320} height={300} sizes="(max-width: 620px) 45vw, (max-width: 900px) 30vw, 22vw" />
               </div>
               <div className={styles.info}>
-                <span className={styles.rarity}>{upman.rarity}</span>
+                <span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : ""}`}>{upman.rarity}</span>
                 <h2>{upman.name}</h2>
                 <p className={styles.creator}>Created by <strong>{upman.creator}</strong></p>
                 {upman.creatorTwitch && (

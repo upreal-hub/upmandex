@@ -5,7 +5,8 @@ type Rarity =
   | "Rare"
   | "Epic"
   | "Mythic"
-  | "Legendary";
+  | "Legendary"
+  | "Secret";
 
 type Props = {
   slug: string;
@@ -56,6 +57,13 @@ export default function UpmanCard({
         "hover:shadow-[0_0_50px_rgba(250,204,21,0.55)]",
       badge:
         "bg-yellow-100 text-yellow-600",
+    },
+
+    Secret: {
+      glow:
+        "hover:shadow-[0_0_45px_rgba(53,230,230,0.38)]",
+      badge:
+        "bg-gradient-to-r from-[var(--rarity-secret-cyan)] to-[var(--rarity-secret-coral)] text-white",
     },
   }[rarity];
 

@@ -1,3 +1,5 @@
+import type { UpmanRarity } from "@/lib/upman-rarity";
+
 export type ViewerSummary = {
   id: string;
   twitchLogin: string;
@@ -29,6 +31,6 @@ export type ViewerDetails = {
   ownedCount: number;
   completion: number;
   latestDiscovery: ViewerDiscovery | null;
-  rarityBreakdown: Record<"Common" | "Rare" | "Epic" | "Mythic" | "Legendary", number>;
+  rarityBreakdown: Record<UpmanRarity, number>;
   recentDiscoveries: ViewerDiscovery[];
 };

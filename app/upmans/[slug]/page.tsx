@@ -8,8 +8,8 @@ import { normalizeTwitchLogin } from "@/lib/validation";
 
 import styles from "./upman-detail.module.css";
 
-const rarityClassNames: Record<string, string> = { Common: styles.common, Rare: styles.rare, Epic: styles.epic, Mythic: styles.mythic, Legendary: styles.legendary };
-const previewClassNames: Record<string, string> = { Common: styles.previewCommon, Rare: styles.previewRare, Epic: styles.previewEpic, Mythic: styles.previewMythic, Legendary: styles.previewLegendary };
+const rarityClassNames: Record<string, string> = { Common: styles.common, Rare: styles.rare, Epic: styles.epic, Mythic: styles.mythic, Legendary: styles.legendary, Secret: "upman-secret" };
+const previewClassNames: Record<string, string> = { Common: styles.previewCommon, Rare: styles.previewRare, Epic: styles.previewEpic, Mythic: styles.previewMythic, Legendary: styles.previewLegendary, Secret: "upman-secret" };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -59,7 +59,7 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
     <Link href="/upmans" className={styles.back}><span aria-hidden="true">←</span> Back to Upmandex</Link>
     <section className={styles.hero} aria-labelledby="upman-name">
       <div className={styles.artworkStage}><Image src={upman.image} alt={upman.name} className={styles.artwork} width={640} height={640} priority sizes="(max-width: 500px) 88vw, (max-width: 900px) 62vw, 32rem" /></div>
-      <h1 id="upman-name" className={styles.name}>{upman.name}</h1><span className={styles.rarity}>{upman.rarity}</span>
+      <h1 id="upman-name" className={styles.name}>{upman.name}</h1><span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : ""}`}>{upman.rarity}</span>
       <p className={styles.creator}><span>Created by</span><span>{creatorIdentity.avatar && <Avatar src={creatorIdentity.avatar} />} {creatorIdentity.displayName}</span></p>
       <UpmanDetailHotbar active={activeView} upmanHref={`/upmans/${upman.slug}`} creatorHref={`/upmans/${upman.slug}?view=creator`} personHref={hasPersonView ? `/upmans/${upman.slug}?view=person` : undefined} />
     </section>

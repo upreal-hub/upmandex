@@ -23,6 +23,7 @@ const rarityClassNames: Record<string, string> = {
   Epic: styles.epic,
   Mythic: styles.mythic,
   Legendary: styles.legendary,
+  Secret: "upman-secret",
 };
 
 export const dynamic = "force-dynamic";

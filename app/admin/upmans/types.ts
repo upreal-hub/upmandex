@@ -20,12 +20,5 @@ export type PersonOption = {
   displayName: string;
 };
 
-export const UP_MAN_RARITIES = [
-  "Common",
-  "Rare",
-  "Epic",
-  "Mythic",
-  "Legendary",
-] as const;
-
-export type UpmanRarity = (typeof UP_MAN_RARITIES)[number];
+export { UP_MAN_RARITIES } from "@/lib/upman-rarity";
+export type { UpmanRarity } from "@/lib/upman-rarity";

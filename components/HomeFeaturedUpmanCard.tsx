@@ -6,11 +6,13 @@ type Props = { slug: string; name: string; image: string; rarity: string; creato
 const rarityClassNames: Record<string, string> = {
   Common: "rarity-common", Rare: "rarity-rare", Epic: "rarity-epic",
   Mythic: "rarity-mythic", Legendary: "rarity-legendary",
+  Secret: "rarity-secret",
 };
 
 const rarityVisualClassNames: Record<string, string> = {
   Common: "home-upman-common", Rare: "home-upman-rare", Epic: "home-upman-epic",
   Mythic: "home-upman-mythic", Legendary: "home-upman-legendary",
+  Secret: "home-upman-secret",
 };
 
 export default function HomeFeaturedUpmanCard({ slug, name, image, rarity, creator }: Props) {

@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { ADMIN_RARITY_CLASSES } from "../../rarity";
+import { UP_MAN_RARITIES } from "@/lib/upman-rarity";
 type CollectionUpman = {
   id: string;
   slug: string;
@@ -16,7 +17,7 @@ type CollectionUpman = {
 
 type OwnershipFilter = "all" | "owned" | "missing";
 
-const rarities = ["Common", "Rare", "Epic", "Mythic", "Legendary"];
+const rarities = UP_MAN_RARITIES;
 
 function responseMessage(status: string) {
   switch (status) {

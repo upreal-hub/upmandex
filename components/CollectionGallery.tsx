@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import styles from "./CollectionGallery.module.css";
+import { UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
-const rarities = ["All", "Common", "Rare", "Epic", "Mythic", "Legendary"] as const;
+const rarities = ["All", ...UP_MAN_RARITIES] as const;
 const collectionViews = ["Collected", "Missing", "All"] as const;
-type Rarity = Exclude<(typeof rarities)[number], "All">;
+type Rarity = UpmanRarity;
 type CollectionView = (typeof collectionViews)[number];
-const collectionRarities: Rarity[] = ["Common", "Rare", "Epic", "Mythic", "Legendary"];
+const collectionRarities: Rarity[] = [...UP_MAN_RARITIES];
 
 export type CollectionEntry = {
   slug: string;
@@ -31,6 +32,7 @@ const rarityClassNames: Record<Rarity, string> = {
   Epic: styles.epic,
   Mythic: styles.mythic,
   Legendary: styles.legendary,
+  Secret: "upman-secret",
 };
 
 export default function CollectionGallery({ upmans, ownedCount }: Props) {
@@ -99,7 +101,7 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
             <Link key={upman.slug} href={`/upmans/${upman.slug}`} className={`${styles.entry} ${rarityClassNames[upman.rarity]} ${upman.owned ? "" : styles.missing}`} aria-label={`View ${upman.name}, ${upman.rarity}${upman.owned ? ", collected" : ", missing"}`}>
               <div className={styles.artwork}><Image src={upman.image} alt={upman.name} width={320} height={300} sizes="(max-width: 620px) 45vw, (max-width: 900px) 30vw, 22vw" /></div>
               <div className={styles.info}>
-                <span className={styles.rarity}>{upman.rarity}</span>
+                <span className={`${styles.rarity} ${upman.rarity === "Secret" ? "rarity-secret" : ""}`}>{upman.rarity}</span>
                 <h2>{upman.name}</h2>
                 <p>Created by <strong>{upman.creator}</strong></p>
                 {upman.creatorTwitch && <p className={styles.creatorIdentity}>{upman.creatorAvatar && (

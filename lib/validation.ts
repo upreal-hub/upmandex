@@ -1,11 +1,6 @@
-export const RARITIES = [
-  "Common",
-  "Rare",
-  "Epic",
-  "Mythic",
-  "Legendary",
-] as const;
+import { isUpmanRarity, UP_MAN_RARITIES } from "@/lib/upman-rarity";
 
+export const RARITIES = UP_MAN_RARITIES;
 export type Rarity = (typeof RARITIES)[number];
 
 const TWITCH_LOGIN_PATTERN = /^[a-z0-9_]{1,25}$/;
@@ -117,9 +112,7 @@ export function validatePersonProjectMutationPayload(value: unknown):
 }
 
 export function validateRarity(value: unknown): Rarity | null {
-  return typeof value === "string" && RARITIES.includes(value as Rarity)
-    ? (value as Rarity)
-    : null;
+  return isUpmanRarity(value) ? value : null;
 }
 
 export function validateUpmanPayload(value: unknown):

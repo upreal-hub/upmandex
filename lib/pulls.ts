@@ -5,6 +5,7 @@ import { createActivityLogData } from "@/lib/activity";
 import { safelySyncLinkedPersonAchievementsByLogin } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { resolveTwitchIdentity } from "@/lib/twitch-identity";
+import { PULL_RARITIES } from "@/lib/upman-rarity";
 
 type PullViewer = {
   twitchUserId: string;
@@ -149,7 +150,7 @@ export async function resolvePull(
           }
 
           const activeRules = await tx.pullRarityRule.findMany({
-            where: { enabled: true, weight: { gt: 0 } },
+            where: { enabled: true, weight: { gt: 0 }, rarity: { in: [...PULL_RARITIES] } },
             select: { rarity: true, weight: true },
             orderBy: { rarity: "asc" },
           });

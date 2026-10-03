@@ -147,6 +147,8 @@ export default async function CollectorPage({ params }: Props) {
               ? "border-purple-500"
               : upman.rarity === "Mythic"
               ? "border-red-500"
+              : upman.rarity === "Secret"
+              ? "border-cyan-400 shadow-[0_0_20px_rgba(53,230,230,0.25)]"
               : "border-yellow-500";
 
           return (

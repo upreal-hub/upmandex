@@ -31,6 +31,7 @@ export default function LatestUpmanCarousel({
     Epic: "text-purple-400",
     Mythic: "text-red-400",
     Legendary: "text-yellow-400",
+    Secret: "bg-gradient-to-r from-[var(--rarity-secret-cyan)] to-[var(--rarity-secret-coral)] bg-clip-text text-transparent",
   }[current.rarity];
 
   function previous() {

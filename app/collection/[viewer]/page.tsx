@@ -18,7 +18,8 @@ type UpmanRarity =
   | "Rare"
   | "Epic"
   | "Mythic"
-  | "Legendary";
+  | "Legendary"
+  | "Secret";
 
 export default async function ViewerCollection({
   params,
@@ -121,6 +122,13 @@ const totalUpmans =
       (upman) =>
         upman.rarity ===
         "Legendary"
+    ).length;
+
+  const secretCount =
+    ownedUpmans.filter(
+      (upman) =>
+        upman.rarity ===
+        "Secret"
     ).length;
 
   const latestDiscovery =
@@ -286,6 +294,10 @@ const totalUpmans =
 
         <span className="text-yellow-500">
           ✨ {legendaryCount} Legendary
+        </span>
+
+        <span className="bg-gradient-to-r from-[var(--rarity-secret-cyan)] to-[var(--rarity-secret-coral)] bg-clip-text text-transparent">
+          ✨ {secretCount} Secret
         </span>
 
       </div>

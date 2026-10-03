@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AdminUpman } from "./AdminClient";
+import { UP_MAN_RARITIES } from "@/lib/upman-rarity";
 
 type Props = {
   initialName?: string;
@@ -192,11 +193,7 @@ export default function UpmanGenerator({
           }
           className="rounded-xl border border-sky-200 bg-white p-3 text-slate-800"
         >
-          <option>Common</option>
-          <option>Rare</option>
-          <option>Epic</option>
-          <option>Mythic</option>
-          <option>Legendary</option>
+          {UP_MAN_RARITIES.map((option) => <option key={option}>{option}</option>)}
         </select>
 
       </div>
