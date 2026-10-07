@@ -8,7 +8,14 @@ export const publicInventoryWhere = {
   upman: publicUpmanWhere,
 } satisfies Prisma.InventoryWhereInput;
 
-export function collectionUpmanWhere(ownerUserId: string): Prisma.UpmanWhereInput {
+export function collectionUpmanWhere(
+  ownerUserId: string,
+  canViewOwnedHidden = true,
+): Prisma.UpmanWhereInput {
+  if (!canViewOwnedHidden) {
+    return publicUpmanWhere;
+  }
+
   return {
     OR: [
       publicUpmanWhere,

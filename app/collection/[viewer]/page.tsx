@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import UpmanCard from "@/components/UpmanCard";
 import { auth } from "@/auth";
 import { normalizeTwitchLogin } from "@/lib/validation";
-import { collectionUpmanWhere, isPublicUpman } from "@/lib/upman-visibility";
+import { collectionUpmanWhere } from "@/lib/upman-visibility";
 import type { UpmanRarity } from "@/lib/upman-rarity";
 
 export const dynamic =
@@ -26,25 +26,25 @@ export default async function ViewerCollection({
   const session = await auth();
   const visitorLogin = normalizeTwitchLogin(session?.user?.name);
 
-  const user =
-    await prisma.user.findUnique({
+  const [user, visitor] = await Promise.all([
+    prisma.user.findUnique({
       where: {
         twitchLogin:
           viewer.toLowerCase(),
       },
-
-      include: {
-        inventory: {
-          include: {
-            upman: true,
-          },
-
-          orderBy: {
-            obtainedAt: "asc",
-          },
-        },
+      select: {
+        id: true,
+        twitchLogin: true,
+        displayName: true,
       },
-    });
+    }),
+    visitorLogin
+      ? prisma.user.findUnique({
+          where: { twitchLogin: visitorLogin },
+          select: { id: true },
+        })
+      : null,
+  ]);
 
   if (!user) {
     return (<main className="text-center py-20"> <h1 className="text-5xl font-black text-sky-800">
@@ -58,17 +58,19 @@ export default async function ViewerCollection({
 
   }
 
-  const ownedUpmans =
-  user.inventory.map(
-    (entry) => entry.upman
-  );
+  const isOwner = visitor?.id === user.id;
+  const visibleUpmanWhere = collectionUpmanWhere(user.id, isOwner);
 
-  const [allUpmans, visitor] = await Promise.all([
-    prisma.upman.findMany({ where: collectionUpmanWhere(user.id) }),
-    visitorLogin
-      ? prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { inventory: { select: { upmanId: true } } } })
-      : null,
+  const [ownedInventory, allUpmans] = await Promise.all([
+    prisma.inventory.findMany({
+      where: { userId: user.id, upman: visibleUpmanWhere },
+      include: { upman: true },
+      orderBy: { obtainedAt: "asc" },
+    }),
+    prisma.upman.findMany({ where: visibleUpmanWhere }),
   ]);
+
+  const ownedUpmans = ownedInventory.map((entry) => entry.upman);
 
 const ownedSlugs =
   new Set(
@@ -78,8 +80,6 @@ const ownedSlugs =
   );
 
 const totalUpmans = allUpmans.length;
-
-  const visitorOwnedUpmanIds = new Set(visitor?.inventory.map((entry) => entry.upmanId));
 
   const ownedCount =
     ownedUpmans.length;
@@ -346,7 +346,6 @@ const totalUpmans = allUpmans.length;
       owned={ownedSlugs.has(
         upman.slug
       )}
-      canViewDetails={isPublicUpman(upman.dexVisibility) || visitorOwnedUpmanIds.has(upman.id)}
     />
   )
 )}

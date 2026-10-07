@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
-import { collectionUpmanWhere, isPublicUpman, publicInventoryWhere } from "@/lib/upman-visibility";
+import { collectionUpmanWhere, publicInventoryWhere } from "@/lib/upman-visibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,16 +18,9 @@ export default async function CollectorPage({ params }: Props) {
   const normalizedLogin = requestedCollector.trim().toLowerCase();
   const visitorLogin = normalizeTwitchLogin((await auth())?.user?.name);
 
-  const inventoryInclude = {
-    inventory: {
-      include: { upman: true },
-      orderBy: { obtainedAt: "asc" },
-    },
-  } as const;
-
   let user = await prisma.user.findUnique({
     where: { twitchLogin: normalizedLogin },
-    include: inventoryInclude,
+    select: { id: true, twitchLogin: true, displayName: true },
   });
 
   if (!user) {
@@ -38,7 +31,7 @@ export default async function CollectorPage({ params }: Props) {
           mode: "insensitive",
         },
       },
-      include: inventoryInclude,
+      select: { id: true, twitchLogin: true, displayName: true },
     });
   }
 
@@ -50,8 +43,14 @@ export default async function CollectorPage({ params }: Props) {
     );
   }
 
-  const [totalUpmans, collectors, visitor] = await Promise.all([
-    prisma.upman.count({ where: collectionUpmanWhere(user.id) }),
+  const visitor = visitorLogin
+    ? await prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { id: true } })
+    : null;
+  const isOwner = visitor?.id === user.id;
+  const visibleUpmanWhere = collectionUpmanWhere(user.id, isOwner);
+
+  const [totalUpmans, collectors, visibleInventory] = await Promise.all([
+    prisma.upman.count({ where: visibleUpmanWhere }),
     prisma.user.findMany({
     select: {
       id: true,
@@ -59,9 +58,11 @@ export default async function CollectorPage({ params }: Props) {
       _count: { select: { inventory: { where: publicInventoryWhere } } },
     },
     }),
-    visitorLogin
-      ? prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { inventory: { select: { upmanId: true } } } })
-      : null,
+    prisma.inventory.findMany({
+      where: { userId: user.id, upman: visibleUpmanWhere },
+      include: { upman: true },
+      orderBy: { obtainedAt: "asc" },
+    }),
   ]);
 
   const ranking = collectors
@@ -72,8 +73,7 @@ export default async function CollectorPage({ params }: Props) {
     );
   const rank = ranking.findIndex((entry) => entry.id === user.id) + 1;
 
-  const collectedUpmans = user.inventory.map((item) => item.upman);
-  const visitorOwnedUpmanIds = new Set(visitor?.inventory.map((item) => item.upmanId));
+  const collectedUpmans = visibleInventory.map((item) => item.upman);
   const ownedCount = collectedUpmans.length;
   const completion = totalUpmans > 0
     ? Math.round((ownedCount / totalUpmans) * 100)
@@ -183,9 +183,7 @@ export default async function CollectorPage({ params }: Props) {
               </div>
           );
 
-          return isPublicUpman(upman.dexVisibility) || visitorOwnedUpmanIds.has(upman.id)
-            ? <Link key={upman.slug} href={`/upmans/${upman.slug}`}>{card}</Link>
-            : <article key={upman.slug}>{card}</article>;
+          return <Link key={upman.slug} href={`/upmans/${upman.slug}`}>{card}</Link>;
         })}
 
       </div>
