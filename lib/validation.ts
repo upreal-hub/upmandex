@@ -411,6 +411,61 @@ export function validateInventoryPayload(value: unknown):
   return { success: true, data: { viewer, slug } };
 }
 
+export function validateStreamProfilePayload(value: unknown):
+  | {
+      success: true;
+      data: {
+        twitchUserId: string | null;
+        twitchLogin: string | null;
+        displayName: string | null;
+      };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid stream profile request" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (
+    Object.keys(payload).some(
+      (key) =>
+        key !== "twitchUserId" &&
+        key !== "twitchLogin" &&
+        key !== "displayName"
+    )
+  ) {
+    return { success: false, error: "Invalid stream profile request" };
+  }
+
+  const twitchUserId =
+    payload.twitchUserId === undefined
+      ? null
+      : nonEmptyString(payload.twitchUserId, 30);
+  const twitchLogin =
+    payload.twitchLogin === undefined
+      ? null
+      : normalizeTwitchLogin(payload.twitchLogin);
+  const displayName =
+    payload.displayName === undefined
+      ? null
+      : nonEmptyString(payload.displayName, 120);
+
+  if (
+    (payload.twitchUserId !== undefined &&
+      (!twitchUserId || !TWITCH_USER_ID_PATTERN.test(twitchUserId))) ||
+    (payload.twitchLogin !== undefined && !twitchLogin) ||
+    (payload.displayName !== undefined && !displayName) ||
+    (!twitchUserId && !twitchLogin)
+  ) {
+    return { success: false, error: "Invalid stream viewer" };
+  }
+
+  return {
+    success: true,
+    data: { twitchUserId, twitchLogin, displayName },
+  };
+}
+
 export function validatePullPayload(value: unknown):
   | {
       success: true;
