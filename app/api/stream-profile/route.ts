@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth";
+import { getBearerToken } from "@/lib/streamerbot-auth";
+import { isStreamChatAuthorized } from "@/lib/stream-chat-auth";
 import { resolveStreamProfile } from "@/lib/stream-profile";
 import { validateStreamProfilePayload } from "@/lib/validation";
 
@@ -8,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const secret = getBearerToken(request) ?? "";
-  if (!isStreamerBotAuthorized(secret)) {
+  if (!isStreamChatAuthorized(secret)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
