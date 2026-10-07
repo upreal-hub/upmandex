@@ -36,10 +36,10 @@ export default async function CreatorPage({
   return (
     <main className="min-h-screen bg-slate-900 text-white p-8">
       <Link
-        href="/pantheon"
+        href="/community"
         className="text-blue-400 hover:underline"
       >
-        ← Back to Pantheon
+        ← Back to Community
       </Link>
 
       <h1 className="text-5xl font-bold mt-8">
