@@ -23,6 +23,9 @@ export type UpmanAcquisitionContext = {
 type AcquisitionUpman = {
   slug: string;
   name: string;
+  rarity: string;
+  image: string;
+  creator: string;
 };
 
 type ResolvedAcquisition = {
@@ -153,7 +156,15 @@ export async function resolveUpmanAcquisition(
               result: true,
               twitchLogin: true,
               displayName: true,
-              upman: { select: { slug: true, name: true } },
+              upman: {
+                select: {
+                  slug: true,
+                  name: true,
+                  rarity: true,
+                  image: true,
+                  creator: true,
+                },
+              },
             },
           });
 
@@ -169,7 +180,16 @@ export async function resolveUpmanAcquisition(
               isEnabled: true,
               requiredTwitchCategoryId: true,
               event: { select: { isEnabled: true, startsAt: true, endsAt: true } },
-              upman: { select: { id: true, slug: true, name: true } },
+              upman: {
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                  rarity: true,
+                  image: true,
+                  creator: true,
+                },
+              },
             },
           });
 
@@ -267,6 +287,9 @@ export async function resolveUpmanAcquisition(
             upman: {
               slug: rule.upman.slug,
               name: rule.upman.name,
+              rarity: rule.upman.rarity,
+              image: rule.upman.image,
+              creator: rule.upman.creator,
             },
           };
         },
