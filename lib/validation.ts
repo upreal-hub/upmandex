@@ -578,6 +578,42 @@ export function validateEventRedeemPayload(value: unknown):
   };
 }
 
+export function validateActiveEventUpmanPayload(value: unknown):
+  | {
+      success: true;
+      data: { upmanId: string | null; rewardId: string };
+    }
+  | { success: false; error: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "Invalid event configuration" };
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (Object.keys(payload).some((key) => key !== "upmanId" && key !== "rewardId")) {
+    return { success: false, error: "Invalid event configuration" };
+  }
+
+  const upmanId = optionalId(payload.upmanId);
+  if (upmanId === undefined) {
+    return { success: false, error: "Invalid Event Upman" };
+  }
+
+  if (typeof payload.rewardId !== "string") {
+    return { success: false, error: "Invalid Twitch Reward ID" };
+  }
+
+  const rewardId = payload.rewardId.trim().toLowerCase();
+  if (rewardId && !TWITCH_REDEMPTION_ID_PATTERN.test(rewardId)) {
+    return { success: false, error: "Twitch Reward ID must be a valid Twitch ID" };
+  }
+
+  if (upmanId && !rewardId) {
+    return { success: false, error: "A Twitch Reward ID is required for an active Event Upman" };
+  }
+
+  return { success: true, data: { upmanId, rewardId } };
+}
+
 export function validateStreamCommandPayload(value: unknown):
   | {
       success: true;

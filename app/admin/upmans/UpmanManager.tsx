@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ADMIN_RARITY_CLASSES } from "../rarity";
+import ActiveEventUpmanPanel from "./ActiveEventUpmanPanel";
 import UpmanEditorModal from "./UpmanEditorModal";
 import { UP_MAN_RARITIES } from "./types";
-import type { ManagedUpman, PersonOption } from "./types";
+import type { ActiveEventUpmanConfig, EventUpmanOption, ManagedUpman, PersonOption } from "./types";
 
 type SortOption =
   | "name-asc"
@@ -53,9 +54,13 @@ function sortUpmans(upmans: ManagedUpman[], sort: SortOption) {
 export default function UpmanManager({
   upmans,
   people,
+  eventUpmans,
+  eventConfig,
 }: {
   upmans: ManagedUpman[];
   people: PersonOption[];
+  eventUpmans: EventUpmanOption[];
+  eventConfig: ActiveEventUpmanConfig | null;
 }) {
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("All rarities");
@@ -113,6 +118,8 @@ export default function UpmanManager({
           </Link>
         </div>
       </header>
+
+      <ActiveEventUpmanPanel eventUpmans={eventUpmans} initialConfig={eventConfig} />
 
       <section className="mt-6 rounded-3xl border border-sky-100 bg-sky-50/70 p-4">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">

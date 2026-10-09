@@ -20,5 +20,20 @@ export type PersonOption = {
   displayName: string;
 };
 
+export type EventUpmanOption = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type ActiveEventUpmanConfig = {
+  eventName: string;
+  eventSlug: string;
+  selectedUpmanId: string | null;
+  selectedUpmanName: string | null;
+  rewardId: string;
+  isActive: boolean;
+};
+
 export { UP_MAN_RARITIES } from "@/lib/upman-rarity";
 export type { UpmanRarity } from "@/lib/upman-rarity";

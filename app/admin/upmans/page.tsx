@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getActiveEventUpmanConfig } from "@/lib/active-event-upman";
 
 import UpmanManager from "./UpmanManager";
 
@@ -6,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminUpmansPage() {
-  const [upmans, people] = await Promise.all([
+  const [upmans, people, eventUpmans, eventConfig] = await Promise.all([
     prisma.upman.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -30,7 +31,13 @@ export default async function AdminUpmansPage() {
       orderBy: [{ displayName: "asc" }, { id: "asc" }],
       select: { id: true, displayName: true },
     }),
+    prisma.upman.findMany({
+      where: { rarity: "Event" },
+      orderBy: [{ name: "asc" }, { slug: "asc" }],
+      select: { id: true, slug: true, name: true },
+    }),
+    getActiveEventUpmanConfig(),
   ]);
 
-  return <UpmanManager upmans={upmans} people={people} />;
+  return <UpmanManager upmans={upmans} people={people} eventUpmans={eventUpmans} eventConfig={eventConfig} />;
 }
