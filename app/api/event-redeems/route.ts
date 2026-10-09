@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth";
+import { isEventUpmanAuthorized } from "@/lib/eventupman-auth";
+import { getBearerToken } from "@/lib/streamerbot-auth";
 import { resolveEventRedeem } from "@/lib/upman-acquisitions";
 import { validateEventRedeemPayload } from "@/lib/validation";
 
@@ -8,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const secret = getBearerToken(request) ?? "";
-  if (!isStreamerBotAuthorized(secret)) {
+  if (!isEventUpmanAuthorized(secret)) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
