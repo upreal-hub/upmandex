@@ -27,7 +27,7 @@
 .resultRow strong { font-family: var(--display-font); font-size: 1.6rem; color: var(--ink); }
 .activeClouds { color: var(--ink-soft); font-size: .77rem; overflow-wrap: anywhere; }
 :global(html[data-theme="night"]) .chip { --chip-fill: color-mix(in srgb, var(--surface-strong) 66%, var(--chip-accent)); }
-:global(html[data-theme="night"]) .chip[aria-pressed="true"] { --chip-fill: color-mix(in srgb, var(--surface-strong) 42%, var(--chip-accent)); color: #102d4c; outline-color: #d6f0ff; }
+:global(html[data-theme="night"]) .chip[aria-pressed="true"] { --chip-fill: color-mix(in srgb, var(--chip-accent) 65%, #e3f4ff); color: #102d4c; outline-color: #d6f0ff; }
 :global(html[data-theme="night"]) .chip[aria-pressed="true"] .selection { color: #102d4c; }
 @media (max-width: 620px) { .panel { margin-top: 1.5rem; }.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem .85rem; padding: 1.5rem .4rem .8rem; }.chip { padding: .5rem .65rem; font-size: .78rem; }.searchField { padding-right: 1rem; padding-left: 1rem; }.searchField input::placeholder { font-size: .86rem; }.resultRow { gap: .25rem; }.activeClouds { flex-basis: 100%; } }
 @media (prefers-reduced-motion: no-preference) { .chip { transition: transform .2s, box-shadow .2s; }.chip:hover { transform: translateY(-3px) rotate(-1deg); }.chip:active { transform: translateY(1px); } }
