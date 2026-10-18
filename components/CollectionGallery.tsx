@@ -27,7 +27,7 @@ export type CollectionEntry = {
   canViewDetails?: boolean;
 };
 
-type Props = { upmans: CollectionEntry[]; ownedCount: number };
+type Props = { upmans: CollectionEntry[]; ownedCount: number; viewerName?: string };
 
 const rarityClassNames: Record<Rarity, string> = {
   Common: styles.common,
@@ -39,7 +39,7 @@ const rarityClassNames: Record<Rarity, string> = {
   Event: "upman-event",
 };
 
-export default function CollectionGallery({ upmans, ownedCount }: Props) {
+export default function CollectionGallery({ upmans, ownedCount, viewerName }: Props) {
   const [view, setView] = useState<CollectionView>("Collected");
   const [rarity, setRarity] = useState<(typeof rarities)[number]>("All");
 
@@ -63,23 +63,23 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
     <>
       <section id="collection-progress" className={styles.progress} aria-label="Collection progress">
         <div className={styles.overall}>
-          <p>Your little sky, growing</p>
+          <p>{viewerName ? `${viewerName}’s little sky, growing` : "Your little sky, growing"}</p>
           <strong>{ownedCount} <span>/ {total}</span></strong>
           <span>Upmans collected · across every rarity</span>
         </div>
         <div className={styles.completion}>
           <strong>{completion}<span>%</span></strong>
-          <span>of your collection complete</span>
+          <span>of {viewerName ? "this" : "your"} collection complete</span>
           <div className={styles.track} role="progressbar" aria-label="Overall collection completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, completion)} aria-valuetext={`${ownedCount} of ${total} Upmans collected`}><i style={{ width: `${Math.min(100, completion)}%` }} /></div>
         </div>
         <div className={styles.nextStep}>
-          <p>{total === 0 ? "Your cloud shelf is ready for new arrivals." : missingCount === 0 ? "Every Upman has found a place in your sky. What a collection!" : <><strong>{missingCount} more {missingCount === 1 ? "face" : "faces"} to discover.</strong> Every little cloud adds a new story.</>}</p>
+          <p>{total === 0 ? (viewerName ? "This cloud shelf is ready for new arrivals." : "Your cloud shelf is ready for new arrivals.") : missingCount === 0 ? (viewerName ? "Every Upman has found a place in this sky. What a collection!" : "Every Upman has found a place in your sky. What a collection!") : <><strong>{missingCount} more {missingCount === 1 ? "face" : "faces"} to discover.</strong> Every little cloud adds a new story.</>}</p>
           {missingCount > 0 && <a href="#collection-controls" onClick={() => { setView("Missing"); setRarity("All"); }}>See what’s missing <span aria-hidden="true">→</span></a>}
         </div>
       </section>
 
       <section className={styles.raritySection} aria-labelledby="rarity-progress-title">
-        <div className={styles.breakdownHeading}><h2 id="rarity-progress-title">A little closer, rarity by rarity</h2><p>Collected / available in your collection</p></div>
+        <div className={styles.breakdownHeading}><h2 id="rarity-progress-title">A little closer, rarity by rarity</h2><p>Collected / available in {viewerName ? "this" : "your"} collection</p></div>
         <div className={styles.rarityProgress}>
           {rarityProgress.map((item) => {
             const percentage = item.total > 0 ? (item.owned / item.total) * 100 : 0;
@@ -94,8 +94,8 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
         </div>
       </section>
 
-      <section id="collection-controls" tabIndex={-1} className={`${ui.panel} ${styles.collectionControls}`} aria-label="Browse your collection">
-        <div className={ui.panelHeading}><h2>Your collection, your way</h2><p>Revisit your discoveries or find the faces still missing from your sky.</p></div>
+      <section id="collection-controls" tabIndex={-1} className={`${ui.panel} ${styles.collectionControls}`} aria-label={viewerName ? "Browse this collection" : "Browse your collection"}>
+        <div className={ui.panelHeading}><h2>{viewerName ? "Explore the collection" : "Your collection, your way"}</h2><p>{viewerName ? "Browse discoveries and the faces still missing from this sky." : "Revisit your discoveries or find the faces still missing from your sky."}</p></div>
         <fieldset className={ui.fieldset}>
           <legend>Show Upmans</legend>
           <div className={`${ui.segmented} ${styles.collectionViews}`}>
@@ -123,7 +123,7 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
           {filtered.map((upman) => <CollectionEntryCard key={upman.slug} upman={upman} />)}
         </div>
       ) : view === "Collected" ? (
-        <div className={styles.empty}><p>{ownedCount === 0 ? "Your first little cloud is still out there. Let’s meet the Upmans." : "No collected Upmans match this rarity yet."}</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button><Link href="/upmans">Explore the Upmandex <span aria-hidden="true">→</span></Link></div>
+        <div className={styles.empty}><p>{ownedCount === 0 ? (viewerName ? "This explorer hasn’t collected an Upman yet." : "Your first little cloud is still out there. Let’s meet the Upmans.") : "No collected Upmans match this rarity yet."}</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button><Link href="/upmans">Explore the Upmandex <span aria-hidden="true">→</span></Link></div>
       ) : (
         <div className={styles.empty}><p>{view === "Missing" && missingCount === 0 && total > 0 ? "Nothing missing — every Upman has a place in your sky!" : "No Upmans match this view."}</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button></div>
       )}

@@ -39,3 +39,17 @@
 .cloudWinner strong { max-width:100%; overflow-wrap:anywhere; color:var(--ink); }.cloudWinner small { color:var(--ink-soft); }.winnerScore { margin:.5rem 0; color:var(--ink); font-weight:800; font-size:.8rem; }.winnerLinks { display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem; }.winnerLinks a { color:var(--ink); font-size:.72rem; font-weight:800; }
 .rankingList { margin:2rem 0 0; padding:0; list-style:none; border-top:1px solid var(--line); }.rankingRow { display:grid; grid-template-columns:2rem minmax(0,1fr) auto auto; align-items:center; gap:1rem; padding:.8rem .3rem; border-bottom:1px solid var(--line); }.rankingRow .podiumLinks { grid-column:auto; }.rankingScore { font-size:.8rem; white-space:nowrap; }
 @media(max-width:600px) { .cloudPodium { gap:.4rem; }.cloudWinner { padding:1rem .3rem; min-height:13rem; border-radius:2.5rem 2.2rem 1.5rem 1.5rem; }.cloudWinner[data-rank="1"] { min-height:14rem; }.cloudWinner img,.winnerAvatar { width:3rem; height:3rem; }.cloudWinner strong { font-size:.78rem; }.cloudWinner small { font-size:.64rem; }.winnerLinks { flex-direction:column; gap:.3rem; }.rankingRow { grid-template-columns:2rem minmax(0,1fr) auto; gap:.45rem; }.rankingRow .podiumLinks { grid-column:2 / -1; }.rankingScore { font-size:.7rem; } }
+
+/* The artwork stage has a fixed footprint independently of image proportions. */
+.dexArtwork { position:relative; display:block; min-width:0; min-height:0; height:100%; padding:0; overflow:hidden; }
+.dexArtwork img { position:absolute; inset:0; width:100%; height:100%; max-width:none; max-height:none; padding:.75rem; object-fit:contain; object-position:center bottom; }
+.dexArtwork .artFallback { position:absolute; inset:0; display:grid; place-items:center; }
+
+/* Medal clouds retain legible ink even against the night sky. */
+.cloudWinner { position:relative; isolation:isolate; border:2px solid #c0d8e8; color:#173751; background:radial-gradient(ellipse at 50% 0%,#fff 0%,#e7f5ff 58%,#c9e2ee 100%); box-shadow:0 9px 0 #789cb477,0 18px 30px #163d5d35,inset 0 2px 0 #fff; }
+.cloudWinner::before { position:absolute; z-index:-1; inset:auto 10% -.55rem; height:2.4rem; border-radius:50%; background:#dbf2ff; box-shadow:0 0 22px #d7f2ff99; content:""; }
+.cloudWinner[data-rank="1"] { border-color:#d5a840; color:#513b12; background:radial-gradient(ellipse at 50% 0%,#fff9dc,#f8e7a9 58%,#ddb864); box-shadow:0 9px 0 #b68a3c88,0 16px 36px #edc96a66,inset 0 2px 0 white; }
+.cloudWinner[data-rank="2"] { border-color:#a4bfcd; background:radial-gradient(ellipse at 50% 0%,#fff,#e6f2f7 58%,#b5cbd8); }
+.cloudWinner[data-rank="3"] { border-color:#ca956e; color:#50392e; background:radial-gradient(ellipse at 50% 0%,#fff4e9,#edd0b9 58%,#c99775); }
+.cloudWinner strong, .cloudWinner .winnerScore, .cloudWinner .winnerLinks a { color:inherit; }.cloudWinner small { color:#3f5665; }.cloudWinner[data-rank="3"] small { color:#694d3c; }.cloudWinner img,.winnerAvatar { border-color:#fff; box-shadow:0 3px 12px #34536a44; }
+:global(html[data-theme="night"]) .podiumLinks a { color:#b9eaff; }

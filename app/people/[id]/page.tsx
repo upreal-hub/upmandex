@@ -130,7 +130,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         </div>
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
-
+          {person.user?.twitchLogin && <div className={styles.heroLinks}><Link href={`/collection/${encodeURIComponent(person.user.twitchLogin)}`}>View collection ↗</Link></div>}
         </div>
       </section>
 

@@ -32,3 +32,12 @@
 .portalCopy { position:relative; display:grid; gap:.6rem; flex:1; padding:1.4rem 1.7rem 1.7rem; background:linear-gradient(180deg,transparent,#102238bb 20%); }.portalCopy small { color:var(--portal); font:900 .65rem var(--display-font); letter-spacing:.11em; }.portalCopy strong { font:900 clamp(1.5rem,3vw,2.2rem) / 1 var(--display-font); }.portalCopy > span { color:#f0f8ff; font-size:.9rem; line-height:1.55; }.portalCopy em { align-self:end; margin-top:.5rem; color:#fff; font-size:.8rem; font-style:normal; font-weight:900; }
 @media(max-width:650px) { .portalGrid { grid-template-columns:1fr; }.portalVisual { height:10rem; }.portalCopy { padding:1.2rem 1.3rem 1.5rem; } }
 @media(prefers-reduced-motion:reduce) { .worldPortal,.portalVisual img,.worldPortal::after { transition:none; }.worldPortal:hover,.worldPortal:hover .portalVisual img { transform:none; } }
+
+/* Portals share a silhouette, but keep their own light and identity. */
+.worldPortal { border-width:2px; border-color:color-mix(in srgb,var(--portal) 80%,#fff); box-shadow:0 7px 0 color-mix(in srgb,var(--portal) 42%,#223c59),0 18px 40px color-mix(in srgb,var(--portal) 30%,transparent),inset 0 1px 0 #fff; }
+.portalVisual { height:13rem; background:radial-gradient(ellipse at 50% 55%,color-mix(in srgb,var(--portal) 50%,transparent),transparent 68%); }
+.worldPortal[data-world="1"] .portalVisual img { object-fit:contain; filter:drop-shadow(0 0 22px var(--portal)); }
+.worldPortal[data-world="0"] .portalVisual img,.worldPortal[data-world="3"] .portalVisual img { width:6rem; height:6rem; }
+.portalStars { font-size:1.15rem; letter-spacing:.12em; }.portalCopy { background:linear-gradient(180deg,#101f34dc,#101f34f5); }
+.portalCopy::after { position:absolute; right:1.4rem; top:-1.5rem; color:#ffffffb5; font-size:2rem; text-shadow:0 0 18px var(--portal); content:"☁ ✧"; pointer-events:none; }
+@media(max-width:650px) { .portalVisual { height:11rem; } }
