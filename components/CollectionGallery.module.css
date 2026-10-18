@@ -78,3 +78,78 @@
 @media (max-width: 700px) {
   .progress, .collectionControls { border-radius: 2.6rem 3.2rem 2.8rem 3rem / 2.3rem 2.8rem 2.5rem 2.6rem; }
 }
+
+/* Separate cloud volumes give the panels a silhouette, not just rounded corners. */
+.progress, .collectionControls {
+  --collection-cloud: color-mix(in srgb, var(--surface-strong) 94%, #bceaff);
+  position: relative;
+  isolation: isolate;
+  margin-top: 2.8rem;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, #a8def3);
+  border-radius: 4rem 5rem 3.8rem 4.7rem / 4.4rem 4rem 4.2rem 3.7rem;
+  background: var(--collection-cloud);
+  box-shadow: 0 8px 0 color-mix(in srgb, #6fbcd9 22%, transparent), 0 19px 30px #25658c1c, inset 0 2px 0 #ffffff90;
+}
+.progress::before, .collectionControls::before,
+.progress::after, .collectionControls::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background: var(--collection-cloud);
+  border-radius: 50%;
+}
+.progress::before, .collectionControls::before {
+  top: -1.35rem;
+  left: 8%;
+  width: 7rem;
+  height: 3.5rem;
+  box-shadow: 5rem -.35rem 0 .35rem var(--collection-cloud), 10rem .3rem 0 -.15rem var(--collection-cloud), inset 0 2px 0 #ffffff90;
+}
+.progress::after, .collectionControls::after {
+  right: 8%;
+  bottom: -.9rem;
+  width: 6rem;
+  height: 2.8rem;
+  box-shadow: -4.2rem .2rem 0 .25rem var(--collection-cloud), 3rem -.1rem 0 -.2rem var(--collection-cloud);
+}
+.rarityItem {
+  position: relative;
+  background: radial-gradient(ellipse at 20% 5%, #ffffff70, transparent 45%), color-mix(in srgb, var(--surface-strong) 79%, var(--rarity-accent));
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--rarity-accent) 25%, transparent), 0 9px 16px color-mix(in srgb, var(--rarity-accent) 18%, transparent), inset 0 2px 0 #ffffff80;
+}
+.ownedLabel { border-color: #69c993; box-shadow: 0 2px 8px #32a66640; }
+
+/* Missing cards remain recognisable, but their artwork and cloud lose their glow. */
+.entry.missing::before, .entry.missing::after,
+:global(html[data-theme="night"]) .entry.missing::before,
+:global(html[data-theme="night"]) .entry.missing::after {
+  background: #293949;
+  box-shadow: 0 8px 16px #10213135;
+}
+.entry.missing .info, :global(html[data-theme="night"]) .entry.missing .info {
+  color: #f4f8fb;
+  border-color: #718396;
+  background: #334558;
+  box-shadow: 0 8px 15px #15263735, inset 0 1px 0 #ffffff25;
+}
+.entry.missing .info h2, .entry.missing .info strong,
+:global(html[data-theme="night"]) .entry.missing .info h2,
+:global(html[data-theme="night"]) .entry.missing .info strong { color: #f4f8fb; }
+.entry.missing .info p, .entry.missing .creatorIdentity,
+:global(html[data-theme="night"]) .entry.missing .info p { color: #d2dce6; }
+.entry.missing .rarity, :global(html[data-theme="night"]) .entry.missing .rarity {
+  color: #edf4fa;
+  border-color: #94a5b4;
+  background: #465a6b;
+  box-shadow: none;
+}
+.entry.missing .missingLabel { color: #e3eaf1; border-color: #9aabb9; background: #283b4c; }
+.entry.missing .artwork img, :global(html[data-theme="night"]) .entry.missing .artwork img {
+  opacity: 1;
+  filter: grayscale(.95) brightness(.38) contrast(1.12) drop-shadow(0 8px 7px #101b2b66);
+}
+@media (max-width: 700px) {
+  .progress::before, .collectionControls::before { left: 12%; width: 4rem; box-shadow: 3rem -.25rem 0 .2rem var(--collection-cloud), 6rem .2rem 0 -.2rem var(--collection-cloud); }
+  .progress::after, .collectionControls::after { right: 12%; width: 4rem; box-shadow: -3rem .15rem 0 .1rem var(--collection-cloud); }
+}

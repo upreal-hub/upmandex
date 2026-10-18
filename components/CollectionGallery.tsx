@@ -144,7 +144,7 @@ function CollectionEntryCard({ upman }: { upman: CollectionEntry }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={upman.creatorAvatar} alt="" />
       )}<span>@{upman.creatorTwitch}</span></p>}
-      <span className={upman.owned ? styles.ownedLabel : styles.missingLabel}><span aria-hidden="true">{upman.owned ? "✓" : "○"}</span> {upman.owned ? "Collected" : "Still to find"}</span>
+      <span className={upman.owned ? styles.ownedLabel : styles.missingLabel}><span aria-hidden="true">{upman.owned ? "✓" : "🔒"}</span> {upman.owned ? "Owned" : "Not collected"}</span>
     </div>
   </>;
 
