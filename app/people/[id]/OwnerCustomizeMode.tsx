@@ -14,8 +14,8 @@ const CustomizeModeContext = createContext<CustomizeModeContextValue>({
   setCustomizeMode: () => undefined,
 });
 
-export function OwnerCustomizeMode({ children }: { children: ReactNode }) {
-  const [isCustomizeMode, setCustomizeMode] = useState(false);
+export function OwnerCustomizeMode({ children, initialCustomizeMode = false }: { children: ReactNode; initialCustomizeMode?: boolean }) {
+  const [isCustomizeMode, setCustomizeMode] = useState(initialCustomizeMode);
   return <CustomizeModeContext.Provider value={{ isCustomizeMode, setCustomizeMode }}>{children}</CustomizeModeContext.Provider>;
 }
 

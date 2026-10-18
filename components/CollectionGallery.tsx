@@ -61,7 +61,7 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
 
   return (
     <>
-      <section className={styles.progress} aria-label="Collection progress">
+      <section id="collection-progress" className={styles.progress} aria-label="Collection progress">
         <div className={styles.overall}>
           <p>Your little sky, growing</p>
           <strong>{ownedCount} <span>/ {total}</span></strong>

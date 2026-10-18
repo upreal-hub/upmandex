@@ -178,7 +178,7 @@ export default async function CommunityPage() {
       <section className={styles.members} aria-labelledby="community-members-heading">
         <SectionHeading eyebrow="THE PEOPLE EXPLORING" heading="COMMUNITY MEMBERS" detail={`${communityMembers} ${communityMembers === 1 ? "member" : "members"}`} headingId="community-members-heading" />
 
-        <div className={styles.podiums} aria-label="Community member highlights">
+        <div id="leaderboards" className={styles.podiums} aria-label="Community member highlights">
           <Podium title="TOP COLLECTORS" subtitle="The explorers closest to a complete public Dex.">
             {topCollectors.length > 0 ? topCollectors.map((member, index) => (
               <article key={member.id} className={styles.podiumEntry}>
@@ -190,7 +190,7 @@ export default async function CommunityPage() {
             )) : <EmptyPanel message="The first active collector is still waiting for a cloud to find." />}
           </Podium>
 
-          <Podium title="TOP CREATORS" subtitle="People who have brought new public Upmans into the world.">
+          <Podium id="top-creators" title="TOP CREATORS" subtitle="People who have brought new public Upmans into the world.">
             {topCreators.length > 0 ? topCreators.map((creator, index) => (
               <article key={creator.id} className={styles.podiumEntry}>
                 <span className={styles.rank} aria-label={`Rank ${index + 1}`}>{index + 1}</span>
@@ -202,7 +202,7 @@ export default async function CommunityPage() {
           </Podium>
         </div>
 
-        {members.length > 0 ? <CommunityMembersRoster members={members} totalUpmans={totalUpmans} /> : <EmptyRoster />}
+        <div id="cloud-members">{members.length > 0 ? <CommunityMembersRoster members={members} totalUpmans={totalUpmans} /> : <EmptyRoster />}</div>
       </section>
 
       <section className={styles.overview} aria-labelledby="community-overview-heading">
@@ -224,7 +224,7 @@ export default async function CommunityPage() {
           <div className={styles.progressTrack} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Number(globalProgress.toFixed(1))} aria-label={`Active collector progress: ${formatPercentage(globalProgress)}`}><span style={{ width: `${Math.min(globalProgress, 100)}%` }} /></div>
         </section>
 
-        <div className={styles.highlights}>
+        <div id="community-highlights" className={styles.highlights}>
           <CommunityHighlight title="MOST OWNED" upman={mostOwned} empty="No public Upman has been collected yet." />
           <CommunityHighlight title="RAREST DISCOVERED" upman={rarestDiscovered} empty="The first public discovery is still waiting." />
         </div>
@@ -255,8 +255,8 @@ function OverviewStat({ label, value }: { label: string; value: string | number 
   return <div><dt>{label}</dt><dd>{value}</dd></div>;
 }
 
-function Podium({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
-  return <section className={styles.podium}><header><p>{title}</p><span>{subtitle}</span></header><div className={styles.podiumList}>{children}</div></section>;
+function Podium({ id, title, subtitle, children }: { id?: string; title: string; subtitle: string; children: ReactNode }) {
+  return <section id={id} className={styles.podium}><header><p>{title}</p><span>{subtitle}</span></header><div className={styles.podiumList}>{children}</div></section>;
 }
 
 function Identity({ avatar, name, login }: { avatar: string | null; name: string; login: string | null }) {

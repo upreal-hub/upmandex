@@ -38,7 +38,7 @@ type PersonUpman = {
   rarity: string;
 };
 
-export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PersonPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ customize?: string }> }) {
   const { id } = await params;
   const person = await prisma.person.findUnique({
     where: { id },
@@ -130,7 +130,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         </div>
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
-          {isOwner && <div className={styles.ownerActions}>
+          {isOwner && <div id="profile-customization" className={styles.ownerActions}>
             <OwnerCustomizeControls />
             <CustomizeModeOnly>
               <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} buttonLabel="Customize cosmetics" />
@@ -142,7 +142,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} showCustomization={false} />}
 
-      {(hasCreativeContent || isOwner) && <OwnerCustomizeContent hasPublicContent={hasCreativeContent}><section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
+      <div id="person-creations">{(hasCreativeContent || isOwner) && <OwnerCustomizeContent hasPublicContent={hasCreativeContent}><section className={styles.creativeSpace} aria-labelledby="creative-space-heading">
         <header className={styles.zoneHeading}><h2 id="creative-space-heading">Creative space</h2></header>
         <div className={styles.creativeGrid}>
           <PersonArtPreview personId={person.id} personName={person.displayName} artworks={person.artworks} isOwner={isOwner} />
@@ -151,11 +151,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </section></OwnerCustomizeContent>}
 
       {hasRepresented && <UpmanSection title="MY UPMAN" upmans={person.representedUpmans} />}
-      {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}
+      {hasCreated && <CreatedUpmansRail upmans={person.createdUpmans} />}</div>
     </main>
   );
 
-  return isOwner ? <OwnerCustomizeMode>{profile}</OwnerCustomizeMode> : profile;
+  const startCustomizing = (await searchParams).customize === "1";
+  return isOwner ? <OwnerCustomizeMode key={startCustomizing ? "customize" : "view"} initialCustomizeMode={startCustomizing}>{profile}</OwnerCustomizeMode> : profile;
 }
 
 function PersonAvatar({ src, displayName }: { src: string; displayName: string }) {

@@ -1,82 +1,46 @@
-export default function AchievementsPage() {
-  const achievements = [
-    {
-      icon: "👑",
-      name: "Legendary Collector",
-      description:
-        "Own at least one Legendary Upman",
-    },
+import Link from "next/link";
 
-    {
-      icon: "🔥",
-      name: "Mythic Hunter",
-      description:
-        "Own at least one Mythic Upman",
-    },
+import { auth } from "@/auth";
+import { getAchievementCatalog, getAchievementProgress } from "@/lib/achievements";
+import { prisma } from "@/lib/prisma";
+import { normalizeTwitchLogin } from "@/lib/validation";
+import styles from "@/app/guides/guide.module.css";
 
-    {
-      icon: "🏅",
-      name: "Upman Veteran",
-      description:
-        "Own 20 or more Upmans",
-    },
+export const dynamic = "force-dynamic";
 
-    {
-      icon: "💎",
-      name: "Common Master",
-      description:
-        "Collect every Common Upman",
-    },
-
-    {
-      icon: "⚡",
-      name: "Event Hunter",
-      description:
-        "Collect an Event Upman",
-    },
-
-    {
-      icon: "👻",
-      name: "Secret Finder",
-      description:
-        "Discover a Secret Upman",
-    },
-  ];
+export default async function AchievementsPage() {
+  const login = normalizeTwitchLogin((await auth())?.user?.name);
+  const user = login ? await prisma.user.findUnique({
+    where: { twitchLogin: login },
+    select: { person: { select: { id: true } } },
+  }) : null;
+  const progress = user?.person ? await getAchievementProgress(user.person.id) : null;
+  const milestones = new Map(progress?.families.flatMap((family) => family.milestones.map((milestone) => [milestone.key, milestone] as const)) ?? []);
+  const catalog = getAchievementCatalog();
 
   return (
-    <main className="min-h-screen bg-slate-900 text-white p-8">
-
-      <h1 className="text-5xl font-bold mb-10">
-        🏆 Achievements
-      </h1>
-
-      <p className="opacity-70 mb-8">
-        Unlock badges by collecting Upmans.
-      </p>
-
-      <div className="grid grid-cols-2 gap-6">
-
-        {achievements.map((achievement) => (
-          <div
-            key={achievement.name}
-            className="border border-slate-700 rounded-lg p-6"
-          >
-            <div className="text-4xl mb-4">
-              {achievement.icon}
-            </div>
-
-            <h2 className="text-2xl font-bold">
-              {achievement.name}
-            </h2>
-
-            <p className="opacity-70 mt-2">
-              {achievement.description}
-            </p>
-          </div>
-        ))}
-
+    <main className={styles.page}>
+      <header className={styles.hero}>
+        <p className={styles.eyebrow}>Your journey in the clouds</p>
+        <h1>Achievements</h1>
+        <p>Collect, create and explore to unlock achievements and profile cosmetics.</p>
+        <p>{progress ? `${progress.summary.unlocked} achievements unlocked.` : login ? "Link a Person profile to see your progress." : "Sign in with Twitch to see your progress."}</p>
+      </header>
+      <div className={styles.grid}>
+        {catalog.map((achievement) => {
+          const milestone = milestones.get(achievement.key);
+          const status = milestone?.isUnlocked ? "Unlocked" : achievement.metric === "unavailable" ? "Not tracked yet" : progress ? "Locked" : "Progress unavailable";
+          return (
+            <article className={styles.card} key={achievement.key}>
+              <span className={styles.status}>{status}</span>
+              <h2>{achievement.name} · {achievement.label}</h2>
+              <p>{achievement.description}</p>
+              {milestone?.trackable && <p>Progress: {milestone.displayCurrent} / {milestone.displayTarget}</p>}
+            </article>
+          );
+        })}
       </div>
-
+      <div className={styles.footer}><Link className={styles.action} href="/profile">My profile →</Link><Link className={styles.action} href="/my-collection">My collection →</Link></div>
     </main>
   );
 }

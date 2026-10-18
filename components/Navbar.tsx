@@ -13,34 +13,32 @@ type Menu = { label: string; intro: string; icon: string; items: MenuItem[]; aut
 const menus: Menu[] = [
   { label: "Upmandex", intro: "Meet the faces in the clouds.", icon: "☁", items: [
     { label: "Explore the Dex", detail: "Discover every public Upman", icon: "✦", href: "/upmans" },
-    { label: "Pull Chances", detail: "A guide to pull chances is coming soon", icon: "✧" },
-    { label: "Twitch Commands", detail: "A command guide is coming soon", icon: "⌘" },
-    { label: "Upman Lore", detail: "Stories from the cloud world are coming soon", icon: "☼" },
+    { label: "Pull Chances", detail: "How rarity chances work", icon: "✧", href: "/guides/pulls" },
+    { label: "Twitch Commands", detail: "Stream interactions and commands", icon: "⌘", href: "/guides/stream#commands" },
+    { label: "Upman Lore", detail: "Meet the world and its creators", icon: "☼", href: "/guides/lore" },
   ] },
   { label: "Collection", intro: "Your discoveries, all in one sky.", icon: "✧", items: [
     { label: "My Collection", detail: "See your collected Upmans", icon: "☁", href: "/my-collection" },
-    { label: "My Progress", detail: "Track your collection and rarities", icon: "◒", href: "/my-collection" },
-    { label: "How to Collect", detail: "A collection guide is coming soon", icon: "?" },
+    { label: "My Progress", detail: "Track your collection and rarities", icon: "◒", href: "/my-collection#collection-progress" },
+    { label: "How to Collect", detail: "Explore ways to collect", icon: "?", href: "/guides/collect" },
     { label: "Achievements", detail: "Explore the achievement gallery", icon: "✦", href: "/achievements" },
   ] },
   { label: "Community", intro: "A sky shared by many explorers.", icon: "✺", items: [
-    { label: "Leaderboards", detail: "Meet the top collectors and creators", icon: "♛", href: "/community#community-members-heading" },
-    { label: "Cloud Members", detail: "Find community members", icon: "☁", href: "/community#community-members-heading" },
-    { label: "Top Creators", detail: "Discover the people creating Upmans", icon: "✎", href: "/community#community-members-heading" },
-    { label: "Community Highlights", detail: "Explore shared discoveries", icon: "✦", href: "/community#community-overview-heading" },
+    { label: "Leaderboards", detail: "Meet the top collectors and creators", icon: "♛", href: "/community#leaderboards" },
+    { label: "Cloud Members", detail: "Find community members", icon: "☁", href: "/community#cloud-members" },
+    { label: "Top Creators", detail: "Discover the people creating Upmans", icon: "✎", href: "/community#top-creators" },
+    { label: "Community Highlights", detail: "Explore shared discoveries", icon: "✦", href: "/community#community-highlights" },
   ] },
   { label: "Cloud Worlds", intro: "Creative corners of the community.", icon: "✵", items: [
-    { label: "Connected Worlds", detail: "Meet creators and friends", icon: "☁", href: "/people" },
-    { label: "Art Galleries", detail: "Artwork made by the community", icon: "✎", href: "/art" },
-    { label: "Stream Schedules", detail: "Stream schedules are coming soon", icon: "◷" },
-    { label: "Stream Tools", detail: "A guide to stream tools is coming soon", icon: "⚙" },
+    { label: "Other Websites", detail: "Visit neighbouring creative worlds", icon: "☁", href: "/guides/worlds" },
+    { label: "Art", detail: "Artwork made by the community", icon: "✎", href: "/art" },
     { label: "Projects", detail: "Little ideas shared by the community", icon: "✧", href: "/projects" },
+    { label: "Stream", detail: "Visit upreal_ and learn about the stream", icon: "◷", href: "/guides/stream" },
   ] },
   { label: "My Profile", intro: "Make your own corner of the sky.", icon: "✿", auth: true, items: [
     { label: "My Profile", detail: "Open your linked Person profile", icon: "☁", href: "/profile" },
-    { label: "Customization", detail: "Customize from your Person profile", icon: "✧", href: "/profile" },
-    { label: "Achievements", detail: "Explore your achievement rewards", icon: "✦", href: "/profile" },
-    { label: "My Creations", detail: "See creations on your Person profile", icon: "✎", href: "/profile" },
+    { label: "Customization", detail: "Customize from your Person profile", icon: "✧", href: "/profile?view=customize" },
+    { label: "My Creations", detail: "See creations on your Person profile", icon: "✎", href: "/profile?view=creations" },
   ] },
 ];
 

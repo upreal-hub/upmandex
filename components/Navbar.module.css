@@ -2,8 +2,8 @@
 .desktop { gap: .05rem; }
 .trigger { gap: .25rem; font-size: .77rem; }
 .trigger:focus-visible, .mobileTrigger:focus-visible, .item:focus-visible { outline: 3px solid #efb43d; outline-offset: 3px; }
-.menuBridge { position: absolute; top: 100%; right: 0; left: 0; z-index: 5; display: flex; justify-content: flex-end; padding: .35rem 1rem 0; }
-.menu { position: relative; isolation: isolate; overflow: hidden; width: min(41rem, 100%); padding: 1.1rem 1.25rem 1.25rem; border: 1px solid var(--line); border-radius: 2.6rem 2.2rem 2.8rem 2.4rem / 2rem 2.5rem 2.2rem 2.6rem; color: var(--ink); background: var(--surface-strong); box-shadow: 0 14px 32px #193e642b, inset 0 1px 0 #ffffff70; }
+.menuBridge { position: absolute; top: 100%; right: 0; left: 0; z-index: 5; display: flex; justify-content: center; padding: .45rem 1rem 0; }
+.menu { position: relative; isolation: isolate; overflow: hidden; width: min(51rem, 100%); padding: 1.35rem 1.6rem 1.5rem; border: 1px solid var(--line); border-radius: 2.6rem 2.2rem 2.8rem 2.4rem / 2rem 2.5rem 2.2rem 2.6rem; color: var(--ink); background: var(--surface-strong); box-shadow: 0 14px 32px #193e642b, inset 0 1px 0 #ffffff70; }
 .menu::before { position: absolute; z-index: -1; top: -3.5rem; right: -1rem; width: 14rem; height: 8rem; border-radius: 50%; background: color-mix(in srgb, #86d8f5 22%, transparent); content: ""; }
 .menu[data-world="Collection"]::before { background: color-mix(in srgb, #75c98f 24%, transparent); }
 .menu[data-world="Community"]::before { background: color-mix(in srgb, #efba5d 24%, transparent); }
@@ -14,7 +14,7 @@
 .menuIntro strong { font-family: var(--display-font); font-size: 1.1rem; }
 .menuIntro p { margin: .16rem 0 0; color: var(--ink-soft); font-size: .75rem; }
 .sparkle { margin-left: auto; color: #d69f36; font-size: 1rem; white-space: nowrap; }
-.items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem; }
+.items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .8rem; }
 .item { display: flex; align-items: center; gap: .65rem; min-width: 0; min-height: 3.4rem; padding: .55rem .65rem; border-radius: 1rem 1.3rem 1.1rem 1.2rem; color: var(--ink); text-decoration: none; }
 a.item:hover { background: color-mix(in srgb, #81d6f3 22%, var(--surface-strong)); }
 .item > span:nth-child(2) { min-width: 0; }

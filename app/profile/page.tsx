@@ -7,7 +7,7 @@ import { normalizeTwitchLogin } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
   if (!sessionLogin) redirect("/");
 
@@ -16,7 +16,13 @@ export default async function ProfilePage() {
     select: { person: { select: { id: true } } },
   });
 
-  if (user?.person) redirect(`/people/${user.person.id}`);
+  const { view } = await searchParams;
+  if (user?.person) {
+    const destination = `/people/${encodeURIComponent(user.person.id)}`;
+    if (view === "customize") redirect(`${destination}?customize=1#profile-customization`);
+    if (view === "creations") redirect(`${destination}#person-creations`);
+    redirect(destination);
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-20 text-center">
