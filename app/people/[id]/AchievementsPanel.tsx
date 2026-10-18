@@ -185,7 +185,7 @@ function MilestoneNode({ family, milestone, index, total, isTarget, isDormant, a
   const leave = () => { if (!pinned) onPreview(null); };
   return <div className={styles.milestoneNodeWrap} data-milestone-interaction data-rarity={family.key === "rarity-completion" ? milestone.label : undefined} onMouseEnter={preview} onMouseLeave={leave}>
     <button type="button" className={`${styles.milestoneNode} ${nodeState(milestone, isTarget, isDormant)}`} aria-label={milestoneAriaLabel(family, milestone, isDormant)} aria-expanded={active} aria-controls={active ? detailId : undefined} onFocus={preview} onBlur={leave} onClick={() => { if (pinned) onDismiss(); else { onPreview(null); onPin(milestone.key); } }} onKeyDown={(event) => { if (event.key === "Escape" && active) { event.preventDefault(); event.stopPropagation(); onDismiss(); } }}>
-      <span aria-hidden="true">{milestone.isCurrentlyComplete && !milestone.isUnlocked && !isDormant ? "•" : ""}</span>
+      <span aria-hidden="true">{milestone.isUnlocked ? "" : milestone.isCurrentlyComplete && !isDormant ? "•" : "◇"}</span>
     </button>
     <span className={styles.milestoneLabel}>{milestone.label}</span>
     {active && <MilestonePopover id={detailId} family={family} milestone={milestone} isDormant={isDormant} position={position} />}

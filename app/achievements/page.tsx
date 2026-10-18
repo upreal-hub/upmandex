@@ -31,8 +31,8 @@ export default async function AchievementsPage() {
           const milestone = milestones.get(achievement.key);
           const status = milestone?.isUnlocked ? "Unlocked" : achievement.metric === "unavailable" ? "Not tracked yet" : progress ? "Locked" : "Progress unavailable";
           return (
-            <article className={styles.card} key={achievement.key}>
-              <span className={styles.status}>{status}</span>
+            <article className={`${styles.card} ${milestone?.isUnlocked ? styles.unlocked : styles.locked}`} key={achievement.key}>
+              <span className={styles.status}>{milestone?.isUnlocked ? "✓ " : "◇ "}{status}</span>
               <h2>{achievement.name} · {achievement.label}</h2>
               <p>{achievement.description}</p>
               {milestone?.trackable && <p>Progress: {milestone.displayCurrent} / {milestone.displayTarget}</p>}

@@ -55,6 +55,7 @@ export default function AchievementCustomization({
   loadout,
   featuredAchievementKeys,
   buttonLabel = "Customize profile",
+  inline = false,
 }: {
   personId: string;
   achievements: DisplayAchievement[];
@@ -63,6 +64,7 @@ export default function AchievementCustomization({
   loadout: Loadout;
   featuredAchievementKeys: string[];
   buttonLabel?: string;
+  inline?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -97,13 +99,13 @@ export default function AchievementCustomization({
   }, [activeSlot, unlockedAchievements]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !saving) setOpen(false);
     };
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
-  }, [open, saving]);
+  }, [open, saving, inline]);
 
   function openCustomizer() {
     setActiveSlot("background");
@@ -189,14 +191,11 @@ export default function AchievementCustomization({
   const isPreviewDifferent = previewLoadout[activeProperty] !== equippedLoadout[activeProperty]
     || Boolean(activeCustomProperty && previewLoadout[activeCustomProperty] !== equippedLoadout[activeCustomProperty]);
 
-  return <>
-    <button type="button" className={styles.customizeButton} onClick={openCustomizer}>{buttonLabel}</button>
-    {open && createPortal(
-      <div className={styles.customizationOverlay} onMouseDown={(event) => event.target === event.currentTarget && !saving && setOpen(false)}>
-        <section className={styles.customizationDialog} role="dialog" aria-modal="true" aria-labelledby="customize-profile-title">
+  const editor = <div className={inline ? styles.inlineCustomization : styles.customizationOverlay} onMouseDown={(event) => event.target === event.currentTarget && !saving && setOpen(false)}>
+        <section className={styles.customizationDialog} role={inline ? undefined : "dialog"} aria-modal={inline ? undefined : true} aria-labelledby="customize-profile-title">
           <header className={styles.customizerHeader}>
             <div><p className={styles.eyebrow}>YOUR PROFILE</p><h2 id="customize-profile-title">Customize profile</h2><p>Preview rewards freely. Equip only what you want to keep.</p></div>
-            <button type="button" onClick={() => setOpen(false)} disabled={saving} aria-label="Close profile customizer">Close</button>
+            {!inline && <button type="button" onClick={() => setOpen(false)} disabled={saving} aria-label="Close profile customizer">Close</button>}
           </header>
 
           <div className={`${styles.customizerPreview} ${styles.page}`} data-background={previewCustomBackground ? "custom" : previewBackground?.styleKey ?? "default"} data-accent={previewAccent?.styleKey ?? "default"} aria-label="Live profile preview">
@@ -250,9 +249,8 @@ export default function AchievementCustomization({
 
           <details className={styles.lockedRewards}><summary>More to discover <span>{lockedAchievements.length}</span></summary><div>{lockedAchievements.map((achievement) => <article key={achievement.key}><strong>{achievement.name} · {achievement.label}</strong><span>{achievement.trackable ? `${achievement.current} / ${achievement.target}` : "Tracking coming later"}</span><small>{achievement.cosmetic[activeSlot]?.label}</small></article>)}</div></details>
         </section>
-      </div>, document.body,
-    )}
-  </>;
+      </div>;
+  return inline ? editor : <><button type="button" className={styles.customizeButton} onClick={openCustomizer}>{buttonLabel}</button>{open && createPortal(editor, document.body)}</>;
 }
 
 function CustomCosmeticOption({ slot, asset, selected, equipped, onPreview }: { slot: "background" | "banner"; asset: CustomAsset; selected: boolean; equipped: boolean; onPreview: () => void }) {

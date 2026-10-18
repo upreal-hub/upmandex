@@ -130,16 +130,18 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         </div>
         <div className={styles.heroAside}>
           <PersonHeroLinks personName={person.displayName} links={person.links} />
-          {isOwner && <div id="profile-customization" className={styles.ownerActions}>
-            <OwnerCustomizeControls />
-            <CustomizeModeOnly>
-              <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} buttonLabel="Customize cosmetics" />
-              <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
-            </CustomizeModeOnly>
-          </div>}
+
         </div>
       </section>
 
+      {isOwner && <OwnerCustomizeControls />}
+          {isOwner && <div id="profile-customization" className={styles.ownerActions}>
+
+            <CustomizeModeOnly>
+              <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} inline buttonLabel="Customize cosmetics" />
+              <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
+            </CustomizeModeOnly>
+          </div>}
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} showCustomization={false} />}
 
       <div id="person-creations">{(hasCreativeContent || isOwner) && <OwnerCustomizeContent hasPublicContent={hasCreativeContent}><section className={styles.creativeSpace} aria-labelledby="creative-space-heading">

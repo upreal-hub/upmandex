@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { publicUpmanWhere } from "@/lib/upman-visibility";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PULL_RARITIES } from "@/lib/upman-rarity";
@@ -6,7 +8,7 @@ import styles from "../guide.module.css";
 
 export const dynamic = "force-dynamic";
 
-type Card = { title: string; text: string; href?: string; action?: string; id?: string; external?: boolean };
+type Card = { title: string; text: string; href?: string; action?: string; id?: string; external?: boolean; image?: string };
 const guides: Record<string, { title: string; intro: string; cards: Card[] }> = {
   pulls: { title: "Pull chances", intro: "Each pull chooses an eligible rarity, then an Upman from that rarity.", cards: [
     { title: "The rarity clouds", text: "Common, Rare, Epic, Mythic and Legendary use configured weights. Only enabled rarities with at least one eligible Upman participate." },
@@ -16,26 +18,31 @@ const guides: Record<string, { title: string; intro: string; cards: Card[] }> = 
   collect: { title: "How to collect", intro: "Find new faces on stream and follow their journey in your collection.", cards: [
     { title: "Pull an Upman", text: "Use the available Twitch reward on stream to receive a weighted pull. A duplicate does not create another inventory entry.", href: "/guides/pulls", action: "Explore pull chances" },
     { title: "Event rewards", text: "When an event is active, its dedicated Twitch reward can grant the selected Event Upman. Availability is controlled during the stream." },
+    { title: "Special discoveries", text: "Some Upmans have dedicated acquisition rules, including stream interactions and site discoveries. Their requirements must be satisfied before a reward can be granted; hidden solutions are yours to discover." },
+    { title: "Track your journey", text: "Achievements follow collection progress, creation credits and recorded pulls. Unlocking an achievement can unlock profile titles, backgrounds, banners and accents.", href: "/achievements", action: "Explore achievements" },
     { title: "Your collection", text: "Sign in with Twitch to see your discoveries, missing faces and progress by rarity.", href: "/my-collection", action: "Open My Collection" },
   ] },
   lore: { title: "Upman lore", intro: "A little world of curious faces, shaped by the people who make and collect them.", cards: [
     { title: "Meet the Upmans", text: "Every public Upman has its own page, artwork and creator credit.", href: "/upmans", action: "Explore the Dex" },
     { title: "Made by people", text: "Meet the creators and friends behind the cloud world.", href: "/people", action: "Meet the community" },
-    { title: "Stories still unfolding", text: "The official history of the world is not yet documented here. More stories can be shared when they are ready." },
+    { title: "A world made together", text: "Discover the real creator credits below. Each portrait links to its public Dex entry; creator and represented-person profiles preserve the connections behind the artwork." },
   ] },
   worlds: { title: "Other websites", intro: "Step through a cloud portal into more creative corners of the web.", cards: [
-    { title: "SillyV Art", text: "Explore SillyV’s art and creative world.", href: "https://www.sillyv.art/home", action: "Visit SillyV Art", external: true },
-    { title: "Byttenapple", text: "Visit the Byttenapple website.", href: "https://byttenapple.com", action: "Visit Byttenapple", external: true },
-    { title: "Natade Gallery", text: "Discover the Natade art gallery.", href: "https://natiiebouzie.com/natadegallery", action: "Visit Natade Gallery", external: true },
-    { title: "Garticverse", text: "Explore the Garticverse collection.", href: "https://garticverse.com/all", action: "Visit Garticverse", external: true },
+    { title: "SillyV Art", image: "/worlds/sillyv.ico", text: "SillyV’s Gartic gallery: a neighbouring world of drawings to explore.", href: "https://www.sillyv.art/home", action: "Visit SillyV Art", external: true },
+    { title: "Byttenapple", image: "/worlds/byttenapple.webp", text: "Rotten Apple’s community hub brings together Gartic Phone drawings, The Halloran Case mystery and The Orchard viewer cards and pets.", href: "https://byttenapple.com", action: "Visit Byttenapple", external: true },
+    { title: "Natade Gallery", image: "/worlds/natade.jpg", text: "NataDeGallery is Natiiebouzie’s gallery for Gartic Phone custom modes, with a Gartic Wall of Fame.", href: "https://natiiebouzie.com/natadegallery", action: "Visit Natade Gallery", external: true },
+    { title: "Garticverse", image: "/worlds/garticverse.ico", text: "Browse the Garticverse gallery, or visit upreal_’s own stream space from Cloud Worlds → Stream.", href: "https://garticverse.com/all", action: "Visit Garticverse", external: true },
   ] },
-  stream: { title: "The stream", intro: "Join upreal_ on Twitch and share the cloud world live.", cards: [
+  stream: { title: "Twitch commands", intro: "Join upreal_ on Twitch and share the cloud world live.", cards: [
     { title: "Watch on Twitch", text: "Chat with the community and discover the rewards available during the stream.", href: "https://www.twitch.tv/upreal_", action: "Open Twitch", external: true },
-    { title: "Twitch commands", id: "commands", text: "A verified public command list is not available yet. Check the stream for current commands; secret acquisition rules stay secret." },
+    { title: "Twitch commands", id: "commands", text: "Stream commands can grant an Upman when their configured acquisition rule is enabled and its requirements are met. Some interactions require the stream to be live in a specific category. The repository does not document the public chat syntax, so ask on stream for the current command list.", href: "https://www.twitch.tv/upreal_", action: "Ask in Twitch chat", external: true },
     { title: "Chat and rewards", text: "Twitch rewards can trigger Upman pulls and, when enabled, an event-specific Upman. Available rewards may change." },
-    { title: "Music Bot", text: "Music Bot information and verified commands are not yet documented here." },
+    { title: "Find your stream space", text: "Open upreal_’s Garticverse space to explore the stream’s world.", href: "https://garticverse.com/s/upreal_", action: "Open upreal_’s space", external: true },
+    { title: "Your Twitch identity", text: "Rewards are attached to your Twitch account. Sign in with that account to check your collection. A repeated delivery of the same reward does not grant another copy.", href: "/my-collection", action: "Check your collection" },
   ] },
 };
+
+guides.commands = guides.stream;
 
 export default async function GuidePage({ params }: { params: Promise<{ topic: string }> }) {
   const { topic } = await params;
@@ -50,12 +57,15 @@ export default async function GuidePage({ params }: { params: Promise<{ topic: s
     const available = new Set(candidates.map((item) => item.rarity));
     rates = rules.filter((rule) => available.has(rule.rarity)).sort((a, b) => PULL_RARITIES.indexOf(a.rarity as typeof PULL_RARITIES[number]) - PULL_RARITIES.indexOf(b.rarity as typeof PULL_RARITIES[number]));
   }
+  const stories = topic === "lore" ? await prisma.upman.findMany({ where: publicUpmanWhere, orderBy: [{ createdAt: "asc" }, { slug: "asc" }], select: { slug: true, name: true, image: true, creator: true, rarity: true } }) : [];
+  const pools = topic === "pulls" ? await prisma.upman.groupBy({ by: ["rarity"], where: { isPullable: true, rarity: { in: [...PULL_RARITIES] } }, _count: { _all: true } }) : [];
   const totalWeight = rates.reduce((sum, rule) => sum + rule.weight, 0);
   return <main className={styles.page}>
     <header className={styles.hero}><span className={styles.eyebrow}>✦ UPMANDEX CLOUD GUIDE</span><h1>{guide.title}</h1><p>{guide.intro}</p></header>
     <div className={styles.grid}>
-      {topic === "pulls" && <section className={styles.card}><h2>Current eligible chances</h2>{totalWeight > 0 ? <><ul className={styles.rates}>{rates.map((rule) => <li key={rule.rarity}>{rule.rarity} · {new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(rule.weight / totalWeight * 100)}%</li>)}</ul><p>Calculated from enabled weights and currently eligible Upmans; chances can change.</p></> : <p>No eligible pull rarities are currently configured.</p>}</section>}
-      {guide.cards.map((card) => <section id={card.id} key={card.title} className={styles.card}><h2>✧ {card.title}</h2><p>{card.text}</p>{card.href && (card.external ? <a href={card.href} target="_blank" rel="noopener noreferrer">{card.action} ↗ <span className="sr-only">(opens in a new tab)</span></a> : <Link href={card.href}>{card.action} →</Link>)}</section>)}
+      {topic === "pulls" && <section className={styles.card}><h2>Current eligible chances</h2>{totalWeight > 0 ? <><ul className={styles.rates}>{rates.map((rule) => <li key={rule.rarity} className={styles.rateRow}><strong>{rule.rarity} · {new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(rule.weight / totalWeight * 100)}%</strong><meter min={0} max={100} value={rule.weight / totalWeight * 100} aria-label={`${rule.rarity} chance`} /><small>Each eligible Upman in this rarity has an equal share of its rarity chance.</small></li>)}</ul><p>Calculated from enabled weights and currently eligible Upmans; chances can change. After the rarity is selected, one eligible Upman is chosen uniformly.</p><p>For one specific Upman: rarity chance ÷ the number of eligible Upmans in that rarity. Eligible pool sizes: {pools.map((pool) => `${pool.rarity}: ${pool._count._all}`).join(" · ")}.</p></> : <p>No eligible pull rarities are currently configured.</p>}</section>}
+      {guide.cards.map((card) => <section id={card.id} key={card.title} className={styles.card}>{card.image && <Image className={styles.portalImage} src={card.image} alt={`${card.title} site identity`} width={640} height={300} unoptimized />}<h2>✧ {card.title}</h2><p>{card.text}</p>{card.href && (card.external ? <a href={card.href} target="_blank" rel="noopener noreferrer">{card.action} ↗ <span className="sr-only">(opens in a new tab)</span></a> : <Link href={card.href}>{card.action} →</Link>)}</section>)}
+      {stories.map((upman) => <article className={styles.card} key={upman.slug}><Image className={styles.loreImage} src={upman.image} alt={upman.name} width={320} height={200} /><span className={styles.status}>{upman.rarity}</span><h2>{upman.name}</h2><p>Created by {upman.creator}.</p><Link href={`/upmans/${upman.slug}`}>Meet {upman.name} →</Link></article>)}
     </div>
     <nav className={styles.footer} aria-label="Related destinations"><Link className={styles.action} href="/upmans">Explore the Dex →</Link><Link className={styles.action} href="/community">Meet the community →</Link></nav>
   </main>;

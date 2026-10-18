@@ -14,7 +14,7 @@ const menus: Menu[] = [
   { label: "Upmandex", intro: "Meet the faces in the clouds.", icon: "☁", items: [
     { label: "Explore the Dex", detail: "Discover every public Upman", icon: "✦", href: "/upmans" },
     { label: "Pull Chances", detail: "How rarity chances work", icon: "✧", href: "/guides/pulls" },
-    { label: "Twitch Commands", detail: "Stream interactions and commands", icon: "⌘", href: "/guides/stream#commands" },
+    { label: "Twitch Commands", detail: "Stream interactions and commands", icon: "⌘", href: "/guides/commands" },
     { label: "Upman Lore", detail: "Meet the world and its creators", icon: "☼", href: "/guides/lore" },
   ] },
   { label: "Collection", intro: "Your discoveries, all in one sky.", icon: "✧", items: [
@@ -24,16 +24,16 @@ const menus: Menu[] = [
     { label: "Achievements", detail: "Explore the achievement gallery", icon: "✦", href: "/achievements" },
   ] },
   { label: "Community", intro: "A sky shared by many explorers.", icon: "✺", items: [
-    { label: "Leaderboards", detail: "Meet the top collectors and creators", icon: "♛", href: "/community#leaderboards" },
-    { label: "Cloud Members", detail: "Find community members", icon: "☁", href: "/community#cloud-members" },
-    { label: "Top Creators", detail: "Discover the people creating Upmans", icon: "✎", href: "/community#top-creators" },
-    { label: "Community Highlights", detail: "Explore shared discoveries", icon: "✦", href: "/community#community-highlights" },
+    { label: "Leaderboards", detail: "Explore the collector ranking", icon: "♛", href: "/community/leaderboards" },
+    { label: "Cloud Members", detail: "Find community members", icon: "☁", href: "/community/members" },
+    { label: "Top Creators", detail: "Discover the people creating Upmans", icon: "✎", href: "/community/creators" },
+    { label: "Community Highlights", detail: "Explore shared discoveries", icon: "✦", href: "/community/highlights" },
   ] },
   { label: "Cloud Worlds", intro: "Creative corners of the community.", icon: "✵", items: [
     { label: "Other Websites", detail: "Visit neighbouring creative worlds", icon: "☁", href: "/guides/worlds" },
     { label: "Art", detail: "Artwork made by the community", icon: "✎", href: "/art" },
     { label: "Projects", detail: "Little ideas shared by the community", icon: "✧", href: "/projects" },
-    { label: "Stream", detail: "Visit upreal_ and learn about the stream", icon: "◷", href: "/guides/stream" },
+    { label: "Stream", detail: "Visit upreal_ and learn about the stream", icon: "◷", href: "https://garticverse.com/s/upreal_" },
   ] },
   { label: "My Profile", intro: "Make your own corner of the sky.", icon: "✿", auth: true, items: [
     { label: "My Profile", detail: "Open your linked Person profile", icon: "☁", href: "/profile" },
