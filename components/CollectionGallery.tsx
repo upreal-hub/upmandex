@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import ui from "./GalleryControls.module.css";
+import clouds from "./DexSkyControls.module.css";
 import styles from "./CollectionGallery.module.css";
 import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
@@ -93,11 +94,11 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
         </div>
       </section>
 
-      <section id="collection-controls" tabIndex={-1} className={ui.panel} aria-label="Browse your collection">
+      <section id="collection-controls" tabIndex={-1} className={`${ui.panel} ${styles.collectionControls}`} aria-label="Browse your collection">
         <div className={ui.panelHeading}><h2>Your collection, your way</h2><p>Revisit your discoveries or find the faces still missing from your sky.</p></div>
         <fieldset className={ui.fieldset}>
           <legend>Show Upmans</legend>
-          <div className={ui.segmented}>
+          <div className={`${ui.segmented} ${styles.collectionViews}`}>
             {collectionViews.map((item) => (
               <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)}>{item}<small>{viewCounts[item]}</small></button>
             ))}
@@ -105,9 +106,9 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
         </fieldset>
         <fieldset className={ui.fieldset}>
           <legend>Rarity <span>Combine with the view above</span></legend>
-          <div className={ui.chips}>
+          <div className={clouds.chips}>
             {rarities.map((item) => (
-              <button key={item} type="button" aria-pressed={rarity === item} className={`${ui.chip} ${ui[item.toLowerCase()]}`} onClick={() => setRarity(item)}>{item}</button>
+              <button key={item} type="button" aria-pressed={rarity === item} className={`${clouds.chip} ${clouds[item.toLowerCase()]}`} onClick={() => setRarity(item)}>{item}</button>
             ))}
           </div>
         </fieldset>
