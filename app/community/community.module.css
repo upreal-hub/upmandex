@@ -19,3 +19,23 @@
 .destinationTabs { display:flex; flex-wrap:wrap; gap:.65rem; margin:0 0 2rem; }.destinationTabs a { padding:.8rem 1.1rem; border:2px solid var(--line); border-radius:2rem; background:var(--surface-strong); color:var(--ink); font-weight:850; }.destinationTabs a[aria-current="page"] { background:var(--navy); color:var(--surface-strong); border-color:var(--navy); }.destinationTabs a:focus-visible { outline:3px solid #efb43d; outline-offset:3px; }
 
 .podiums { grid-template-columns:1fr; }.podiums:empty { display:none; }.destinationTabs { margin-top:2rem; }.hero h1 { overflow-wrap:anywhere; }
+
+/* A fixed image stage prevents unusually shaped artwork from expanding the grid. */
+.dexArtwork { min-height: 0; height: 100%; overflow: hidden; place-items: center; padding: .8rem; }
+.dexArtwork img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+.artFallback { color: var(--ink-soft); font-size: 2.3rem; }
+
+.leaderboard { margin-top: 1.8rem; }
+.leaderboardControls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; }
+.leaderboardFilters { display:flex; flex-wrap:wrap; gap:.5rem; }
+.leaderboardFilters button, .myCollectionLink { padding:.7rem 1rem; border:1px solid var(--line); border-radius:999px; color:var(--ink); background:var(--surface-strong); font:800 .8rem var(--display-font); cursor:pointer; text-decoration:none; }
+.leaderboardFilters button[aria-pressed="true"] { background:var(--navy); color:var(--surface-strong); }
+.leaderboardFilters button:focus-visible, .myCollectionLink:focus-visible, .winnerLinks a:focus-visible { outline:3px solid #efb43d; outline-offset:3px; }
+.cloudPodium { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; gap:1rem; margin:2rem 0 0; padding:0; list-style:none; }
+.cloudWinner { display:flex; flex-direction:column; align-items:center; min-width:0; min-height:14rem; padding:1.25rem .8rem; border:1px solid var(--line); border-radius:45% 48% 28% 28% / 30% 30% 20% 20%; background:radial-gradient(ellipse at 50% 0%,#c8f1ff80,transparent 65%),var(--surface-strong); box-shadow:0 10px 0 #79c8df35,0 18px 30px #4697b023; text-align:center; }
+.cloudWinner[data-rank="1"] { order:2; min-height:16rem; border-color:#e8c369; background:radial-gradient(ellipse at 50% 0%,#f8df8d99,transparent 65%),var(--surface-strong); box-shadow:0 10px 0 #e7c06748,0 15px 35px #e0b44835; }
+.cloudWinner[data-rank="2"] { order:1; }.cloudWinner[data-rank="3"] { order:3; }
+.winnerRank { color:#ac7822; font:900 1rem var(--display-font); }.cloudWinner img, .winnerAvatar { width:4.2rem; height:4.2rem; margin:.55rem 0; border:3px solid var(--surface-strong); border-radius:50%; object-fit:cover; background:var(--surface); }.winnerAvatar { display:grid; place-items:center; font-size:1.8rem; }
+.cloudWinner strong { max-width:100%; overflow-wrap:anywhere; color:var(--ink); }.cloudWinner small { color:var(--ink-soft); }.winnerScore { margin:.5rem 0; color:var(--ink); font-weight:800; font-size:.8rem; }.winnerLinks { display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem; }.winnerLinks a { color:var(--ink); font-size:.72rem; font-weight:800; }
+.rankingList { margin:2rem 0 0; padding:0; list-style:none; border-top:1px solid var(--line); }.rankingRow { display:grid; grid-template-columns:2rem minmax(0,1fr) auto auto; align-items:center; gap:1rem; padding:.8rem .3rem; border-bottom:1px solid var(--line); }.rankingRow .podiumLinks { grid-column:auto; }.rankingScore { font-size:.8rem; white-space:nowrap; }
+@media(max-width:600px) { .cloudPodium { gap:.4rem; }.cloudWinner { padding:1rem .3rem; min-height:13rem; border-radius:2.5rem 2.2rem 1.5rem 1.5rem; }.cloudWinner[data-rank="1"] { min-height:14rem; }.cloudWinner img,.winnerAvatar { width:3rem; height:3rem; }.cloudWinner strong { font-size:.78rem; }.cloudWinner small { font-size:.64rem; }.winnerLinks { flex-direction:column; gap:.3rem; }.rankingRow { grid-template-columns:2rem minmax(0,1fr) auto; gap:.45rem; }.rankingRow .podiumLinks { grid-column:2 / -1; }.rankingScore { font-size:.7rem; } }

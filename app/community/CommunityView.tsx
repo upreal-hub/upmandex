@@ -7,6 +7,8 @@ import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/up
 import { publicInventoryWhere, publicUpmanWhere } from "@/lib/upman-visibility";
 
 import { CommunityMembersRoster } from "./CommunityMembersRoster";
+import { CommunityLeaderboard } from "./CommunityLeaderboard";
+import { CommunityArtwork } from "./CommunityArtwork";
 import styles from "./community.module.css";
 
 export const dynamic = "force-dynamic";
@@ -177,19 +179,10 @@ export async function CommunityView({ view = "members" }: { view?: "members" | "
 
       <nav className={styles.destinationTabs} aria-label="Community destinations">{([['members', 'Cloud Members'], ['leaderboards', 'Leaderboards'], ['creators', 'Top Creators'], ['highlights', 'Community Highlights']] as const).map(([key, label]) => <Link key={key} href={`/community/${key}`} aria-current={view === key ? "page" : undefined}>{label}</Link>)}</nav>
       {view !== "highlights" && <section className={styles.members} aria-labelledby="community-members-heading">
-        <SectionHeading eyebrow="THE PEOPLE EXPLORING" heading={view === "members" ? "COMMUNITY MEMBERS" : view === "creators" ? "CREATOR RANKING" : "COLLECTOR RANKING"} detail={`${communityMembers} ${communityMembers === 1 ? "member" : "members"}`} headingId="community-members-heading" />
+        <SectionHeading eyebrow="THE PEOPLE EXPLORING" heading={view === "members" ? "COMMUNITY MEMBERS" : view === "creators" ? "CREATOR RANKING" : "COMMUNITY RANKING"} detail={`${communityMembers} ${communityMembers === 1 ? "member" : "members"}`} headingId="community-members-heading" />
 
+        {view === "leaderboards" && <CommunityLeaderboard totalUpmans={totalUpmans} collectors={topCollectors} creators={topCreators} />}
         <div id="leaderboards" className={styles.podiums} aria-label="Community member highlights">
-          {view === "leaderboards" && <Podium title="TOP COLLECTORS" subtitle="The explorers closest to a complete public Dex.">
-            {topCollectors.length > 0 ? topCollectors.map((member, index) => (
-              <article key={member.id} className={styles.podiumEntry}>
-                <span className={styles.rank} aria-label={`Rank ${index + 1}`}>{index + 1}</span>
-                <Identity avatar={member.avatar} name={member.displayName} login={member.twitchLogin} />
-                <div className={styles.podiumMetric}><strong>{member.collectedCount} <span>/ {totalUpmans}</span></strong><small>{formatPercentage(percentage(member.collectedCount, totalUpmans))} complete</small></div>
-                <MemberLinks member={member} />
-              </article>
-            )) : <EmptyPanel message="The first active collector is still waiting for a cloud to find." />}
-          </Podium>}
 
           {view === "creators" && <Podium id="top-creators" title="TOP CREATORS" subtitle="People who have brought new public Upmans into the world.">
             {topCreators.length > 0 ? topCreators.map((creator, index) => (
@@ -271,10 +264,6 @@ function Identity({ avatar, name, login }: { avatar: string | null; name: string
   </div>;
 }
 
-function MemberLinks({ member }: { member: Member }) {
-  return <div className={styles.podiumLinks}><Link href={`/collection/${encodeURIComponent(member.twitchLogin)}`}>Collection <span aria-hidden="true">↗</span></Link>{member.person && <Link href={`/people/${member.person.id}`}>Profile <span aria-hidden="true">↗</span></Link>}</div>;
-}
-
 function EmptyPanel({ message }: { message: string }) {
   return <p className={styles.emptyPanel}>{message}</p>;
 }
@@ -302,7 +291,7 @@ function CommunityDexCard({ upman }: { upman: CommunityUpman }) {
 
   return (
     <Link href={`/upmans/${upman.slug}`} className={`${styles.dexCard} ${rarityClass(upman.rarity)}`} aria-label={`View ${upman.name}, ${getUpmanRarityLabel(upman.rarity)}, ${upman.ownerCount} ${upman.ownerCount === 1 ? "owner" : "owners"}`}>
-      <span className={styles.dexArtwork}><Image src={upman.image} alt={upman.name} width={240} height={210} sizes="(max-width: 520px) 40vw, (max-width: 900px) 27vw, 15rem" /></span>
+      <span className={styles.dexArtwork}><CommunityArtwork src={upman.image} name={upman.name} /></span>
       <span className={styles.dexInfo}><small className={`${styles.dexRarity} ${upman.rarity === "Secret" ? "rarity-secret" : upman.rarity === "Event" ? "rarity-event" : ""}`}>{getUpmanRarityLabel(upman.rarity)}</small><strong>{upman.name}</strong><em>{upman.ownerCount} {upman.ownerCount === 1 ? "owner" : "owners"}</em></span>
     </Link>
   );
