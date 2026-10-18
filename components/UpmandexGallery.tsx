@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import ui from "./GalleryControls.module.css";
 import styles from "./UpmandexGallery.module.css";
 import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
@@ -69,37 +70,30 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
 
   return (
     <>
-      <div className={styles.controls}>
-        <label className={styles.searchLabel}>
-          <span className="sr-only">Search the Upmandex</span>
-          <span aria-hidden="true" className={styles.searchIcon}>⌕</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search an Upman or creator..."
-            className={styles.searchInput}
-          />
+      <section className={ui.panel} aria-label="Explore the Upmandex">
+        <div className={ui.panelHeading}><h2>Find your next favourite</h2><p>A name, a creator, a rarity — see where the clouds take you.</p></div>
+        <label className={ui.searchLabel}>
+          <span>Search the Dex</span>
+          <span className={ui.searchField}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="10" cy="10" r="6.5" /><path d="m15 15 5 5" /></svg>
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Upman name or creator…" />
+          </span>
         </label>
-
-        <div className={styles.filters} aria-label="Filter Upmans by rarity">
-          {rarities.map((rarity) => {
-            const isSelected = rarity === selectedRarity;
-            return (
-              <button
-                key={rarity}
-                type="button"
-                onClick={() => setSelectedRarity(rarity)}
-                className={`${styles.filter} ${rarity === "All" ? styles.all : rarityClassNames[rarity]} ${isSelected ? styles.selected : ""}`}
-                aria-pressed={isSelected}
-              >
-                <span>{rarity === "All" ? "All" : rarity}</span>
-                <small>{rarityCounts[rarity]}</small>
+        <fieldset className={ui.fieldset}>
+          <legend>Rarity <span>Choose one to narrow your search</span></legend>
+          <div className={ui.chips}>
+            {rarities.map((rarity) => (
+              <button key={rarity} type="button" onClick={() => setSelectedRarity(rarity)}
+                className={`${ui.chip} ${ui[rarity.toLowerCase()]}`} aria-pressed={rarity === selectedRarity}>
+                <span>{rarity}</span><small>{rarityCounts[rarity]}</small>
               </button>
-            );
-          })}
+            ))}
+          </div>
+        </fieldset>
+        <div className={ui.resultRow}>
+          <p role="status" aria-live="polite" aria-atomic="true"><strong>{filteredUpmans.length}</strong> of {upmans.length} Upman{upmans.length === 1 ? "" : "s"}{query.trim() || selectedRarity !== "All" ? " match your filters" : " ready to discover"}</p>
+          <button className={ui.reset} type="button" disabled={!query && selectedRarity === "All"} onClick={() => { setQuery(""); setSelectedRarity("All"); }}>Reset filters</button>
         </div>
-      </div>
+      </section>
 
       {(collection || showConnectMessage) && (
         <aside className={styles.collectionContext}>
@@ -113,12 +107,6 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
           )}
         </aside>
       )}
-
-      <p className={styles.results} aria-live="polite">
-        {filteredUpmans.length === upmans.length
-          ? `${upmans.length} Upman${upmans.length === 1 ? "" : "s"} in the Dex`
-          : `${filteredUpmans.length} matching Upman${filteredUpmans.length === 1 ? "" : "s"}`}
-      </p>
 
       {filteredUpmans.length > 0 ? (
         <div className={styles.gallery}>

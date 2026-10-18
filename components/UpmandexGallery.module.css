@@ -31,3 +31,6 @@
 @media (min-width: 1500px) { .gallery { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2.3rem 1rem; }.entry { min-height: 21.6rem; grid-template-rows: 12.8rem auto; }.artwork { padding: 0 .25rem; }.artwork img { max-height: 13.45rem; }.entry::before { bottom: 3.95rem; height: 6.1rem; }.entry::after { bottom: 3.45rem; width: 6.8rem; }.info { padding: .82rem .62rem .95rem; }.info h2 { font-size: clamp(1.03rem, 1.45vw, 1.28rem); }.creator { font-size: .64rem; }.rarity { font-size: .57rem; }.creatorIdentity { margin-top: .45rem; font-size: .64rem; }.creatorIdentity img { width: 1.35rem; height: 1.35rem; }.owned { margin-top: .58rem; font-size: .64rem; } }
 @media (min-width: 701px) and (max-width: 1150px) { .gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); }.entry { min-height: 22.4rem; grid-template-rows: 13.65rem auto; }.artwork img { max-height: 14.1rem; }.info { padding-right: .85rem; padding-left: .85rem; } }
 @media (min-width: 701px) and (max-width: 900px) { .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }.entry { min-height: 23.5rem; grid-template-rows: 14.5rem auto; }.artwork img { max-height: 15rem; } }
+
+.collectionContext { width: 100%; margin: 1rem 0 2rem; border-radius: 1.2rem; }
+.collectionContext a { color: var(--ink); min-height: 2.75rem; display: inline-flex; align-items: center; }

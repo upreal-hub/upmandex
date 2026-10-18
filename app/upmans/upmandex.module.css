@@ -4,3 +4,23 @@
 :global(html[data-theme="night"]) .page::before { background: radial-gradient(ellipse 36rem 9rem at -12% 19%, color-mix(in srgb, var(--cloud-soft) 82%, transparent) 0 30%, transparent 31%), radial-gradient(ellipse 34rem 10rem at 111% 35%, color-mix(in srgb, var(--cloud-soft) 76%, transparent) 0 30%, transparent 31%), radial-gradient(ellipse 44rem 13rem at -18% 62%, color-mix(in srgb, var(--cloud) 80%, #224f76) 0 33%, transparent 34%), radial-gradient(ellipse 43rem 12rem at 117% 69%, color-mix(in srgb, var(--cloud) 80%, #224f76) 0 33%, transparent 34%), radial-gradient(ellipse 49rem 15rem at 43% 101%, color-mix(in srgb, var(--cloud) 94%, #315f86) 0 35%, transparent 36%); }
 .header h1 { text-shadow:.08rem .1rem 0 color-mix(in srgb,#bfeeff 62%,transparent),.18rem .22rem .6rem color-mix(in srgb,#3b9ac7 16%,transparent); }.header::after{display:block;width:8rem;height:.38rem;margin-top:.8rem;border-radius:999px;background:linear-gradient(90deg,#75cbe9,transparent);content:"";}
 @media (max-width: 620px) { .page { padding-top: 3rem; }.page::before { top: -2rem; bottom: -4rem; background: radial-gradient(ellipse 26rem 7rem at -28% 24%, color-mix(in srgb, var(--cloud-soft) 76%, transparent) 0 31%, transparent 32%), radial-gradient(ellipse 28rem 8rem at 130% 45%, color-mix(in srgb, var(--cloud-soft) 70%, transparent) 0 31%, transparent 32%), radial-gradient(ellipse 33rem 10rem at -32% 71%, color-mix(in srgb, var(--cloud) 75%, #e7f8ff) 0 34%, transparent 35%), radial-gradient(ellipse 35rem 11rem at 132% 83%, color-mix(in srgb, var(--cloud) 77%, #e7f8ff) 0 34%, transparent 35%), radial-gradient(ellipse 38rem 12rem at 50% 102%, color-mix(in srgb, var(--cloud) 94%, #f6fdff) 0 36%, transparent 37%); }.header h1 { font-size: clamp(3.35rem, 16vw, 5rem); }.intro { max-width: 22rem; }.count { margin-top: .8rem; }:global(html[data-theme="night"]) .page::before { background: radial-gradient(ellipse 26rem 7rem at -28% 24%, color-mix(in srgb, var(--cloud-soft) 84%, transparent) 0 31%, transparent 32%), radial-gradient(ellipse 28rem 8rem at 130% 45%, color-mix(in srgb, var(--cloud-soft) 78%, transparent) 0 31%, transparent 32%), radial-gradient(ellipse 33rem 10rem at -32% 71%, color-mix(in srgb, var(--cloud) 80%, #224f76) 0 34%, transparent 35%), radial-gradient(ellipse 35rem 11rem at 132% 83%, color-mix(in srgb, var(--cloud) 80%, #224f76) 0 34%, transparent 35%), radial-gradient(ellipse 38rem 12rem at 50% 102%, color-mix(in srgb, var(--cloud) 94%, #315f86) 0 36%, transparent 37%); } }
+
+/* Phase 2: a compact introduction with a readable guide. */
+.page { padding-top: clamp(1.8rem, 4vw, 3.5rem); }
+.header { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(17rem, .8fr); align-items: center; gap: clamp(2rem, 5vw, 4rem); max-width: none; }
+.header::after { display: none; }
+.heroCopy { min-width: 0; }
+.kicker { margin: 0 0 1rem; color: var(--ink-soft); font-family: var(--display-font); font-size: .75rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.header h1 { font-size: clamp(3.5rem, 7.7vw, 6.4rem); letter-spacing: -.09em; line-height: .95; }
+.intro { margin-top: 1.3rem; font-weight: 500; line-height: 1.75; text-wrap: pretty; }
+.count { margin-top: 1.1rem; min-height: 2rem; align-items: center; }
+.guide { padding: 1.5rem 1.6rem; border: 1px solid var(--line); border-radius: 2rem 2.6rem 2.2rem 2.4rem; background: var(--surface); }
+.guideTitle { margin: 0 0 1.1rem; color: var(--ink); font-family: var(--display-font); font-weight: 900; font-size: 1rem; }
+.guide ol { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; counter-reset: cloud-guide; }
+.guide li { position: relative; padding-left: 2.3rem; counter-increment: cloud-guide; }
+.guide li::before { content: counter(cloud-guide, decimal-leading-zero); position: absolute; left: 0; top: .1rem; color: var(--ink-soft); font-size: .7rem; font-weight: 800; }
+.guide strong, .guide li span { display: block; }
+.guide strong { color: var(--ink); font-size: .84rem; }
+.guide li span { margin-top: .2rem; color: var(--ink-soft); font-size: .78rem; line-height: 1.6; }
+@media (max-width: 760px) { .header { grid-template-columns: 1fr; gap: 1.4rem; }.header h1 { font-size: clamp(3rem, 13vw, 5.5rem); }.guide { padding: 1.2rem; }.guide ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }.guide li { padding: 1.5rem 0 0; }.guide li::before { top: 0; } }
+@media (max-width: 420px) { .guide ol { grid-template-columns: 1fr; }.guide li { padding: 0 0 0 2rem; } }

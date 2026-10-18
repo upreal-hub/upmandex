@@ -16,5 +16,5 @@ export default function SkyAtmosphere() {
     preference.addEventListener("change", reveal);
     return () => { observer.disconnect(); reveal(); preference.removeEventListener("change", reveal); };
   }, [pathname]);
-  return <div className="living-sky" aria-hidden="true"><div className="night-stars" /><span className="ambient-cloud ambient-cloud-one" /><span className="ambient-cloud ambient-cloud-two" /></div>;
+  return <div className="living-sky" aria-hidden="true"><div className="night-stars" /><div className="night-stars night-stars-near" /><div className="night-stars night-stars-far" /><span className="ambient-cloud ambient-cloud-one" /><span className="ambient-cloud ambient-cloud-two" /></div>;
 }

@@ -62,10 +62,20 @@ export default async function UpmansPage() {
   return (
     <main className={`upmandex-page ${styles.page}`}>
       <header className={styles.header}>
-        <p>Every known cloud creature</p>
-        <h1>UPMANDEX</h1>
-        <span className={styles.count}>{upmans.length} Upman{upmans.length === 1 ? "" : "s"}</span>
-        <p className={styles.intro}>Discover every Upman in the Dex and the people behind them.</p>
+        <div className={styles.heroCopy}>
+          <p className={styles.kicker}>A little world. Plenty to discover.</p>
+          <h1>UPMANDEX</h1>
+          <p className={styles.intro}>Every cloud has a curious face. Find your favourite Upmans, meet their creators, and discover the stories that make each one unique.</p>
+          <span className={styles.count}>{upmans.length} Upman{upmans.length === 1 ? "" : "s"} to discover</span>
+        </div>
+        <aside className={styles.guide} aria-label="How to explore the Dex">
+          <p className={styles.guideTitle}>Your guide to the clouds</p>
+          <ol>
+            <li><strong>Find a familiar face</strong><span>Search by Upman name or creator.</span></li>
+            <li><strong>Follow your curiosity</strong><span>Pick a rarity to explore a little further.</span></li>
+            <li><strong>Get to know an Upman</strong><span>Open a card for its story and details.</span></li>
+          </ol>
+        </aside>
       </header>
 
       <UpmandexGallery

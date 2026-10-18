@@ -54,7 +54,7 @@ export default async function MyCollectionPage() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={user.avatar} alt="" className={styles.avatar} />
         )}
-        <div><p>Your part of the cloud world</p><h1>MY COLLECTION</h1><p className={styles.identity}><strong>{user.displayName}</strong> · @{user.twitchLogin}</p></div>
+        <div><p>Your part of the cloud world</p><h1>MY COLLECTION</h1><p className={styles.identity}><strong>{user.displayName}</strong> · @{user.twitchLogin}</p><span className={styles.subtitle}>Every discovery gives your sky a little more character.</span></div>
       </header>
       <CollectionGallery upmans={entries} ownedCount={user.inventory.length} />
     </main>
@@ -67,7 +67,8 @@ function LoggedOutCollection() {
       <section className={styles.login}>
         <p>Your part of the cloud world</p>
         <h1>MY COLLECTION</h1>
-        <span>Your Upman collection is linked to Twitch. Connect to see every cloud you have found.</span>
+        <span>Your little sky starts here. Connect with Twitch to see the Upmans you’ve collected, track your progress by rarity, and discover the faces still waiting to join you.</span>
+        <div className={styles.loginBenefits} aria-label="Your collection at a glance"><span>✓ Your discoveries</span><span>◌ Your progress</span><span>☁ Your next favourites</span></div>
         <LoginButton />
       </section>
     </main>

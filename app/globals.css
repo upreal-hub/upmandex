@@ -261,3 +261,20 @@ html[data-theme="night"] .destination-card::before, html[data-theme="night"] .de
 @media (max-width: 350px) { .brand-mark { font-size: 1rem; } .site-nav-actions { gap: .2rem; } .twitch-login-button { padding: .5rem; } }
 @media (prefers-reduced-motion: reduce) { .awaiting-sky { opacity: 1; translate: none; } }
 html[data-theme="night"] .destination-card p { color: var(--ink-soft); } html[data-theme="night"] .destination-card > b { color: #183e65; }
+
+/* Phase 2: travel stays on the compositor; twinkles use staggered opacity layers. */
+.night-stars { animation: none; opacity: 0; transition: opacity .6s; background-image: radial-gradient(circle at 12% 17%, #ecf7ff 0 1px, transparent 1.8px), radial-gradient(circle at 79% 11%, #ecf7ff 0 1.5px, transparent 2px); }
+.night-stars-near { background-image: radial-gradient(circle at 34% 38%, #bedfff 0 1px, transparent 2px), radial-gradient(circle at 92% 62%, #ecf7ff 0 1px, transparent 2px); background-size: 41rem 35rem; }
+.night-stars-far { background-image: radial-gradient(circle at 57% 23%, #d0eaff 0 1px, transparent 2px), radial-gradient(circle at 21% 71%, #ecf7ff 0 1.2px, transparent 2px); background-size: 53rem 43rem; }
+.ambient-cloud { filter: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .ambient-cloud-one { animation: cloud-voyage 32s ease-in-out -8s infinite alternate; }
+  .ambient-cloud-two { animation: cloud-voyage-back 41s ease-in-out -22s infinite alternate; }
+  html[data-theme="night"] .night-stars { animation: star-breath 8.3s linear -2.1s infinite; }
+  html[data-theme="night"] .night-stars-near { animation: star-breath 11.7s linear -7.4s infinite reverse; }
+  html[data-theme="night"] .night-stars-far { animation: star-breath 14.9s linear -4.6s infinite; }
+}
+@keyframes cloud-voyage { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(clamp(9rem, 24vw, 24rem), 1rem, 0); } }
+@keyframes cloud-voyage-back { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(clamp(-24rem, -24vw, -9rem), -1.5rem, 0); } }
+@keyframes star-breath { 0%, 100% { opacity: .5; } 17% { opacity: .75; } 29% { opacity: .6; } 53% { opacity: .85; } 68% { opacity: .55; } 83% { opacity: .7; } }
+@media (prefers-reduced-motion: reduce) { .ambient-cloud, .night-stars { animation: none !important; }.night-stars { transition: none; } }

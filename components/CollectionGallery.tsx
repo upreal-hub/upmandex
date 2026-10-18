@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import ui from "./GalleryControls.module.css";
 import styles from "./CollectionGallery.module.css";
 import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
@@ -53,58 +54,77 @@ export default function CollectionGallery({ upmans, ownedCount }: Props) {
   }), [rarity, upmans, view]);
 
   const total = upmans.length;
+  const missingCount = upmans.filter((upman) => !upman.owned).length;
+  const viewCounts = { All: total, Collected: total - missingCount, Missing: missingCount };
   const completion = total > 0 ? Math.round((ownedCount / total) * 100) : 0;
 
   return (
     <>
       <section className={styles.progress} aria-label="Collection progress">
         <div className={styles.overall}>
-          <p>Your cloud shelf</p>
+          <p>Your little sky, growing</p>
           <strong>{ownedCount} <span>/ {total}</span></strong>
-          <span>Upmans collected</span>
+          <span>Upmans collected · across every rarity</span>
         </div>
         <div className={styles.completion}>
-          <strong>{completion}%</strong>
-          <span>complete</span>
-          <div className={styles.track} aria-label={`${completion}% complete`}><i style={{ width: `${completion}%` }} /></div>
+          <strong>{completion}<span>%</span></strong>
+          <span>of your collection complete</span>
+          <div className={styles.track} role="progressbar" aria-label="Overall collection completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, completion)} aria-valuetext={`${ownedCount} of ${total} Upmans collected`}><i style={{ width: `${Math.min(100, completion)}%` }} /></div>
+        </div>
+        <div className={styles.nextStep}>
+          <p>{total === 0 ? "Your cloud shelf is ready for new arrivals." : missingCount === 0 ? "Every Upman has found a place in your sky. What a collection!" : <><strong>{missingCount} more {missingCount === 1 ? "face" : "faces"} to discover.</strong> Every little cloud adds a new story.</>}</p>
+          {missingCount > 0 && <a href="#collection-controls" onClick={() => { setView("Missing"); setRarity("All"); }}>See what’s missing <span aria-hidden="true">→</span></a>}
         </div>
       </section>
 
-      <section className={styles.rarityProgress} aria-label="Rarity progress">
-        {rarityProgress.map((item) => {
-          const percentage = item.total > 0 ? (item.owned / item.total) * 100 : 0;
-          return (
-            <div key={item.rarity} className={`${styles.rarityItem} ${rarityClassNames[item.rarity]}`}>
-              <div><span>{item.rarity}</span><strong>{item.owned} / {item.total}</strong></div>
-              <i><b style={{ width: `${percentage}%` }} /></i>
-            </div>
-          );
-        })}
+      <section className={styles.raritySection} aria-labelledby="rarity-progress-title">
+        <div className={styles.breakdownHeading}><h2 id="rarity-progress-title">A little closer, rarity by rarity</h2><p>Collected / available in your collection</p></div>
+        <div className={styles.rarityProgress}>
+          {rarityProgress.map((item) => {
+            const percentage = item.total > 0 ? (item.owned / item.total) * 100 : 0;
+            return (
+              <div key={item.rarity} className={`${styles.rarityItem} ${rarityClassNames[item.rarity]}`}>
+                <div><span>{item.rarity}</span><strong>{item.owned} / {item.total}</strong></div>
+                <i role="progressbar" aria-label={`${item.rarity} collection completion`} aria-valuemin={0} aria-valuemax={item.total || 1} aria-valuenow={item.owned} aria-valuetext={item.total ? `${item.owned} of ${item.total} collected` : "No Upmans available in this rarity"}><b style={{ width: `${percentage}%` }} /></i>
+                <small>{item.total === 0 ? "No arrivals yet" : item.owned === item.total ? "All collected ✓" : `${item.total - item.owned} still to find`}</small>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
-      <div className={styles.controls}>
-        <div className={styles.viewControls} aria-label="Collection view">
-          {collectionViews.map((item) => (
-            <button key={item} type="button" aria-pressed={view === item} className={`${styles.viewButton} ${view === item ? styles.selected : ""}`} onClick={() => setView(item)}>{item}</button>
-          ))}
+      <section id="collection-controls" tabIndex={-1} className={ui.panel} aria-label="Browse your collection">
+        <div className={ui.panelHeading}><h2>Your collection, your way</h2><p>Revisit your discoveries or find the faces still missing from your sky.</p></div>
+        <fieldset className={ui.fieldset}>
+          <legend>Show Upmans</legend>
+          <div className={ui.segmented}>
+            {collectionViews.map((item) => (
+              <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)}>{item}<small>{viewCounts[item]}</small></button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset className={ui.fieldset}>
+          <legend>Rarity <span>Combine with the view above</span></legend>
+          <div className={ui.chips}>
+            {rarities.map((item) => (
+              <button key={item} type="button" aria-pressed={rarity === item} className={`${ui.chip} ${ui[item.toLowerCase()]}`} onClick={() => setRarity(item)}>{item}</button>
+            ))}
+          </div>
+        </fieldset>
+        <div className={ui.resultRow}>
+          <p role="status" aria-live="polite" aria-atomic="true"><strong>{filtered.length}</strong> {view === "All" ? "Upmans" : `${view.toLowerCase()} Upman${filtered.length === 1 ? "" : "s"}`}{rarity !== "All" ? ` · ${rarity}` : " · all rarities"}</p>
+          <button className={ui.reset} type="button" disabled={view === "Collected" && rarity === "All"} onClick={() => { setView("Collected"); setRarity("All"); }}>Reset filters</button>
         </div>
-        <div className={styles.rarityControls} aria-label="Filter collection by rarity">
-          {rarities.map((item) => (
-            <button key={item} type="button" aria-pressed={rarity === item} className={`${styles.rarityButton} ${item === "All" ? styles.all : rarityClassNames[item]} ${rarity === item ? styles.selected : ""}`} onClick={() => setRarity(item)}>{item}</button>
-          ))}
-        </div>
-      </div>
-
-      <p className={styles.results} aria-live="polite">{filtered.length} {view.toLowerCase()} Upman{filtered.length === 1 ? "" : "s"}</p>
+      </section>
 
       {filtered.length > 0 ? (
         <div className={styles.gallery}>
           {filtered.map((upman) => <CollectionEntryCard key={upman.slug} upman={upman} />)}
         </div>
       ) : view === "Collected" ? (
-        <div className={styles.empty}><p>Your collection is waiting for its first Upman.</p><Link href="/upmans">Explore the Upmandex <span aria-hidden="true">→</span></Link></div>
+        <div className={styles.empty}><p>{ownedCount === 0 ? "Your first little cloud is still out there. Let’s meet the Upmans." : "No collected Upmans match this rarity yet."}</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button><Link href="/upmans">Explore the Upmandex <span aria-hidden="true">→</span></Link></div>
       ) : (
-        <div className={styles.empty}><p>No Upmans match this view.</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button></div>
+        <div className={styles.empty}><p>{view === "Missing" && missingCount === 0 && total > 0 ? "Nothing missing — every Upman has a place in your sky!" : "No Upmans match this view."}</p><button type="button" onClick={() => { setView("Collected"); setRarity("All"); }}>Reset collection filters</button></div>
       )}
     </>
   );
@@ -123,7 +143,7 @@ function CollectionEntryCard({ upman }: { upman: CollectionEntry }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={upman.creatorAvatar} alt="" />
       )}<span>@{upman.creatorTwitch}</span></p>}
-      {!upman.owned && <span className={styles.missingLabel}>Missing</span>}
+      <span className={upman.owned ? styles.ownedLabel : styles.missingLabel}><span aria-hidden="true">{upman.owned ? "✓" : "○"}</span> {upman.owned ? "Collected" : "Still to find"}</span>
     </div>
   </>;
 
