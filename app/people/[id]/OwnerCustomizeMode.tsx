@@ -25,7 +25,7 @@ export function useOwnerCustomizeMode() {
 
 export function OwnerCustomizeControls() {
   const { isCustomizeMode, setCustomizeMode } = useOwnerCustomizeMode();
-  return <nav className={styles.profileTabs} aria-label="My Profile"><button type="button" aria-pressed={!isCustomizeMode} onClick={() => setCustomizeMode(false)}>My Profile</button><button type="button" aria-pressed={isCustomizeMode} onClick={() => setCustomizeMode(true)}>✧ Customization</button></nav>;
+  return <nav className={styles.profileTabs} aria-label="My Profile"><button type="button" aria-pressed={!isCustomizeMode} onClick={() => setCustomizeMode(false)}>☁ My Profile</button><button type="button" aria-pressed={isCustomizeMode} onClick={() => setCustomizeMode(true)}>✧ Customization</button><a href="#person-creations" onClick={() => setCustomizeMode(false)}>✎ My Creations</a></nav>;
 }
 
 export function CustomizeModeOnly({ children }: { children: ReactNode }) {

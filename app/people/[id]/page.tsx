@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getAchievementCosmetic, getAchievementProgress } from "@/lib/achievements";
 import { auth } from "@/auth";
 import { normalizeTwitchLogin } from "@/lib/validation";
-import { publicUpmanWhere } from "@/lib/upman-visibility";
+import { collectionUpmanWhere, publicUpmanWhere } from "@/lib/upman-visibility";
 
 import AchievementsPanel from "./AchievementsPanel";
 import AchievementCustomization from "./AchievementCustomization";
@@ -96,6 +96,12 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
+  const collectionWhere = person.userId ? collectionUpmanWhere(person.userId, isOwner) : null;
+  const [skyTotal, skyOwned, skyLatest] = person.userId && collectionWhere ? await Promise.all([
+    prisma.upman.count({ where: collectionWhere }),
+    prisma.inventory.count({ where: { userId: person.userId, upman: collectionWhere } }),
+    prisma.inventory.findFirst({ where: { userId: person.userId, upman: collectionWhere }, orderBy: [{ obtainedAt: "desc" }, { id: "desc" }], select: { upman: { select: { name: true, slug: true } } } }),
+  ]) : [0, 0, null];
   const unlockedAchievements = achievementProgress?.families.flatMap((family) => family.milestones.map((milestone) => ({ key: milestone.key, family: family.key, name: family.name, label: milestone.label, category: family.category, unlocked: milestone.isUnlocked, trackable: milestone.trackable, current: milestone.displayCurrent, target: milestone.displayTarget, cosmetic: {
     title: getAchievementCosmetic(milestone.key, "title"),
     background: getAchievementCosmetic(milestone.key, "background"),
@@ -142,6 +148,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
               <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
             </CustomizeModeOnly>
           </div>}
+      {person.userId && person.user?.twitchLogin && <section className={styles.mySky} aria-labelledby="my-sky-title">
+        <div className={styles.skyIntro}><p className={styles.eyebrow}>✦ A LITTLE WORLD OF DISCOVERIES</p><h2 id="my-sky-title">{isOwner ? "My sky" : "Collection sky"}</h2><p>{skyOwned} of {skyTotal} Upmans discovered · {skyTotal ? Math.round(skyOwned / skyTotal * 100) : 0}% complete</p><progress max={skyTotal || 1} value={skyOwned} aria-label="Collection progress" /><Link href={isOwner ? "/my-collection" : `/collection/${encodeURIComponent(person.user.twitchLogin)}`}>{isOwner ? "My Collection" : "View collection"} →</Link></div>
+        <div className={styles.skyDetails}><div><span>✧ Latest discovery</span>{skyLatest ? <Link href={`/upmans/${encodeURIComponent(skyLatest.upman.slug)}`}>{skyLatest.upman.name}</Link> : <strong>No discoveries yet</strong>}</div><div><span>☁ Created Upmans</span><strong>{person.createdUpmans.length}</strong>{hasCreated && <a href="#person-creations">Explore creations →</a>}</div></div>
+      </section>}
       {achievementProgress && <AchievementsPanel progress={achievementProgress} personId={person.id} isOwner={isOwner} achievements={unlockedAchievements} featuredAchievements={featured} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} showCustomization={false} />}
 
       <div id="person-creations">{(hasCreativeContent || isOwner) && <OwnerCustomizeContent hasPublicContent={hasCreativeContent}><section className={styles.creativeSpace} aria-labelledby="creative-space-heading">

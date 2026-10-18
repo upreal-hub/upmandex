@@ -222,7 +222,7 @@ export default function AchievementCustomization({
             <div className={styles.galleryHeading}><div><p className={styles.eyebrow}>CHOOSE A REWARD</p><h3 id="cosmetic-gallery-title">{activeConfig.label}</h3></div><span>{options.length} unlocked</span></div>
             {(activeSlot === "background" || activeSlot === "banner") && <p className={styles.sourceHeading}>Achievement {activeConfig.label.toLowerCase()}s</p>}
             <div className={`${styles.galleryOptions} ${styles[`gallery${activeConfig.label}`]}`}>
-              <CosmeticOption slot={activeSlot} achievement={null} selected={previewLoadout[activeProperty] === null} equipped={equippedLoadout[activeProperty] === null} onPreview={() => previewOption(null)} />
+              <CosmeticOption slot={activeSlot} achievement={null} selected={previewLoadout[activeProperty] === null && (!activeCustomProperty || previewLoadout[activeCustomProperty] === null)} equipped={equippedLoadout[activeProperty] === null && (!activeCustomProperty || equippedLoadout[activeCustomProperty] === null)} onPreview={() => previewOption(null)} />
               {options.map((achievement) => {
                 const cosmetic = achievement.cosmetic[activeSlot];
                 const optionKey = previewSelection(achievement.key);
@@ -247,7 +247,7 @@ export default function AchievementCustomization({
           {error && <p className={styles.customizationError} role="alert">{error}</p>}
           {success && <p className={styles.customizationSuccess} role="status">{success}</p>}
 
-          <details className={styles.lockedRewards}><summary>More to discover <span>{lockedAchievements.length}</span></summary><div>{lockedAchievements.map((achievement) => <article key={achievement.key}><strong>{achievement.name} · {achievement.label}</strong><span>{achievement.trackable ? `${achievement.current} / ${achievement.target}` : "Tracking coming later"}</span><small>{achievement.cosmetic[activeSlot]?.label}</small></article>)}</div></details>
+          <details className={styles.lockedRewards}><summary>🔒 More to discover <span>{lockedAchievements.length}</span></summary><div>{lockedAchievements.map((achievement) => <article key={achievement.key}><strong>🔒 {achievement.cosmetic[activeSlot]?.label ?? achievement.name}</strong><span>{achievement.name} · {achievement.label}</span><small>{achievement.trackable ? `${achievement.current} / ${achievement.target}` : "Tracking coming later"}</small></article>)}</div></details>
         </section>
       </div>;
   return inline ? editor : <><button type="button" className={styles.customizeButton} onClick={openCustomizer}>{buttonLabel}</button>{open && createPortal(editor, document.body)}</>;
@@ -256,7 +256,7 @@ export default function AchievementCustomization({
 function CustomCosmeticOption({ slot, asset, selected, equipped, onPreview }: { slot: "background" | "banner"; asset: CustomAsset; selected: boolean; equipped: boolean; onPreview: () => void }) {
   return <button type="button" className={`${styles.cosmeticOption} ${styles.customCosmeticOption}`} data-slot={slot} data-selected={selected} data-equipped={equipped} onClick={onPreview} aria-pressed={selected}>
     <span className={styles.customOptionMedia}><Image src={asset.image} alt="" fill sizes="(max-width: 430px) 100vw, 14rem" className={styles.customProfileImage} /></span>
-    <span className={styles.optionCopy}><strong>{asset.name}</strong><small>Custom {slot}</small><em>{equipped ? "Equipped" : selected ? "Previewing" : "Preview"}</em></span>
+    <span className={styles.optionCopy}><strong>{asset.name}</strong><small>Custom {slot}</small><em>{equipped ? "✓ Equipped" : selected ? "✧ Previewing" : "Unlocked · Preview"}</em></span>
   </button>;
 }
 
@@ -270,6 +270,6 @@ function CosmeticOption({ slot, achievement, selected, equipped, onPreview }: { 
     {slot === "background" && <span className={`${styles.optionScene} ${styles.page}`} data-background={styleKey}><span className={styles.profileScene} aria-hidden="true" /></span>}
     {slot === "banner" && <span className={`${styles.optionBanner} ${styles.header}`} data-banner={styleKey}><span className={styles.headerBanner} aria-hidden="true" /></span>}
     {slot === "accent" && <span className={styles.optionAccent} data-accent={styleKey} aria-hidden="true" />}
-    <span className={styles.optionCopy}><strong>{label}</strong><small>{source}</small><em>{equipped ? "Equipped" : selected ? "Previewing" : "Preview"}</em></span>
+    <span className={styles.optionCopy}><strong>{label}</strong><small>{source}</small><em>{equipped ? "✓ Equipped" : selected ? "✧ Previewing" : "Unlocked · Preview"}</em></span>
   </button>;
 }
