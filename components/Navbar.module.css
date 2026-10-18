@@ -1,0 +1,34 @@
+.bar { gap: .35rem; }
+.desktop { gap: .05rem; }
+.trigger { gap: .25rem; font-size: .77rem; }
+.trigger:focus-visible, .mobileTrigger:focus-visible, .item:focus-visible { outline: 3px solid #efb43d; outline-offset: 3px; }
+.menuBridge { position: absolute; top: 100%; right: 0; left: 0; z-index: 5; display: flex; justify-content: flex-end; padding: .35rem 1rem 0; }
+.menu { position: relative; isolation: isolate; overflow: hidden; width: min(41rem, 100%); padding: 1.1rem 1.25rem 1.25rem; border: 1px solid var(--line); border-radius: 2.6rem 2.2rem 2.8rem 2.4rem / 2rem 2.5rem 2.2rem 2.6rem; color: var(--ink); background: var(--surface-strong); box-shadow: 0 14px 32px #193e642b, inset 0 1px 0 #ffffff70; }
+.menu::before { position: absolute; z-index: -1; top: -3.5rem; right: -1rem; width: 14rem; height: 8rem; border-radius: 50%; background: color-mix(in srgb, #86d8f5 22%, transparent); content: ""; }
+.menu[data-world="Collection"]::before { background: color-mix(in srgb, #75c98f 24%, transparent); }
+.menu[data-world="Community"]::before { background: color-mix(in srgb, #efba5d 24%, transparent); }
+.menu[data-world="Cloud Worlds"]::before { background: color-mix(in srgb, #bd9ae8 25%, transparent); }
+.menu[data-world="My Profile"]::before { background: color-mix(in srgb, #f292bd 24%, transparent); }
+.menuIntro { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; padding: .2rem .35rem .8rem; border-bottom: 1px solid var(--line); }
+.menuIcon { display: grid; flex: 0 0 2.6rem; width: 2.6rem; height: 2.6rem; place-items: center; border-radius: 46% 54% 43% 57%; color: #2178a1; background: #b9eaff; font-size: 1.5rem; }
+.menuIntro strong { font-family: var(--display-font); font-size: 1.1rem; }
+.menuIntro p { margin: .16rem 0 0; color: var(--ink-soft); font-size: .75rem; }
+.sparkle { margin-left: auto; color: #d69f36; font-size: 1rem; white-space: nowrap; }
+.items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem; }
+.item { display: flex; align-items: center; gap: .65rem; min-width: 0; min-height: 3.4rem; padding: .55rem .65rem; border-radius: 1rem 1.3rem 1.1rem 1.2rem; color: var(--ink); text-decoration: none; }
+a.item:hover { background: color-mix(in srgb, #81d6f3 22%, var(--surface-strong)); }
+.item > span:nth-child(2) { min-width: 0; }
+.item strong, .item small { display: block; }
+.item strong { font-size: .8rem; }
+.item small { margin-top: .16rem; color: var(--ink-soft); font-size: .68rem; line-height: 1.35; }
+.itemIcon { display: grid; flex: 0 0 2rem; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; color: var(--ink); background: color-mix(in srgb, #8edcf5 28%, var(--surface-strong)); font-size: 1rem; }
+.arrow { margin-left: auto; color: var(--ink-soft); }
+.soonLabel { margin-left: auto; color: var(--ink-soft); font-size: .62rem; font-weight: 800; text-transform: uppercase; }
+.soon { opacity: .72; }
+.mobileGroup + .mobileGroup { border-top: 1px solid var(--line); }
+.mobileTrigger { display: flex; align-items: center; gap: .5rem; width: 100%; min-height: 2.8rem; padding: .7rem; border: 0; border-radius: .8rem; background: transparent; color: var(--ink); font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+.mobileTrigger span:last-child { margin-left: auto; }
+.mobileItems { display: grid; padding: 0 .25rem .5rem; }
+@media (max-width: 1050px) { .bar .desktop { display: none; } .bar :global(.mobile-menu-trigger) { display: grid; width: 2.3rem; height: 2.1rem; padding: .4rem; border: 1px solid var(--line); border-radius: .75rem; background: transparent; cursor: pointer; } .bar :global(.mobile-menu-trigger) span { display: block; width: 100%; height: 2px; border-radius: 2px; background: var(--ink); } .menuBridge { display: none; } .mobile { display: grid; margin-top: .65rem; padding: .7rem; border: 1px solid var(--line); border-radius: 1.5rem; background: var(--surface-strong); box-shadow: var(--shadow); } }
+@media (max-width: 620px) { .mobile { max-height: min(70dvh, 36rem); overflow-y: auto; } .item { min-height: 3rem; } }
+@media (prefers-reduced-motion: no-preference) { .menu { animation: cloudIn .16s ease-out; } @keyframes cloudIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } } }

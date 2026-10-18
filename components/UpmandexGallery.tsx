@@ -124,8 +124,8 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
             <Link
               key={upman.slug}
               href={`/upmans/${upman.slug}`}
-              className={`${styles.entry} ${rarityClassNames[upman.rarity]}`}
-              aria-label={`View ${upman.name}, ${upman.rarity}`}
+              className={`${styles.entry} ${rarityClassNames[upman.rarity]} ${collection && !upman.owned ? styles.missing : ""}`}
+              aria-label={`View ${upman.name}, ${upman.rarity}${collection ? upman.owned ? ", owned" : ", not collected" : ""}`}
             >
               <div className={styles.artwork}>
                 <Image src={upman.image} alt={upman.name} width={320} height={300} sizes="(max-width: 620px) 45vw, (max-width: 900px) 30vw, 22vw" />
@@ -145,6 +145,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
                   </p>
                 )}
                 {upman.owned && <p className={styles.owned}><span aria-hidden="true">✓</span> Owned</p>}
+                {collection && !upman.owned && <p className={styles.missingLabel}><span aria-hidden="true">🔒</span> Not collected</p>}
               </div>
             </Link>
           ))}

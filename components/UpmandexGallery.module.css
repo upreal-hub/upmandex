@@ -37,3 +37,21 @@
 
 /* Keep the collection reminder light, like a passing cloud. */
 .collectionContext { border: 0; background: transparent; box-shadow: none; padding: .6rem .3rem; margin: .25rem 0 1.4rem; }
+
+/* Only known collection ownership is dimmed; visitors without a collection see the full Dex. */
+.entry.missing::before, .entry.missing::after,
+:global(html[data-theme="night"]) .entry.missing::before,
+:global(html[data-theme="night"]) .entry.missing::after { background: #293949; box-shadow: 0 8px 16px #10213135; }
+.entry.missing .info, :global(html[data-theme="night"]) .entry.missing .info {
+  color: #f4f8fb; border-color: #718396; background: #334558;
+  box-shadow: 0 8px 15px #15263735, inset 0 1px 0 #ffffff25;
+}
+.entry.missing .info h2, .entry.missing .creator strong,
+:global(html[data-theme="night"]) .entry.missing .info h2,
+:global(html[data-theme="night"]) .entry.missing .creator strong { color: #f4f8fb; }
+.entry.missing .creator, .entry.missing .creatorIdentity,
+:global(html[data-theme="night"]) .entry.missing .creator,
+:global(html[data-theme="night"]) .entry.missing .creatorIdentity { color: #d2dce6; }
+.entry.missing .rarity, :global(html[data-theme="night"]) .entry.missing .rarity { color: #edf4fa; border-color: #94a5b4; background: #465a6b; box-shadow: none; }
+.entry.missing .artwork img, :global(html[data-theme="night"]) .entry.missing .artwork img { opacity: 1; filter: grayscale(.95) brightness(.38) contrast(1.12) drop-shadow(0 8px 7px #101b2b66); }
+.missingLabel { display: inline-flex; align-items: center; gap: .3rem; margin: .75rem 0 0; padding: .35rem .6rem; border: 1px dashed #9aabb9; border-radius: 999px; color: #e3eaf1; background: #283b4c; font-size: .7rem; font-weight: 800; }

@@ -37,7 +37,6 @@ export default function LoginButton() {
           <span aria-hidden="true">⌄</span>
         </button>
         {open && <div id="profile-menu" className="profile-menu" onClick={() => setOpen(false)}>
-          <Link href="/profile">My profile</Link>
           {username.toLowerCase() === "upreal_" && <Link href="/admin">Admin</Link>}
           <button type="button" onClick={() => signOut()}>Log out</button>
         </div>}
