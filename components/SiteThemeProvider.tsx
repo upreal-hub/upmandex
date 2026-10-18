@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
 
 type SiteTheme = "day" | "night";
 
@@ -14,7 +14,8 @@ const THEME_EVENT = "upmandex-theme-change";
 
 function getThemeSnapshot(): SiteTheme {
   if (typeof window === "undefined") return "day";
-  const savedTheme = window.localStorage.getItem("upmandex-theme");
+  let savedTheme: string | null = null;
+  try { savedTheme = window.localStorage.getItem("upmandex-theme"); } catch { savedTheme = document.documentElement.dataset.theme ?? null; }
   if (savedTheme === "day" || savedTheme === "night") return savedTheme;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
 }
@@ -24,11 +25,18 @@ function getServerThemeSnapshot(): SiteTheme {
 }
 
 function subscribeToTheme(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(THEME_EVENT, onStoreChange);
+  const syncTheme = () => {
+    document.documentElement.dataset.theme = getThemeSnapshot();
+    onStoreChange();
+  };
+  const preference = window.matchMedia("(prefers-color-scheme: dark)");
+  preference.addEventListener("change", syncTheme);
+  window.addEventListener("storage", syncTheme);
+  window.addEventListener(THEME_EVENT, syncTheme);
   return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(THEME_EVENT, onStoreChange);
+    preference.removeEventListener("change", syncTheme);
+    window.removeEventListener("storage", syncTheme);
+    window.removeEventListener(THEME_EVENT, syncTheme);
   };
 }
 
@@ -41,15 +49,16 @@ export function useSiteTheme() {
 export default function SiteThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-
   const toggleTheme = useCallback(() => {
     const nextTheme = getThemeSnapshot() === "day" ? "night" : "day";
-    window.localStorage.setItem("upmandex-theme", nextTheme);
-    document.documentElement.dataset.theme = nextTheme;
-    window.dispatchEvent(new Event(THEME_EVENT));
+    try { window.localStorage.setItem("upmandex-theme", nextTheme); } catch {}
+    const applyTheme = () => {
+      document.documentElement.dataset.theme = nextTheme;
+      window.dispatchEvent(new Event(THEME_EVENT));
+    };
+    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.startViewTransition(applyTheme);
+    } else applyTheme();
   }, []);
 
   const value = useMemo<SiteThemeContextValue>(() => ({ theme, toggleTheme }), [theme, toggleTheme]);

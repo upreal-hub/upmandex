@@ -30,7 +30,7 @@ export default async function HomePage() {
           <h1 id="home-title" className="hero-wordmark">UPMANDEX</h1>
           <p className="hero-kicker">A sky full of tiny stories.</p>
           <p className="hero-description">
-            Discover Upmans, the artists who create them, and the community collecting every cloud-dwelling oddity.
+            Every Upman has a story. Meet the artists behind them, find your favourites, and give these little cloud-dwellers a place in your collection.
           </p>
           <Link href="/upmans" className="primary-button cloud-button">Explore the Upmandex <span aria-hidden="true">↗</span></Link>
         </div>
@@ -48,9 +48,9 @@ export default async function HomePage() {
           <h2 id="destinations-title">Where would you like to wander?</h2>
         </div>
         <div className="destination-grid">
-          <Link href="/upmans" className="destination-card destination-card-sky"><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>Meet every known Upman</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/my-collection" className="destination-card destination-card-lavender"><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>See the clouds you have found</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/art" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>Explore community galleries</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/upmans" className="destination-card destination-card-sky"><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>A world of curious faces to discover</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/my-collection" className="destination-card destination-card-lavender"><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>Your discoveries, one little cloud at a time</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/art" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>From a spark of an idea to a world of art</span></div><b aria-hidden="true">↗</b></Link>
           <Link href="/community" className="destination-card destination-card-gold"><span className="destination-icon">☼</span><div><p>04 · Beyond the Dex</p><h3>EXPLORE</h3><span>Creators, friends and community</span></div><b aria-hidden="true">↗</b></Link>
         </div>
       </section>
