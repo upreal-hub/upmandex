@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import ui from "./GalleryControls.module.css";
+import ui from "./DexSkyControls.module.css";
 import styles from "./UpmandexGallery.module.css";
 import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
@@ -39,7 +39,13 @@ const rarityClassNames: Record<UpmanRarity, string> = {
 
 export default function UpmandexGallery({ upmans, collection, showConnectMessage }: Props) {
   const [query, setQuery] = useState("");
-  const [selectedRarity, setSelectedRarity] = useState<(typeof rarities)[number]>("All");
+  const [selectedRarities, setSelectedRarities] = useState<UpmanRarity[]>([]);
+
+  function toggleRarity(rarity: (typeof rarities)[number]) {
+    setSelectedRarities((current) => rarity === "All" ? [] : current.includes(rarity)
+      ? current.filter((item) => item !== rarity)
+      : [...current, rarity]);
+  }
 
   const rarityCounts = useMemo(() => {
     return upmans.reduce<Record<(typeof rarities)[number], number>>(
@@ -56,7 +62,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
     const normalizedQuery = query.trim().toLocaleLowerCase();
 
     return upmans.filter((upman) => {
-      const matchesRarity = selectedRarity === "All" || upman.rarity === selectedRarity;
+      const matchesRarity = selectedRarities.length === 0 || selectedRarities.includes(upman.rarity);
       const matchesQuery = !normalizedQuery || [
         upman.name,
         upman.slug,
@@ -66,32 +72,36 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
 
       return matchesRarity && matchesQuery;
     });
-  }, [query, selectedRarity, upmans]);
+  }, [query, selectedRarities, upmans]);
 
   return (
     <>
       <section className={ui.panel} aria-label="Explore the Upmandex">
-        <div className={ui.panelHeading}><h2>Find your next favourite</h2><p>A name, a creator, a rarity — see where the clouds take you.</p></div>
+        <div className={ui.panelHeading}><p>Follow your curiosity</p><h2>Which clouds will you explore?</h2></div>
         <label className={ui.searchLabel}>
           <span>Search the Dex</span>
           <span className={ui.searchField}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="10" cy="10" r="6.5" /><path d="m15 15 5 5" /></svg>
-            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Upman name or creator…" />
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="An Upman, a creator, a little curiosity…" />
           </span>
         </label>
         <fieldset className={ui.fieldset}>
-          <legend>Rarity <span>Choose one to narrow your search</span></legend>
+          <legend>Choose your rarity clouds <span>Pick one or several. Tap again to let one drift away.</span></legend>
           <div className={ui.chips}>
-            {rarities.map((rarity) => (
-              <button key={rarity} type="button" onClick={() => setSelectedRarity(rarity)}
-                className={`${ui.chip} ${ui[rarity.toLowerCase()]}`} aria-pressed={rarity === selectedRarity}>
-                <span>{rarity}</span><small>{rarityCounts[rarity]}</small>
-              </button>
-            ))}
+            {rarities.map((rarity) => {
+              const isSelected = rarity === "All" ? selectedRarities.length === 0 : selectedRarities.includes(rarity);
+              return (
+                <button key={rarity} type="button" onClick={() => toggleRarity(rarity)}
+                  className={`${ui.chip} ${ui[rarity.toLowerCase()]}`} aria-pressed={isSelected}>
+                  <span className={ui.selection} aria-hidden="true">{isSelected ? "✓" : "+"}</span>
+                  <span>{rarity}</span><small>{rarityCounts[rarity]}</small>
+                </button>
+              );
+            })}
           </div>
         </fieldset>
         <div className={ui.resultRow}>
-          <p role="status" aria-live="polite" aria-atomic="true"><strong>{filteredUpmans.length}</strong> of {upmans.length} Upman{upmans.length === 1 ? "" : "s"}{query.trim() || selectedRarity !== "All" ? " match your filters" : " ready to discover"}</p>
-          <button className={ui.reset} type="button" disabled={!query && selectedRarity === "All"} onClick={() => { setQuery(""); setSelectedRarity("All"); }}>Reset filters</button>
+          <p role="status" aria-live="polite" aria-atomic="true"><strong>{filteredUpmans.length}</strong> of {upmans.length} Upman{upmans.length === 1 ? "" : "s"}{query.trim() || selectedRarities.length > 0 ? " match your sky" : " ready to discover"}</p>
+          <span className={ui.activeClouds}>{selectedRarities.length ? selectedRarities.join(" + ") : "All rarities · the whole sky"}</span>
         </div>
       </section>
 
@@ -142,7 +152,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
       ) : (
         <div className={styles.empty}>
           <p>No Upmans are drifting through these clouds.</p>
-          <button type="button" onClick={() => { setQuery(""); setSelectedRarity("All"); }}>Clear filters</button>
+          <p>Try another name, choose a different cloud, or pick All to explore every rarity.</p>
         </div>
       )}
     </>

@@ -34,3 +34,6 @@
 
 .collectionContext { width: 100%; margin: 1rem 0 2rem; border-radius: 1.2rem; }
 .collectionContext a { color: var(--ink); min-height: 2.75rem; display: inline-flex; align-items: center; }
+
+/* Keep the collection reminder light, like a passing cloud. */
+.collectionContext { border: 0; background: transparent; box-shadow: none; padding: .6rem .3rem; margin: .25rem 0 1.4rem; }

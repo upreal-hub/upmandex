@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { auth } from "@/auth";
 import UpmandexGallery, { type UpmandexEntry } from "@/components/UpmandexGallery";
 import { prisma } from "@/lib/prisma";
@@ -59,6 +60,8 @@ export default async function UpmansPage() {
     owned: ownedUpmanIds.has(upman.id),
   }));
 
+  const guideUpman = upmans.find((upman) => upman.slug === "beanieupman") ?? upmans[0];
+
   return (
     <main className={`upmandex-page ${styles.page}`}>
       <header className={styles.header}>
@@ -68,13 +71,16 @@ export default async function UpmansPage() {
           <p className={styles.intro}>Every cloud has a curious face. Find your favourite Upmans, meet their creators, and discover the stories that make each one unique.</p>
           <span className={styles.count}>{upmans.length} Upman{upmans.length === 1 ? "" : "s"} to discover</span>
         </div>
-        <aside className={styles.guide} aria-label="How to explore the Dex">
-          <p className={styles.guideTitle}>Your guide to the clouds</p>
-          <ol>
-            <li><strong>Find a familiar face</strong><span>Search by Upman name or creator.</span></li>
-            <li><strong>Follow your curiosity</strong><span>Pick a rarity to explore a little further.</span></li>
-            <li><strong>Get to know an Upman</strong><span>Open a card for its story and details.</span></li>
-          </ol>
+        <aside className={styles.skyGuide} aria-label="A little nudge from the clouds">
+          <div className={styles.guideScene}>
+            <span className={styles.guideStar} aria-hidden="true">✦</span>
+            <span className={styles.guideCloud} aria-hidden="true" />
+            {guideUpman && <Image src={guideUpman.image} alt={guideUpman.name} width={240} height={260} sizes="(max-width: 760px) 130px, 180px" className={styles.guideUpman} />}
+            <span className={styles.guideWhisper}>A familiar face?<span aria-hidden="true"> ↙</span></span>
+            <span className={styles.guideTrail} aria-hidden="true">✧ · · ☁</span>
+          </div>
+          <p className={styles.guideTitle}>A new friend around every cloud.</p>
+          <p className={styles.guideText}>Mix a few rarities, follow an artist you love, then open a card to meet the Upman behind the face.</p>
         </aside>
       </header>
 
