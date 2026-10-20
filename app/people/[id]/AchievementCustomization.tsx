@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import styles from "./person.module.css";
@@ -33,7 +33,7 @@ type Loadout = {
 };
 
 type LoadoutKey = keyof Loadout;
-type CustomAsset = { id: string; type: "BACKGROUND" | "BANNER"; name: string; image: string };
+type CustomAsset = { id: string; type: "BACKGROUND" | "BANNER"; name: string; image: string; ownerUserId?: string | null };
 type SlotConfig = { slot: CosmeticSlot; label: string; property: LoadoutKey; customProperty?: LoadoutKey };
 
 const slots: SlotConfig[] = [
@@ -235,6 +235,7 @@ export default function AchievementCustomization({
             </div>
             {activeCustomProperty && <>
               <p className={styles.sourceHeading}>Custom {activeConfig.label.toLowerCase()}s</p>
+              {activeSlot === "background" && <PersonalBackgroundControls personId={personId} asset={customAssets.find((asset) => asset.type === "BACKGROUND" && asset.ownerUserId) ?? null} onChanged={() => router.refresh()} />}
               {activeCustomAssets.length
                 ? <div className={`${styles.galleryOptions} ${styles.customAssetOptions}`}>
                   {activeCustomAssets.map((asset) => <CustomCosmeticOption key={asset.id} slot={activeSlot as "background" | "banner"} asset={asset} selected={previewLoadout[activeCustomProperty] === asset.id} equipped={equippedLoadout[activeCustomProperty] === asset.id} onPreview={() => previewCustomOption(asset.id)} />)}
@@ -253,10 +254,44 @@ export default function AchievementCustomization({
   return inline ? editor : <><button type="button" className={styles.customizeButton} onClick={openCustomizer}>{buttonLabel}</button>{open && createPortal(editor, document.body)}</>;
 }
 
+function PersonalBackgroundControls({ personId, asset, onChanged }: { personId: string; asset: CustomAsset | null; onChanged: () => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function upload(file?: File) {
+    if (!file) return;
+    setBusy(true); setError(null);
+    try {
+      const form = new FormData(); form.set("image", file);
+      const response = await fetch(`/api/people/${personId}/personal-background`, { method: "POST", body: form });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Unable to save your background");
+      onChanged();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to save your background"); } finally { setBusy(false); }
+  }
+  async function remove() {
+    if (!asset || !window.confirm("Remove your personal background? Your profile will return to its current official background.")) return;
+    setBusy(true); setError(null);
+    try {
+      const response = await fetch(`/api/people/${personId}/personal-background`, { method: "DELETE" });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Unable to remove your background");
+      onChanged();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to remove your background"); } finally { setBusy(false); }
+  }
+  return <section className={styles.personalBackground} aria-labelledby="personal-background-title">
+    <div><p className={styles.sourceHeading}>My Custom Background</p><h4 id="personal-background-title">Your own sky</h4><p>One personal image, yours to preview and equip whenever you like.</p></div>
+    {asset && <div className={styles.personalBackgroundPreview}><Image src={asset.image} alt="Your personal background" fill sizes="(max-width: 640px) 100vw, 18rem" className={styles.customProfileImage} /></div>}
+    {error && <p className={styles.personalBackgroundError} role="alert">{error}</p>}
+    <div className={styles.personalBackgroundActions}><button type="button" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Saving…" : asset ? "Replace image" : "Upload image"}</button>{asset && <button type="button" disabled={busy} onClick={remove}>Remove</button>}</div>
+    <input ref={input} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" onChange={(event) => { void upload(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+  </section>;
+}
+
 function CustomCosmeticOption({ slot, asset, selected, equipped, onPreview }: { slot: "background" | "banner"; asset: CustomAsset; selected: boolean; equipped: boolean; onPreview: () => void }) {
   return <button type="button" className={`${styles.cosmeticOption} ${styles.customCosmeticOption}`} data-slot={slot} data-selected={selected} data-equipped={equipped} onClick={onPreview} aria-pressed={selected}>
     <span className={styles.customOptionMedia}><Image src={asset.image} alt="" fill sizes="(max-width: 430px) 100vw, 14rem" className={styles.customProfileImage} /></span>
-    <span className={styles.optionCopy}><strong>{asset.name}</strong><small>Custom {slot}</small><em>{equipped ? "✓ Equipped" : selected ? "✧ Previewing" : "Unlocked · Preview"}</em></span>
+    <span className={styles.optionCopy}><strong>{asset.ownerUserId ? "My custom background" : asset.name}</strong><small>{asset.ownerUserId ? "Personal background" : `Custom ${slot}`}</small><em>{equipped ? "✓ Equipped" : selected ? "✧ Previewing" : "Preview"}</em></span>
   </button>;
 }
 

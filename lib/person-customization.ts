@@ -67,7 +67,7 @@ export async function updatePersonCosmeticLoadout(personId: string, userId: stri
 
   const customAssetIds = [loadout.equippedCustomBackgroundId, loadout.equippedCustomBannerId].filter((id): id is string => typeof id === "string");
   if (customAssetIds.length) {
-    const customAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true } });
+    const customAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true, ownerUserId: true } });
     if (customAssets.length !== customAssetIds.length) throw new PersonCustomizationError(400, "Choose only existing custom cosmetics");
     const customAssetTypes = new Map(customAssets.map((asset) => [asset.id, asset.type]));
     if (loadout.equippedCustomBackgroundId && customAssetTypes.get(loadout.equippedCustomBackgroundId) !== ProfileCosmeticAssetType.BACKGROUND) {
@@ -75,6 +75,9 @@ export async function updatePersonCosmeticLoadout(personId: string, userId: stri
     }
     if (loadout.equippedCustomBannerId && customAssetTypes.get(loadout.equippedCustomBannerId) !== ProfileCosmeticAssetType.BANNER) {
       throw new PersonCustomizationError(400, "Choose a banner asset for your banner");
+    }
+    if (customAssets.some((asset) => asset.ownerUserId !== null && asset.ownerUserId !== userId)) {
+      throw new PersonCustomizationError(403, "You can only equip your own personal background");
     }
   }
 

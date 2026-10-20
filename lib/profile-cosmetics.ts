@@ -59,7 +59,7 @@ function dimensions(bytes: Uint8Array, type: string) {
   return null;
 }
 
-async function validateImage(file: File, type: ProfileCosmeticAssetType) {
+export async function validateProfileCosmeticImage(file: File, type: ProfileCosmeticAssetType) {
   if (file.size === 0 || file.size > MAX_BYTES) throw new ProfileCosmeticError(400, "Image must be no larger than 5 MiB");
   const image = dimensions(new Uint8Array(await file.arrayBuffer()), file.type);
   const maxHeight = type === "BANNER" ? 2048 : 4096;
@@ -92,12 +92,12 @@ function metadata(asset: { id: string; name: string; type: ProfileCosmeticAssetT
 }
 
 export async function listProfileCosmetics() {
-  return prisma.profileCosmeticAsset.findMany({ orderBy: [{ type: "asc" }, { createdAt: "asc" }, { id: "asc" }] });
+  return prisma.profileCosmeticAsset.findMany({ where: { ownerUserId: null }, orderBy: [{ type: "asc" }, { createdAt: "asc" }, { id: "asc" }] });
 }
 
 export async function createProfileCosmetic(input: { type: ProfileCosmeticAssetType; name: string; file: File; actor: ActivityActor }) {
   if (!process.env.BLOB_STORE_ID) throw new ProfileCosmeticError(500, "Profile cosmetic storage is not configured");
-  const image = await validateImage(input.file, input.type);
+  const image = await validateProfileCosmeticImage(input.file, input.type);
   const blob = await put(blobPath(input.type, image.extension), input.file, { access: "public", addRandomSuffix: false, contentType: image.contentType });
   try {
     return await prisma.$transaction(async (tx) => {
@@ -111,6 +111,7 @@ export async function createProfileCosmetic(input: { type: ProfileCosmeticAssetT
 export async function renameProfileCosmetic(id: string, name: string, actor: ActivityActor) {
   const existing = await prisma.profileCosmeticAsset.findUnique({ where: { id } });
   if (!existing) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
+  if (existing.ownerUserId) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
   return prisma.$transaction(async (tx) => {
     const asset = await tx.profileCosmeticAsset.update({ where: { id }, data: { name } });
     await tx.activityLog.create({ data: createActivityLogData({ action: "PROFILE_COSMETIC_UPDATED", context: { origin: "ADMIN", actor }, metadata: metadata(asset) }) });
@@ -121,8 +122,9 @@ export async function renameProfileCosmetic(id: string, name: string, actor: Act
 export async function replaceProfileCosmetic(id: string, file: File, actor: ActivityActor) {
   const existing = await prisma.profileCosmeticAsset.findUnique({ where: { id } });
   if (!existing) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
+  if (existing.ownerUserId) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
   if (!process.env.BLOB_STORE_ID) throw new ProfileCosmeticError(500, "Profile cosmetic storage is not configured");
-  const image = await validateImage(file, existing.type);
+  const image = await validateProfileCosmeticImage(file, existing.type);
   const blob = await put(blobPath(existing.type, image.extension), file, { access: "public", addRandomSuffix: false, contentType: image.contentType });
   let asset;
   try {
@@ -139,6 +141,7 @@ export async function replaceProfileCosmetic(id: string, file: File, actor: Acti
 export async function deleteProfileCosmetic(id: string, actor: ActivityActor) {
   const existing = await prisma.profileCosmeticAsset.findUnique({ where: { id } });
   if (!existing) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
+  if (existing.ownerUserId) throw new ProfileCosmeticError(404, "Profile cosmetic not found");
   await prisma.$transaction(async (tx) => {
     await tx.profileCosmeticAsset.delete({ where: { id } });
     await tx.activityLog.create({ data: createActivityLogData({ action: "PROFILE_COSMETIC_DELETED", context: { origin: "ADMIN", actor }, metadata: metadata(existing) }) });

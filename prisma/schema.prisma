@@ -87,6 +87,7 @@ model User {
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
   person           Person?
+  personalProfileCosmeticAssets ProfileCosmeticAsset[] @relation("PersonalProfileCosmeticAssetOwner")
 }
 
 model Person {
@@ -120,17 +121,22 @@ model Person {
 }
 
 model ProfileCosmeticAsset {
-  id        String                   @id @default(cuid())
-  type      ProfileCosmeticAssetType
-  name      String
-  image     String
-  createdAt DateTime                 @default(now())
-  updatedAt DateTime                 @updatedAt
+  id          String                   @id @default(cuid())
+  type        ProfileCosmeticAssetType
+  name        String
+  image       String
+  ownerUserId String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  owner User? @relation("PersonalProfileCosmeticAssetOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
 
   backgroundEquippedBy Person[] @relation("PersonCustomBackground")
   bannerEquippedBy     Person[] @relation("PersonCustomBanner")
 
   @@index([type, createdAt])
+  @@index([ownerUserId])
+  @@unique([ownerUserId, type])
 }
 
 model PersonLink {

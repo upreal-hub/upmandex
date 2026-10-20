@@ -85,17 +85,18 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
 
   if (!person) notFound();
 
-  const [achievementProgress, customAssets] = await Promise.all([
-    getAchievementProgress(id),
-    prisma.profileCosmeticAsset.findMany({
-      select: { id: true, type: true, name: true, image: true },
-      orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
-    }),
-  ]);
+  const achievementProgress = await getAchievementProgress(id);
   const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
+  const customAssets = isOwner
+    ? await prisma.profileCosmeticAsset.findMany({
+      where: { OR: [{ ownerUserId: null }, { ownerUserId: currentUser!.id }] },
+      select: { id: true, type: true, name: true, image: true, ownerUserId: true },
+      orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
+    })
+    : [];
   const collectionWhere = person.userId ? collectionUpmanWhere(person.userId, isOwner) : null;
   const [skyTotal, skyOwned, skyLatest] = person.userId && collectionWhere ? await Promise.all([
     prisma.upman.count({ where: collectionWhere }),

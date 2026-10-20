@@ -20,4 +20,5 @@ export type ManagedPerson = {
   achievementsCount: number;
   hasEquippedTitle: boolean;
   featuredAchievementsCount: number;
+  representedUpmans: Array<{ id: string; name: string; slug: string; rarity: string; image: string }>;
 };

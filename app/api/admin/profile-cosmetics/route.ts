@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const name = validateProfileCosmeticName(form.get("name"));
     const image = form.get("image");
     if (!type || !name || !(image instanceof File)) throw new ProfileCosmeticError(400, "Provide a name, type, and image");
+    if (type === "BACKGROUND") throw new ProfileCosmeticError(400, "Personal backgrounds are uploaded by their owners");
     const asset = await createProfileCosmetic({ type, name, file: image, actor: authorization.user });
     return NextResponse.json({ success: true, asset }, { status: 201 });
   } catch (error) {

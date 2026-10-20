@@ -18,6 +18,7 @@ export default async function AdminPeoplePage() {
         featuredAchievementKeys: true,
         user: { select: { id: true, twitchLogin: true, displayName: true, avatar: true } },
         _count: { select: { createdUpmans: true, representedUpmans: true, achievements: true } },
+        representedUpmans: { select: { id: true, name: true, slug: true, rarity: true, image: true }, orderBy: [{ name: "asc" }, { slug: "asc" }] },
       },
     }),
     prisma.user.findMany({
@@ -45,6 +46,7 @@ export default async function AdminPeoplePage() {
         achievementsCount: person._count.achievements,
         hasEquippedTitle: Boolean(person.equippedTitleAchievementKey),
         featuredAchievementsCount: person.featuredAchievementKeys.length,
+        representedUpmans: person.representedUpmans,
       }))}
       users={users.map((user) => ({
         id: user.id,
