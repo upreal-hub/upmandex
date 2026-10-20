@@ -88,6 +88,8 @@ model User {
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
   person           Person?
   personalProfileCosmeticAssets ProfileCosmeticAsset[] @relation("PersonalProfileCosmeticAssetOwner")
+  artworkLikes      PersonArtworkLike[]
+  projectLikes      PersonProjectLike[]
 }
 
 model Person {
@@ -162,6 +164,7 @@ model PersonProject {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  likes       PersonProjectLike[]
 
   @@index([personId, position])
 }
@@ -174,8 +177,32 @@ model PersonArtwork {
   position  Int
   createdAt DateTime @default(now())
   person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  allowDownloads Boolean @default(false)
+  likes     PersonArtworkLike[]
 
   @@index([personId, position])
+}
+
+model PersonArtworkLike {
+  userId    String
+  artworkId String
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artwork   PersonArtwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@id([userId, artworkId])
+  @@index([artworkId, createdAt])
+}
+
+model PersonProjectLike {
+  userId    String
+  projectId String
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   PersonProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@index([projectId, createdAt])
 }
 
 model PersonAchievement {
