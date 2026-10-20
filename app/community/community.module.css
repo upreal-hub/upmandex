@@ -53,3 +53,24 @@
 .cloudWinner[data-rank="3"] { border-color:#ca956e; color:#50392e; background:radial-gradient(ellipse at 50% 0%,#fff4e9,#edd0b9 58%,#c99775); }
 .cloudWinner strong, .cloudWinner .winnerScore, .cloudWinner .winnerLinks a { color:inherit; }.cloudWinner small { color:#3f5665; }.cloudWinner[data-rank="3"] small { color:#694d3c; }.cloudWinner img,.winnerAvatar { border-color:#fff; box-shadow:0 3px 12px #34536a44; }
 :global(html[data-theme="night"]) .podiumLinks a { color:#b9eaff; }
+
+/* Visual polish: podiums read as compact cloud plinths rather than flat ovals. */
+.cloudPodium { gap: clamp(.6rem, 1.8vw, 1.2rem); }
+.cloudWinner {
+  min-height: 12.25rem;
+  padding: 1.05rem .85rem 1.15rem;
+  border-radius: 2.45rem 3.05rem 2.2rem 2.7rem / 2rem 2.4rem 2rem 2.25rem;
+  box-shadow: 0 .45rem 0 color-mix(in srgb, currentColor 14%, transparent), 0 1.15rem 2.2rem #163d5d2b, inset 0 2px 0 #fff;
+}
+.cloudWinner[data-rank="1"] { min-height: 14.15rem; }
+.cloudWinner::before { right: 14%; left: 14%; bottom: -.42rem; height: 1.75rem; box-shadow: 0 0 1rem color-mix(in srgb, currentColor 16%, transparent); }
+.cloudWinner strong { line-height: 1.1; overflow-wrap: anywhere; }
+.winnerLinks { gap: .42rem .65rem; }
+.rankingRow { min-width: 0; padding-block: .9rem; }
+.rankingRow > * { min-width: 0; }
+@media (max-width: 600px) {
+  .cloudPodium { gap: .45rem; }
+  .cloudWinner { min-height: 11.4rem; padding: .9rem .35rem 1rem; border-radius: 1.85rem 2.2rem 1.75rem 2rem; }
+  .cloudWinner[data-rank="1"] { min-height: 12.45rem; }
+  .winnerLinks { gap: .28rem; }
+}

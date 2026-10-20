@@ -2,3 +2,18 @@
 @media (max-width: 900px) { .artGrid { column-count: 2; }.projectGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .page { width: min(100% - 1.1rem, 34rem); padding-top: 2.4rem; }.hero { padding: 1.4rem; border-radius: 2.5rem 1.8rem 2.45rem 1.9rem; }.hero::after { display: none; }.artGrid { column-count: 1; }.projectGrid { grid-template-columns: 1fr; }.tabs button { flex: 1 1 auto; }.cardActions > * { flex: 1 1 auto; text-align: center; } }
 @media (prefers-reduced-motion: reduce) { .tabs button { transition: none; } }
+
+/* Keep publication details airy at desktop sizes and reliably readable at narrow widths. */
+.artImage { background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, #8bd7ee 22%, transparent), transparent 64%), color-mix(in srgb, var(--cloud-soft) 58%, var(--surface-strong)); }
+.cardActions { min-height: 2rem; }
+.likeWrap { min-width: 0; }
+:global(html[data-theme="night"]) .artCard,
+:global(html[data-theme="night"]) .projectCard { border-color: color-mix(in srgb, var(--line) 78%, #5aadd0); background: color-mix(in srgb, var(--surface-strong) 88%, #174768); }
+:global(html[data-theme="night"]) .description,
+:global(html[data-theme="night"]) .person { color: color-mix(in srgb, #effaff 86%, var(--ink-soft)); }
+@media (max-width: 560px) {
+  .cardActions { align-items: stretch; }
+  .likeWrap { flex: 1 1 8rem; }
+  .like, .download, .secondary { min-height: 2.35rem; }
+  .artImage { aspect-ratio: 1 / .9; }
+}

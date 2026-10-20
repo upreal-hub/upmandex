@@ -8,7 +8,7 @@ import styles from "../guide.module.css";
 
 export const dynamic = "force-dynamic";
 
-type Card = { title: string; text: string; href?: string; action?: string; id?: string; external?: boolean; image?: string };
+type Card = { title: string; text: string; href?: string; action?: string; id?: string; external?: boolean; image?: string; status?: "confirmed" | "stream-dependent" | "manual" };
 const guides: Record<string, { title: string; intro: string; cards: Card[] }> = {
   pulls: { title: "Pull chances", intro: "Each pull chooses an eligible rarity, then an Upman from that rarity.", cards: [
     { title: "The rarity clouds", text: "Common, Rare, Epic, Mythic and Legendary use configured weights. Only enabled rarities with at least one eligible Upman participate." },
@@ -34,11 +34,11 @@ const guides: Record<string, { title: string; intro: string; cards: Card[] }> = 
     { title: "Garticverse", image: "/worlds/garticverse.ico", text: "Browse the Garticverse gallery, or visit upreal_’s own stream space from Cloud Worlds → Stream.", href: "https://garticverse.com/all", action: "Visit Garticverse", external: true },
   ] },
   stream: { title: "Twitch commands", intro: "Join upreal_ on Twitch and share the cloud world live.", cards: [
-    { title: "Watch on Twitch", text: "Chat with the community and discover the rewards available during the stream.", href: "https://www.twitch.tv/upreal_", action: "Open Twitch", external: true },
-    { title: "Twitch commands", id: "commands", text: "Stream commands can grant an Upman when their configured acquisition rule is enabled and its requirements are met. Some interactions require the stream to be live in a specific category. The repository does not document the public chat syntax, so ask on stream for the current command list.", href: "https://www.twitch.tv/upreal_", action: "Ask in Twitch chat", external: true },
-    { title: "Chat and rewards", text: "Twitch rewards can trigger Upman pulls and, when enabled, an event-specific Upman. Available rewards may change." },
-    { title: "Find your stream space", text: "Open upreal_’s Garticverse space to explore the stream’s world.", href: "https://garticverse.com/s/upreal_", action: "Open upreal_’s space", external: true },
-    { title: "Your Twitch identity", text: "Rewards are attached to your Twitch account. Sign in with that account to check your collection. A repeated delivery of the same reward does not grant another copy.", href: "/my-collection", action: "Check your collection" },
+    { title: "Watch on Twitch", text: "Chat with the community and discover the rewards available during the stream.", href: "https://www.twitch.tv/upreal_", action: "Open Twitch", external: true, status: "confirmed" },
+    { title: "Twitch commands", id: "commands", text: "The public command list is managed in Streamer.bot and is not stored in this repository. Ask in chat for the commands currently enabled; some interactions depend on the live stream category.", href: "https://www.twitch.tv/upreal_", action: "Ask in Twitch chat", external: true, status: "manual" },
+    { title: "Chat and rewards", text: "Twitch rewards can trigger Upman pulls and, when enabled, an event-specific Upman. Available rewards may change during a stream.", status: "stream-dependent" },
+    { title: "Find your stream space", text: "Open upreal_’s Garticverse space to explore the stream’s world.", href: "https://garticverse.com/s/upreal_", action: "Open upreal_’s space", external: true, status: "confirmed" },
+    { title: "Your Twitch identity", text: "Rewards are attached to your Twitch account. Sign in with that account to check your collection. A repeated delivery of the same reward does not grant another copy.", href: "/my-collection", action: "Check your collection", status: "confirmed" },
   ] },
 };
 
@@ -67,7 +67,7 @@ export default async function GuidePage({ params }: { params: Promise<{ topic: s
       {guide.cards.map((card, index) => topic === "worlds" && card.href && card.image ? <a key={card.title} href={card.href} target="_blank" rel="noopener noreferrer" className={styles.worldPortal} data-world={index}>
         <span className={styles.portalStars} aria-hidden="true">✧　✦　⋆</span><span className={styles.portalVisual}><Image src={card.image} alt="" width={640} height={300} unoptimized /></span>
         <span className={styles.portalCopy}><small>✦ COMMUNITY WORLD</small><strong>{card.title}</strong><span>{card.text}</span><em>{card.action} ↗ <span className="sr-only">(opens in a new tab)</span></em></span>
-      </a> : <section id={card.id} key={card.title} className={styles.card}>{card.image && <Image className={styles.portalImage} src={card.image} alt={`${card.title} site identity`} width={640} height={300} unoptimized />}<h2>✧ {card.title}</h2><p>{card.text}</p>{card.href && (card.external ? <a href={card.href} target="_blank" rel="noopener noreferrer">{card.action} ↗ <span className="sr-only">(opens in a new tab)</span></a> : <Link href={card.href}>{card.action} →</Link>)}</section>)}
+      </a> : <section id={card.id} key={card.title} className={styles.card}>{card.image && <Image className={styles.portalImage} src={card.image} alt={`${card.title} site identity`} width={640} height={300} unoptimized />}{card.status && <span className={`${styles.commandStatus} ${styles[card.status]}`}>{card.status === "confirmed" ? "Confirmed" : card.status === "stream-dependent" ? "Stream-dependent" : "Check in chat"}</span>}<h2>✧ {card.title}</h2><p>{card.text}</p>{card.href && (card.external ? <a href={card.href} target="_blank" rel="noopener noreferrer">{card.action} ↗ <span className="sr-only">(opens in a new tab)</span></a> : <Link href={card.href}>{card.action} →</Link>)}</section>)}
       {stories.map((upman) => <article className={styles.card} key={upman.slug}><Image className={styles.loreImage} src={upman.image} alt={upman.name} width={320} height={200} /><span className={styles.status}>{upman.rarity}</span><h2>{upman.name}</h2><p>Created by {upman.creator}.</p><Link href={`/upmans/${upman.slug}`}>Meet {upman.name} →</Link></article>)}
     </div>
     <nav className={styles.footer} aria-label="Related destinations"><Link className={styles.action} href="/upmans">Explore the Dex →</Link><Link className={styles.action} href="/community">Meet the community →</Link></nav>
