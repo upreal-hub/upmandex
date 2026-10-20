@@ -21,6 +21,7 @@ type AchievementMetric =
   | "legendary-pull"
   | "duplicate-pulls"
   | "creation-count"
+  | "artwork-count"
   | "unavailable";
 
 type AchievementDefinition = {
@@ -120,13 +121,13 @@ const rawDefinitions: AchievementDefinitionInput[] = [
   { key: "upman-creator-10", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "10", metric: "creation-count", target: 10, order: 20 },
   { key: "upman-creator-50", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "50", metric: "creation-count", target: 50, order: 30 },
   ...[
-    ["artist-1", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "1", 1], ["artist-10", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "10", 10], ["artist-100", "artist", "ART", "Artist", "Share artwork with the UPMANDEX community.", "100", 100],
     ["gartic-regular-1", "gartic-regular", "GARTIC", "Gartic Regular", "Take part in Gartic Phone sessions.", "1", 1], ["gartic-regular-10", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "10", 10], ["gartic-regular-50", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "50", 50],
     ["gartic-gallery-1", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "1", 1], ["gartic-gallery-10", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "10", 10], ["gartic-gallery-50", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "50", 50],
     ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "100", 100],
     ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "50", 50],
     ["event-collector-1", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "1", 1], ["event-collector-10", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "10", 10], ["event-collector-25", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "25", 25],
   ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: "unavailable" as const, target: target as number, order: 100 + index })),
+  ...[["artist-1", "1", 1], ["artist-10", "10", 10], ["artist-100", "100", 100]].map(([key, label, target], index) => ({ key: key as string, family: "artist", category: "ART" as const, name: "Artist", description: "Share artwork with the UPMANDEX community.", label: label as string, metric: "artwork-count" as const, target: target as number, order: 10 + index })),
 ];
 
 const definitions: AchievementDefinition[] = rawDefinitions.map((definition) => ({ ...definition, cosmetic: cosmeticFor(definition) }));
@@ -184,6 +185,7 @@ type EvaluationContext = {
   duplicatePulls: number;
   hasLegendaryPull: boolean;
   creations: number;
+  artworks: number;
 };
 
 function metricValue(definition: AchievementDefinition, context: EvaluationContext) {
@@ -198,6 +200,7 @@ function metricValue(definition: AchievementDefinition, context: EvaluationConte
     case "legendary-pull": return context.hasLegendaryPull ? 1 : 0;
     case "duplicate-pulls": return context.duplicatePulls;
     case "creation-count": return context.creations;
+    case "artwork-count": return context.artworks;
     case "unavailable": return 0;
   }
 }
@@ -230,9 +233,10 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
   });
   if (!person) return null;
 
-  const [upmans, creations, inventory, pulls] = await Promise.all([
+  const [upmans, creations, artworks, inventory, pulls] = await Promise.all([
     prisma.upman.findMany({ select: { id: true, rarity: true } }),
     prisma.upman.count({ where: { creatorPersonId: person.id } }),
+    prisma.personArtwork.count({ where: { personId: person.id } }),
     person.userId ? prisma.inventory.findMany({ where: { userId: person.userId }, select: { upman: { select: { rarity: true } } } }) : Promise.resolve([]),
     person.userId ? prisma.pullEvent.findMany({ where: { userId: person.userId }, select: { result: true, upmanRarity: true } }) : Promise.resolve([]),
   ]);
@@ -252,6 +256,7 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
     duplicatePulls: pulls.filter((pull) => pull.result === "DUPLICATE").length,
     hasLegendaryPull: pulls.some((pull) => pull.upmanRarity === "Legendary"),
     creations,
+    artworks,
   };
   const unlocks = new Map(person.achievements.map((achievement) => [achievement.achievementKey, achievement.unlockedAt.toISOString()]));
   const byFamily = new Map<string, AchievementFamily>();

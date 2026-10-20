@@ -5,6 +5,7 @@ import { getAchievementCatalog, getAchievementProgress } from "@/lib/achievement
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
 import styles from "@/app/guides/guide.module.css";
+import AchievementBrowser from "./AchievementBrowser";
 
 export const dynamic = "force-dynamic";
 
@@ -26,20 +27,10 @@ export default async function AchievementsPage() {
         <p>Collect, create and explore to unlock achievements and profile cosmetics.</p>
         <p>{progress ? `${progress.summary.unlocked} achievements unlocked.` : login ? "Link a Person profile to see your progress." : "Sign in with Twitch to see your progress."}</p>
       </header>
-      <div className={styles.grid}>
-        {catalog.map((achievement) => {
+      <AchievementBrowser signedIn={Boolean(progress)} items={catalog.map((achievement) => {
           const milestone = milestones.get(achievement.key);
-          const status = milestone?.isUnlocked ? "Unlocked" : achievement.metric === "unavailable" ? "Not tracked yet" : progress ? "Locked" : "Progress unavailable";
-          return (
-            <article className={`${styles.card} ${milestone?.isUnlocked ? styles.unlocked : styles.locked}`} key={achievement.key}>
-              <span className={styles.status}>{milestone?.isUnlocked ? "✓ " : "◇ "}{status}</span>
-              <h2>{achievement.name} · {achievement.label}</h2>
-              <p>{achievement.description}</p>
-              {milestone?.trackable && <p>Progress: {milestone.displayCurrent} / {milestone.displayTarget}</p>}
-            </article>
-          );
-        })}
-      </div>
+          return { key: achievement.key, name: achievement.name, description: achievement.description, label: achievement.label, category: achievement.category, order: achievement.order, unlocked: Boolean(milestone?.isUnlocked), unlockedAt: milestone?.unlockedAt ?? null, current: milestone?.trackable ? milestone.displayCurrent : null, target: milestone?.trackable ? milestone.displayTarget : null, trackable: Boolean(milestone?.trackable) };
+        })} />
       <div className={styles.footer}><Link className={styles.action} href="/profile">My profile →</Link><Link className={styles.action} href="/my-collection">My collection →</Link></div>
     </main>
   );

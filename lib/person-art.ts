@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { del, put } from "@vercel/blob";
 
 import { auth } from "@/auth";
+import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin, validateArtworkTitle } from "@/lib/validation";
 
@@ -240,7 +241,7 @@ export async function uploadPersonArtwork(personId: string, file: File, titleInp
   });
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const artwork = await prisma.$transaction(async (tx) => {
       const lastArtwork = await tx.personArtwork.findFirst({
         where: { personId: owner.person.id },
         orderBy: [{ position: "desc" }, { createdAt: "desc" }, { id: "desc" }],
@@ -257,6 +258,8 @@ export async function uploadPersonArtwork(personId: string, file: File, titleInp
         select: { id: true, image: true, title: true, position: true, createdAt: true },
       });
     });
+    await safelySyncPersonAchievements(owner.person.id);
+    return artwork;
   } catch (error) {
     await cleanupArtworkBlob(blob.url, owner.person.id);
     throw error;
