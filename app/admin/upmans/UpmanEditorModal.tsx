@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 
 import { UP_MAN_RARITIES } from "./types";
 import type { ManagedUpman, PersonOption } from "./types";
+import { getCreatorAssociationStatus } from "@/lib/upman-identity";
 
 type UpmanEditorModalProps = {
   upman: ManagedUpman;
@@ -53,6 +54,9 @@ export default function UpmanEditorModal({
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [, startTransition] = useTransition();
   const isMutating = isSaving || isDeleting;
+  const creatorStatus = getCreatorAssociationStatus(upman, upman.creatorPerson);
+  const canonicalCreatorLogin = upman.creatorPerson?.user?.twitchLogin ?? null;
+  const representedLogin = upman.representedPerson?.user?.twitchLogin ?? null;
 
   const createdAt = upman.createdAt.toLocaleDateString("en-GB", {
     day: "numeric",
@@ -199,10 +203,6 @@ export default function UpmanEditorModal({
           <dl className="grid gap-3 sm:grid-cols-2">
             <ReadOnlyField label="Slug" value={upman.slug} />
             <ReadOnlyField label="Image" value={upman.image} />
-            <ReadOnlyField
-              label="Creator Twitch"
-              value={upman.creatorTwitch ?? "Not set"}
-            />
             <ReadOnlyField label="Owners" value={String(upman.ownersCount)} />
             <ReadOnlyField
               label="First Owner"
@@ -211,6 +211,25 @@ export default function UpmanEditorModal({
             <ReadOnlyField label="Added" value={createdAt} />
           </dl>
         </div>
+
+        <section className="mt-6 grid gap-4 rounded-3xl border border-cyan-100 bg-cyan-50/60 p-5 md:grid-cols-2" aria-label="Association diagnostic">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700">Creator</p>
+            <p className="mt-2 font-black text-sky-950">{upman.creatorPerson?.displayName ?? (upman.creator || "Unknown creator")}</p>
+            <p className="mt-1 text-sm text-sky-700">Verified Twitch: {canonicalCreatorLogin ? `@${canonicalCreatorLogin}` : "Not linked"}</p>
+            <p className="mt-1 text-sm text-sky-700">Creator Person: {upman.creatorPerson?.displayName ?? "None"}</p>
+            <p className="mt-2 text-xs font-bold text-sky-600">Legacy attribution: {upman.creator || "None"}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</p>
+            <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-black ${creatorStatus === "Mismatch" ? "bg-amber-100 text-amber-900" : creatorStatus === "Linked" ? "bg-emerald-100 text-emerald-800" : creatorStatus === "Legacy only" ? "bg-sky-100 text-sky-800" : "bg-slate-100 text-slate-700"}`}>{creatorStatus}</span>
+            {creatorStatus === "Mismatch" && <p className="mt-2 text-xs font-bold text-amber-900">Legacy attribution differs from canonical creator.</p>}
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700">Represented Person</p>
+            <p className="mt-2 font-black text-sky-950">{upman.representedPerson?.displayName ?? "None"}</p>
+            <p className="mt-1 text-sm text-sky-700">Linked Twitch: {representedLogin ? `@${representedLogin}` : "Not linked"}</p>
+            <p className="mt-1 text-sm text-sky-700">Association: {upman.rarity === "Common" ? "Not applicable — Common" : upman.representedPerson ? "Linked" : "Unlinked"}</p>
+            <p className="mt-2 text-xs font-bold text-sky-600">Independent from the creator and from ownership.</p>
+          </div>
+        </section>
 
         <form onSubmit={saveChanges} className="mt-8 rounded-3xl border border-sky-100 bg-white p-5">
           <div className="flex items-center justify-between gap-4">
@@ -300,7 +319,7 @@ export default function UpmanEditorModal({
                   <option value="">None — legacy creator only</option>
                   {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
                 </select>
-                <span className="text-xs font-medium text-sky-600">Legacy: {upman.creator}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</span>
+                <span className="text-xs font-medium text-sky-600">Legacy attribution: {upman.creator}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</span>
               </label>
               <label className="grid gap-2 text-sm font-bold text-sky-900">
                 Represented Person

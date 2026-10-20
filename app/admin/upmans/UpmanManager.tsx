@@ -9,6 +9,7 @@ import ActiveEventUpmanPanel from "./ActiveEventUpmanPanel";
 import UpmanEditorModal from "./UpmanEditorModal";
 import { UP_MAN_RARITIES } from "./types";
 import type { ActiveEventUpmanConfig, EventUpmanOption, ManagedUpman, PersonOption } from "./types";
+import { getCreatorAssociationStatus } from "@/lib/upman-identity";
 
 type SortOption =
   | "name-asc"
@@ -75,7 +76,11 @@ export default function UpmanManager({
         !normalizedQuery ||
         upman.name.toLowerCase().includes(normalizedQuery) ||
         upman.slug.toLowerCase().includes(normalizedQuery) ||
-        upman.creator.toLowerCase().includes(normalizedQuery);
+        upman.creator.toLowerCase().includes(normalizedQuery) ||
+        upman.creatorPerson?.displayName.toLowerCase().includes(normalizedQuery) ||
+        upman.creatorPerson?.user?.twitchLogin.toLowerCase().includes(normalizedQuery) ||
+        upman.representedPerson?.displayName.toLowerCase().includes(normalizedQuery) ||
+        upman.representedPerson?.user?.twitchLogin.toLowerCase().includes(normalizedQuery);
       const matchesRarity = rarity === "All rarities" || upman.rarity === rarity;
 
       return matchesQuery && matchesRarity;
@@ -104,6 +109,12 @@ export default function UpmanManager({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/upmans/relationships"
+            className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-black text-sky-800 transition hover:bg-cyan-100"
+          >
+            Relationship tools
+          </Link>
           <Link
             href="/admin/upmans/legacy"
             className="rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm font-black text-sky-800 transition hover:bg-sky-50"
@@ -206,10 +217,11 @@ export default function UpmanManager({
                   </div>
                   <p className="mt-1 truncate text-xs text-sky-600">/{upman.slug}</p>
                 </div>
-                <p className="text-sm font-semibold text-sky-800">
+                <div className="text-sm font-semibold text-sky-800">
                   <span className="mr-1 text-sky-500 lg:hidden">Creator:</span>
-                  {upman.creator}
-                </p>
+                  <p>{upman.creatorPerson?.displayName ?? (upman.creator || "Unknown creator")}</p>
+                  <p className="mt-1 text-xs font-bold text-sky-500">{getCreatorAssociationStatus(upman, upman.creatorPerson)}</p>
+                </div>
                 <p className="text-sm font-black text-sky-900">
                   <span className="mr-1 text-sky-500 lg:hidden">Owners:</span>
                   {upman.ownersCount}

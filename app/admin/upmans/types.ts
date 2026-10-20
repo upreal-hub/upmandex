@@ -8,8 +8,8 @@ export type ManagedUpman = {
   creatorTwitch: string | null;
   creatorPersonId: string | null;
   representedPersonId: string | null;
-  creatorPerson: { id: string; displayName: string } | null;
-  representedPerson: { id: string; displayName: string } | null;
+  creatorPerson: { id: string; displayName: string; isPublic: boolean; user: { twitchLogin: string; avatar: string | null } | null } | null;
+  representedPerson: { id: string; displayName: string; isPublic: boolean; user: { twitchLogin: string; avatar: string | null } | null } | null;
   ownersCount: number;
   firstOwner: string | null;
   createdAt: Date;

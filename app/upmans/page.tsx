@@ -4,6 +4,7 @@ import UpmandexGallery, { type UpmandexEntry } from "@/components/UpmandexGaller
 import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
 import { publicUpmanWhere } from "@/lib/upman-visibility";
+import { resolvePublicCreatorIdentity } from "@/lib/upman-identity";
 
 import styles from "./upmandex.module.css";
 
@@ -26,6 +27,7 @@ export default async function UpmansPage() {
         rarity: true,
         creator: true,
         creatorTwitch: true,
+        creatorPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { twitchLogin: true, avatar: true } } } },
       },
     }),
     twitchLogin
@@ -37,6 +39,7 @@ export default async function UpmansPage() {
   ]);
 
   const creatorLogins = upmans
+    .filter((upman) => !upman.creatorPerson?.isPublic)
     .map((upman) => upman.creatorTwitch)
     .filter((login): login is string => Boolean(login));
 
@@ -51,14 +54,22 @@ export default async function UpmansPage() {
     creatorUsers.map((user) => [user.twitchLogin, user.avatar]),
   );
   const ownedUpmanIds = new Set(viewer?.inventory.map((item) => item.upmanId));
-  const entries: UpmandexEntry[] = upmans.map((upman) => ({
-    ...upman,
+  const entries: UpmandexEntry[] = upmans.map((upman) => {
+    const identity = resolvePublicCreatorIdentity(
+      upman,
+      upman.creatorPerson,
+      upman.creatorTwitch ? avatarsByTwitchLogin.get(upman.creatorTwitch) ?? null : null,
+    );
+    return {
+    slug: upman.slug,
+    name: upman.name,
+    image: upman.image,
     rarity: upman.rarity as UpmandexEntry["rarity"],
-    creatorAvatar: upman.creatorTwitch
-      ? avatarsByTwitchLogin.get(upman.creatorTwitch) ?? null
-      : null,
+    creator: identity.displayName,
+    creatorTwitch: identity.twitchLogin,
+    creatorAvatar: identity.avatar,
     owned: ownedUpmanIds.has(upman.id),
-  }));
+  }; });
 
   const guideUpman = upmans.find((upman) => upman.slug === "beanieupman") ?? upmans[0];
 

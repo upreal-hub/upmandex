@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeTwitchLogin } from "@/lib/validation";
 import { publicUpmanWhere, upmanDetailWhere } from "@/lib/upman-visibility";
 import { getUpmanRarityLabel } from "@/lib/upman-rarity";
+import { resolvePublicCreatorIdentity } from "@/lib/upman-identity";
 
 import styles from "./upman-detail.module.css";
 
@@ -64,9 +65,7 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
     twitchLogin ? prisma.user.findUnique({ where: { twitchLogin }, select: { inventory: { where: { upmanId: upman.id }, select: { id: true } } } }) : null,
     !structuredCreator && upman.creatorTwitch ? prisma.user.findUnique({ where: { twitchLogin: upman.creatorTwitch }, select: { avatar: true } }) : null,
   ]);
-  const creatorIdentity: PublicIdentity = structuredCreator
-    ? { displayName: structuredCreator.displayName, avatar: structuredCreator.user?.avatar ?? null, twitchLogin: structuredCreator.user?.twitchLogin ?? null }
-    : { displayName: upman.creator, avatar: legacyCreator?.avatar ?? null, twitchLogin: upman.creatorTwitch };
+  const creatorIdentity: PublicIdentity = resolvePublicCreatorIdentity(upman, upman.creatorPerson, legacyCreator?.avatar ?? null);
   const creatorUpmans = structuredCreator ? upmans.filter((candidate) => candidate.creatorPersonId === structuredCreator.id) : upmans.filter((candidate) => candidate.creator === upman.creator);
   const representedUpmans = representedPerson ? upmans.filter((candidate) => candidate.representedPersonId === representedPerson.id) : [];
   const hasPersonView = Boolean(representedPerson);
