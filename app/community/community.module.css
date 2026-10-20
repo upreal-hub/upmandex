@@ -47,7 +47,6 @@
 
 /* Medal clouds retain legible ink even against the night sky. */
 .cloudWinner { position:relative; isolation:isolate; border:2px solid #c0d8e8; color:#173751; background:radial-gradient(ellipse at 50% 0%,#fff 0%,#e7f5ff 58%,#c9e2ee 100%); box-shadow:0 9px 0 #789cb477,0 18px 30px #163d5d35,inset 0 2px 0 #fff; }
-.cloudWinner::before { position:absolute; z-index:-1; inset:auto 10% -.55rem; height:2.4rem; border-radius:50%; background:#dbf2ff; box-shadow:0 0 22px #d7f2ff99; content:""; }
 .cloudWinner[data-rank="1"] { border-color:#d5a840; color:#513b12; background:radial-gradient(ellipse at 50% 0%,#fff9dc,#f8e7a9 58%,#ddb864); box-shadow:0 9px 0 #b68a3c88,0 16px 36px #edc96a66,inset 0 2px 0 white; }
 .cloudWinner[data-rank="2"] { border-color:#a4bfcd; background:radial-gradient(ellipse at 50% 0%,#fff,#e6f2f7 58%,#b5cbd8); }
 .cloudWinner[data-rank="3"] { border-color:#ca956e; color:#50392e; background:radial-gradient(ellipse at 50% 0%,#fff4e9,#edd0b9 58%,#c99775); }
@@ -63,7 +62,6 @@
   box-shadow: 0 .45rem 0 color-mix(in srgb, currentColor 14%, transparent), 0 1.15rem 2.2rem #163d5d2b, inset 0 2px 0 #fff;
 }
 .cloudWinner[data-rank="1"] { min-height: 14.15rem; }
-.cloudWinner::before { right: 14%; left: 14%; bottom: -.42rem; height: 1.75rem; box-shadow: 0 0 1rem color-mix(in srgb, currentColor 16%, transparent); }
 .cloudWinner strong { line-height: 1.1; overflow-wrap: anywhere; }
 .winnerLinks { gap: .42rem .65rem; }
 .rankingRow { min-width: 0; padding-block: .9rem; }
