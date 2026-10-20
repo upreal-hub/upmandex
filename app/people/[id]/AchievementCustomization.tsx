@@ -51,6 +51,7 @@ export default function AchievementCustomization({
   personId,
   achievements,
   customAssets = [],
+  personalBackgroundsAvailable = true,
   identity,
   loadout,
   featuredAchievementKeys,
@@ -60,6 +61,7 @@ export default function AchievementCustomization({
   personId: string;
   achievements: DisplayAchievement[];
   customAssets?: CustomAsset[];
+  personalBackgroundsAvailable?: boolean;
   identity: { displayName: string; avatar: string | null; twitchLogin: string | null };
   loadout: Loadout;
   featuredAchievementKeys: string[];
@@ -235,7 +237,9 @@ export default function AchievementCustomization({
             </div>
             {activeCustomProperty && <>
               <p className={styles.sourceHeading}>Custom {activeConfig.label.toLowerCase()}s</p>
-              {activeSlot === "background" && <PersonalBackgroundControls personId={personId} asset={customAssets.find((asset) => asset.type === "BACKGROUND" && asset.ownerUserId) ?? null} onChanged={() => router.refresh()} />}
+              {activeSlot === "background" && (personalBackgroundsAvailable
+                ? <PersonalBackgroundControls personId={personId} asset={customAssets.find((asset) => asset.type === "BACKGROUND" && asset.ownerUserId) ?? null} onChanged={() => router.refresh()} />
+                : <p className={styles.noCustomAssets}>Personal background uploads will be available after this Preview database is updated.</p>)}
               {activeCustomAssets.length
                 ? <div className={`${styles.galleryOptions} ${styles.customAssetOptions}`}>
                   {activeCustomAssets.map((asset) => <CustomCosmeticOption key={asset.id} slot={activeSlot as "background" | "banner"} asset={asset} selected={previewLoadout[activeCustomProperty] === asset.id} equipped={equippedLoadout[activeCustomProperty] === asset.id} onPreview={() => previewCustomOption(asset.id)} />)}

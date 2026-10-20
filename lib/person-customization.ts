@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAchievementCosmetic, getAchievementDefinition, type CosmeticSlot } from "@/lib/achievements";
-import { ProfileCosmeticAssetType } from "@/app/generated/prisma/client";
+import { Prisma, ProfileCosmeticAssetType } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type PersonCosmeticLoadout = {
@@ -67,7 +67,18 @@ export async function updatePersonCosmeticLoadout(personId: string, userId: stri
 
   const customAssetIds = [loadout.equippedCustomBackgroundId, loadout.equippedCustomBannerId].filter((id): id is string => typeof id === "string");
   if (customAssetIds.length) {
-    const customAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true, ownerUserId: true } });
+    let customAssets: Array<{ id: string; type: ProfileCosmeticAssetType; ownerUserId: string | null }>;
+    try {
+      customAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true, ownerUserId: true } });
+    } catch (error) {
+      const missingOwnerColumn = error instanceof Prisma.PrismaClientKnownRequestError
+        && error.code === "P2022"
+        && typeof error.meta?.column === "string"
+        && error.meta.column.includes("ownerUserId");
+      if (!missingOwnerColumn) throw error;
+      const legacyAssets = await prisma.profileCosmeticAsset.findMany({ where: { id: { in: customAssetIds } }, select: { id: true, type: true } });
+      customAssets = legacyAssets.map((asset) => ({ ...asset, ownerUserId: null }));
+    }
     if (customAssets.length !== customAssetIds.length) throw new PersonCustomizationError(400, "Choose only existing custom cosmetics");
     const customAssetTypes = new Map(customAssets.map((asset) => [asset.id, asset.type]));
     if (loadout.equippedCustomBackgroundId && customAssetTypes.get(loadout.equippedCustomBackgroundId) !== ProfileCosmeticAssetType.BACKGROUND) {

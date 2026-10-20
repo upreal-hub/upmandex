@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/app/generated/prisma/client";
 
 import {
   deletePersonalProfileBackground,
@@ -10,6 +11,9 @@ import {
 export const runtime = "nodejs";
 
 function responseFor(error: unknown, fallback: string) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2022" && typeof error.meta?.column === "string" && error.meta.column.includes("ownerUserId")) {
+    return NextResponse.json({ success: false, error: "Personal backgrounds are not available until the Preview database migration is applied" }, { status: 503 });
+  }
   if (error instanceof PersonalProfileBackgroundError) {
     return NextResponse.json({ success: false, error: error.message }, { status: error.status });
   }

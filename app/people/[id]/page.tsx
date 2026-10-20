@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAchievementCosmetic, getAchievementProgress } from "@/lib/achievements";
 import { auth } from "@/auth";
@@ -37,6 +38,13 @@ type PersonUpman = {
   image: string;
   rarity: string;
 };
+
+function isMissingPersonalBackgroundColumn(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && error.code === "P2022"
+    && typeof error.meta?.column === "string"
+    && error.meta.column.includes("ownerUserId");
+}
 
 export default async function PersonPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ customize?: string }> }) {
   const { id } = await params;
@@ -90,13 +98,24 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
-  const customAssets = isOwner
-    ? await prisma.profileCosmeticAsset.findMany({
-      where: { OR: [{ ownerUserId: null }, { ownerUserId: currentUser!.id }] },
-      select: { id: true, type: true, name: true, image: true, ownerUserId: true },
-      orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
-    })
-    : [];
+  let personalBackgroundsAvailable = true;
+  let customAssets: Array<{ id: string; type: "BACKGROUND" | "BANNER"; name: string; image: string; ownerUserId?: string | null }> = [];
+  if (isOwner) {
+    try {
+      customAssets = await prisma.profileCosmeticAsset.findMany({
+        where: { OR: [{ ownerUserId: null }, { ownerUserId: currentUser!.id }] },
+        select: { id: true, type: true, name: true, image: true, ownerUserId: true },
+        orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
+      });
+    } catch (error) {
+      if (!isMissingPersonalBackgroundColumn(error)) throw error;
+      personalBackgroundsAvailable = false;
+      customAssets = await prisma.profileCosmeticAsset.findMany({
+        select: { id: true, type: true, name: true, image: true },
+        orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
+      });
+    }
+  }
   const collectionWhere = person.userId ? collectionUpmanWhere(person.userId, isOwner) : null;
   const [skyTotal, skyOwned, skyLatest] = person.userId && collectionWhere ? await Promise.all([
     prisma.upman.count({ where: collectionWhere }),
@@ -145,7 +164,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
           {isOwner && <div id="profile-customization" className={styles.ownerActions}>
 
             <CustomizeModeOnly>
-              <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} inline buttonLabel="Customize cosmetics" />
+              <AchievementCustomization personId={person.id} achievements={unlockedAchievements} customAssets={customAssets} personalBackgroundsAvailable={personalBackgroundsAvailable} identity={{ displayName: person.displayName, avatar: person.user?.avatar ?? null, twitchLogin: person.user?.twitchLogin ?? null }} loadout={{ equippedTitleAchievementKey: person.equippedTitleAchievementKey, equippedBackgroundAchievementKey: person.equippedBackgroundAchievementKey, equippedBannerAchievementKey: person.equippedBannerAchievementKey, equippedAccentAchievementKey: person.equippedAccentAchievementKey, equippedCustomBackgroundId: person.equippedCustomBackgroundId, equippedCustomBannerId: person.equippedCustomBannerId }} featuredAchievementKeys={featured.map((achievement) => achievement.key)} inline buttonLabel="Customize cosmetics" />
               <PersonLinks personId={person.id} personName={person.displayName} links={person.links} isOwner={isOwner} />
             </CustomizeModeOnly>
           </div>}
