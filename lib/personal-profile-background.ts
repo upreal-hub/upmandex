@@ -12,6 +12,24 @@ import { normalizeTwitchLogin } from "@/lib/validation";
 const PREFIX = "personal-profile-backgrounds/";
 const EXTENSIONS = /\.(png|jpe?g|webp)$/i;
 
+/**
+ * Keeps deployed code compatible with the existing Anniversary schema until
+ * the personal-background migration has been deliberately applied. This is a
+ * read-only metadata query, not a broad Prisma-error fallback.
+ */
+export async function isPersonalProfileBackgroundSchemaAvailable() {
+  const rows = await prisma.$queryRaw<Array<{ available: boolean }>>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = current_schema()
+        AND table_name = 'ProfileCosmeticAsset'
+        AND column_name = 'ownerUserId'
+    ) AS "available"
+  `;
+  return rows[0]?.available === true;
+}
+
 export class PersonalProfileBackgroundError extends Error {
   constructor(public readonly status: 400 | 401 | 403 | 404 | 500, message: string) {
     super(message);

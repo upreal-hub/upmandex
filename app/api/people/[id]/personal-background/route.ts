@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@/app/generated/prisma/client";
-
 import {
   deletePersonalProfileBackground,
   getPersonalProfileBackground,
+  isPersonalProfileBackgroundSchemaAvailable,
   PersonalProfileBackgroundError,
   uploadPersonalProfileBackground,
 } from "@/lib/personal-profile-background";
@@ -11,9 +10,6 @@ import {
 export const runtime = "nodejs";
 
 function responseFor(error: unknown, fallback: string) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2022" && typeof error.meta?.column === "string" && error.meta.column.includes("ownerUserId")) {
-    return NextResponse.json({ success: false, error: "Personal backgrounds are not available until the Preview database migration is applied" }, { status: 503 });
-  }
   if (error instanceof PersonalProfileBackgroundError) {
     return NextResponse.json({ success: false, error: error.message }, { status: error.status });
   }
@@ -22,6 +18,7 @@ function responseFor(error: unknown, fallback: string) {
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    if (!await isPersonalProfileBackgroundSchemaAvailable()) return NextResponse.json({ success: false, error: "Personal backgrounds are not available until the Preview database migration is applied" }, { status: 503 });
     return NextResponse.json({ success: true, asset: await getPersonalProfileBackground((await params).id) });
   } catch (error) {
     return responseFor(error, "Unable to load your personal background");
@@ -30,6 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    if (!await isPersonalProfileBackgroundSchemaAvailable()) return NextResponse.json({ success: false, error: "Personal backgrounds are not available until the Preview database migration is applied" }, { status: 503 });
     const formData = await request.formData();
     if ([...formData.keys()].some((key) => key !== "image")) {
       throw new PersonalProfileBackgroundError(400, "Invalid background upload");
@@ -45,6 +43,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    if (!await isPersonalProfileBackgroundSchemaAvailable()) return NextResponse.json({ success: false, error: "Personal backgrounds are not available until the Preview database migration is applied" }, { status: 503 });
     return NextResponse.json({ success: true, ...(await deletePersonalProfileBackground((await params).id)) });
   } catch (error) {
     return responseFor(error, "Unable to remove your personal background");

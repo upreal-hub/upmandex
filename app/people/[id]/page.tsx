@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAchievementCosmetic, getAchievementProgress } from "@/lib/achievements";
 import { auth } from "@/auth";
 import { normalizeTwitchLogin } from "@/lib/validation";
 import { collectionUpmanWhere, publicUpmanWhere } from "@/lib/upman-visibility";
+import { isPersonalProfileBackgroundSchemaAvailable } from "@/lib/personal-profile-background";
 
 import AchievementsPanel from "./AchievementsPanel";
 import AchievementCustomization from "./AchievementCustomization";
@@ -38,13 +38,6 @@ type PersonUpman = {
   image: string;
   rarity: string;
 };
-
-function isMissingPersonalBackgroundColumn(error: unknown) {
-  return error instanceof Prisma.PrismaClientKnownRequestError
-    && error.code === "P2022"
-    && typeof error.meta?.column === "string"
-    && error.meta.column.includes("ownerUserId");
-}
 
 export default async function PersonPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ customize?: string }> }) {
   const { id } = await params;
@@ -98,18 +91,16 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
-  let personalBackgroundsAvailable = true;
+  const personalBackgroundsAvailable = isOwner && await isPersonalProfileBackgroundSchemaAvailable();
   let customAssets: Array<{ id: string; type: "BACKGROUND" | "BANNER"; name: string; image: string; ownerUserId?: string | null }> = [];
   if (isOwner) {
-    try {
+    if (personalBackgroundsAvailable) {
       customAssets = await prisma.profileCosmeticAsset.findMany({
         where: { OR: [{ ownerUserId: null }, { ownerUserId: currentUser!.id }] },
         select: { id: true, type: true, name: true, image: true, ownerUserId: true },
         orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
       });
-    } catch (error) {
-      if (!isMissingPersonalBackgroundColumn(error)) throw error;
-      personalBackgroundsAvailable = false;
+    } else {
       customAssets = await prisma.profileCosmeticAsset.findMany({
         select: { id: true, type: true, name: true, image: true },
         orderBy: [{ type: "asc" }, { name: "asc" }, { id: "asc" }],
