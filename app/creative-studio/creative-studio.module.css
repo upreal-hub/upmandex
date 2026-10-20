@@ -17,3 +17,9 @@
   .like, .download, .secondary { min-height: 2.35rem; }
   .artImage { aspect-ratio: 1 / .9; }
 }
+
+.workshopCallout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .85rem 1.25rem; max-width: 47rem; margin-top: 1.35rem; padding: .8rem 1rem .8rem 1.15rem; border: 1px solid color-mix(in srgb, #50b6dc 42%, var(--line)); border-radius: 1.35rem 1.1rem 1.45rem 1.15rem; background: color-mix(in srgb, var(--surface-strong) 78%, #d7f4ff); box-shadow: inset 0 1px 0 #ffffff9c; }
+.workshopCallout strong, .workshopCallout small { display: block; }.workshopCallout strong { color: var(--navy); font-family: var(--display-font); font-size: .98rem; }.workshopCallout small { margin-top: .18rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
+.workshopAction { min-height: 2.55rem; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 1px solid #258fbd; border-radius: 999px; padding: .55rem .9rem; color: #fff; background: linear-gradient(135deg, #4cc5e9, #2782ae); box-shadow: 0 .45rem .9rem color-mix(in srgb, #2782ae 25%, transparent); font: inherit; font-size: .8rem; font-weight: 900; text-decoration: none; cursor: pointer; }
+.workshopAction:focus-visible { outline: 3px solid #efb43d; outline-offset: 3px; }
+@media (max-width: 560px) { .workshopCallout { align-items: stretch; }.workshopAction { width: 100%; }.workshopCallout small { line-height: 1.45; } }

@@ -37,7 +37,7 @@ const menus: Menu[] = [
   { label: "My Profile", intro: "Make your own corner of the sky.", icon: "✿", auth: true, items: [
     { label: "My Profile", detail: "Open your linked Person profile", icon: "☁", href: "/profile" },
     { label: "Customization", detail: "Customize from your Person profile", icon: "✧", href: "/profile?view=customize" },
-    { label: "My Creations", detail: "See creations on your Person profile", icon: "✎", href: "/profile?view=creations" },
+    { label: "My Workshop", detail: "Manage and publish your creations", icon: "✎", href: "/profile?view=creations" },
   ] },
 ];
 

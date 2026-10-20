@@ -20,7 +20,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   if (user?.person) {
     const destination = `/people/${encodeURIComponent(user.person.id)}`;
     if (view === "customize") redirect(`${destination}?customize=1#profile-customization`);
-    if (view === "creations") redirect(`${destination}#person-creations`);
+    if (view === "creations") redirect(`${destination}?customize=1#person-creations`);
     redirect(destination);
   }
 

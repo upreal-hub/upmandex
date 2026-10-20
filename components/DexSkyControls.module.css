@@ -13,6 +13,10 @@
 .fieldset legend { padding: 0; font-size: .8rem; font-weight: 800; }
 .fieldset legend span { display: block; margin-top: .3rem; color: var(--ink-soft); font-weight: 500; line-height: 1.6; }
 .chips { display: flex; flex-wrap: wrap; gap: 1.65rem 1rem; padding: 1.55rem .4rem 1.1rem; }
+.ownershipChips { padding-top: 1.25rem; }
+.ownershipChip { --chip-accent: #67c8e8; }
+.ownershipChip:nth-child(2) { --chip-accent: #72c98d; }
+.ownershipChip:nth-child(3) { --chip-accent: #8398ad; }
 .chip { --chip-accent: #69bfe4; --chip-fill: color-mix(in srgb, var(--surface-strong) 80%, var(--chip-accent)); position: relative; isolation: isolate; display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; gap: .4rem; padding: .55rem .95rem; border: 0; border-radius: 2.5rem 3.1rem 2.7rem 2.8rem / 2.2rem 2.3rem 2.1rem 2.5rem; color: var(--ink); background: var(--chip-fill); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--chip-accent) 24%, transparent), 0 7px 14px color-mix(in srgb, var(--chip-accent) 20%, transparent); font: inherit; font-family: var(--display-font); font-size: .82rem; font-weight: 900; cursor: pointer; }
 .chip::before, .chip::after { content: ""; position: absolute; z-index: -1; top: -.5rem; left: .75rem; width: 1.8rem; height: 1.5rem; border-radius: 50%; background: var(--chip-fill); box-shadow: inset 0 1px 0 #ffffff70; pointer-events: none; }
 .chip::after { top: -.75rem; left: auto; right: 20%; width: 2.3rem; height: 1.9rem; }

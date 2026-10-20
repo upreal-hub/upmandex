@@ -9,6 +9,7 @@ import styles from "./UpmandexGallery.module.css";
 import { getUpmanRarityLabel, UP_MAN_RARITIES, type UpmanRarity } from "@/lib/upman-rarity";
 
 const rarities = ["All", ...UP_MAN_RARITIES] as const;
+type OwnershipFilter = "all" | "owned" | "missing";
 
 export type UpmandexEntry = {
   slug: string;
@@ -40,6 +41,7 @@ const rarityClassNames: Record<UpmanRarity, string> = {
 export default function UpmandexGallery({ upmans, collection, showConnectMessage }: Props) {
   const [query, setQuery] = useState("");
   const [selectedRarities, setSelectedRarities] = useState<UpmanRarity[]>([]);
+  const [ownership, setOwnership] = useState<OwnershipFilter>("all");
 
   function toggleRarity(rarity: (typeof rarities)[number]) {
     setSelectedRarities((current) => rarity === "All" ? [] : current.includes(rarity)
@@ -69,10 +71,11 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
         upman.creator,
         upman.creatorTwitch ?? "",
       ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
+      const matchesOwnership = !collection || ownership === "all" || (ownership === "owned" ? upman.owned : !upman.owned);
 
-      return matchesRarity && matchesQuery;
+      return matchesRarity && matchesQuery && matchesOwnership;
     });
-  }, [query, selectedRarities, upmans]);
+  }, [collection, ownership, query, selectedRarities, upmans]);
 
   return (
     <>
@@ -99,9 +102,21 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
             })}
           </div>
         </fieldset>
+        {collection && <fieldset className={ui.fieldset}>
+          <legend>Choose your collection view <span>These clouds use your real collection, without changing the Dex itself.</span></legend>
+          <div className={`${ui.chips} ${ui.ownershipChips}`}>
+            {([
+              ["all", "All Upmans", upmans.length],
+              ["owned", "Collected", collection.ownedCount],
+              ["missing", "Not collected", Math.max(0, collection.totalCount - collection.ownedCount)],
+            ] as const).map(([value, label, count]) => <button key={value} type="button" className={`${ui.chip} ${ui.ownershipChip}`} aria-pressed={ownership === value} onClick={() => setOwnership(value)}>
+              <span className={ui.selection} aria-hidden="true">{ownership === value ? "✓" : "+"}</span><span>{label}</span><small>{count}</small>
+            </button>)}
+          </div>
+        </fieldset>}
         <div className={ui.resultRow}>
           <p role="status" aria-live="polite" aria-atomic="true"><strong>{filteredUpmans.length}</strong> of {upmans.length} Upman{upmans.length === 1 ? "" : "s"}{query.trim() || selectedRarities.length > 0 ? " match your sky" : " ready to discover"}</p>
-          <span className={ui.activeClouds}>{selectedRarities.length ? selectedRarities.join(" + ") : "All rarities · the whole sky"}</span>
+          <span className={ui.activeClouds}>{selectedRarities.length ? selectedRarities.join(" + ") : "All rarities · the whole sky"}{collection && ownership !== "all" ? ` · ${ownership === "owned" ? "Collected" : "Not collected"}` : ""}</span>
         </div>
       </section>
 
@@ -145,7 +160,7 @@ export default function UpmandexGallery({ upmans, collection, showConnectMessage
                   </p>
                 )}
                 {upman.owned && <p className={styles.owned}><span aria-hidden="true">✓</span> Owned</p>}
-                {collection && !upman.owned && <p className={styles.missingLabel}><span aria-hidden="true">🔒</span> Not collected</p>}
+                {collection && !upman.owned && <p className={styles.missingLabel}>Not collected</p>}
               </div>
             </Link>
           ))}
