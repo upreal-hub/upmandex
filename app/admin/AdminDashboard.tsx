@@ -7,8 +7,13 @@ import { formatActivityDescription } from "@/lib/activity";
 type DashboardData = {
   totalUpmans: number;
   totalUsers: number;
+  totalPeople: number;
   totalDiscoveries: number;
   globalCompletion: number;
+  rarityCounts: Array<{ rarity: string; count: number }>;
+  canonicalCreators: number;
+  missingRepresentedPeople: number;
+  mismatchCount: number;
   latestUpman: {
     name: string;
     image: string;
@@ -57,15 +62,16 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           Anniversary Admin
         </p>
         <h1 className="mt-2 text-4xl font-black tracking-tight text-sky-950 sm:text-5xl">
-          Dashboard
+          Admin Studio
         </h1>
         <p className="mt-3 max-w-2xl text-sky-700">
-          A clear view of the UPMANDEX anniversary environment.
+          A clear, safe control room for the UPMANDEX anniversary environment.
         </p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Dex statistics">
         <StatCard label="Total Upmans" value={String(data.totalUpmans)} detail="Available in the Dex" />
+        <StatCard label="People" value={String(data.totalPeople)} detail={`${data.canonicalCreators} structured creators`} />
         <StatCard label="Total Viewers" value={String(data.totalUsers)} detail="Registered Twitch collectors" />
         <StatCard label="Total Discoveries" value={String(data.totalDiscoveries)} detail="Unique inventory entries" />
         <StatCard
@@ -73,6 +79,21 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           value={`${data.globalCompletion.toFixed(1)}%`}
           detail="Inventory out of all possible viewer × Upman discoveries"
         />
+      </section>
+
+      <section className="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
+        <article className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-500">Dex makeup</p>
+          <h2 className="mt-1 text-2xl font-black text-sky-950">Rarities in the cloud world</h2>
+          <div className="mt-5 flex flex-wrap gap-2">{data.rarityCounts.map((entry) => <span key={entry.rarity} className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-2 text-sm font-bold text-sky-800"><strong className="text-sky-950">{entry.count}</strong> {entry.rarity}</span>)}</div>
+          <Link href="/admin/upmans" className="mt-5 inline-flex rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Open Upman library →</Link>
+        </article>
+        <article className="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-amber-700">Relationship health</p>
+          <h2 className="mt-1 text-2xl font-black text-sky-950">Associations to review</h2>
+          <dl className="mt-5 grid gap-3 text-sm text-sky-800"><div className="flex justify-between gap-4"><dt>Missing represented Person</dt><dd className="font-black">{data.missingRepresentedPeople}</dd></div><div className="flex justify-between gap-4"><dt>Verified Twitch mismatches</dt><dd className="font-black">{data.mismatchCount}</dd></div></dl>
+          <Link href="/admin/upmans/relationships" className="mt-5 inline-flex rounded-xl bg-amber-400 px-3 py-2 text-sm font-black text-amber-950 transition hover:bg-amber-300">Review relationships →</Link>
+        </article>
       </section>
 
       <section className="mt-8 rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
@@ -140,10 +161,10 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           <h2 className="mt-1 text-2xl font-black text-sky-950">Admin shortcuts</h2>
           <div className="mt-6 grid gap-3">
             <Link
-              href="/admin/upmans"
+              href="/admin/upmans/new"
               className="rounded-2xl bg-sky-500 px-4 py-3 text-center font-black text-white shadow-sm transition hover:bg-sky-600"
             >
-              Manage Upmans →
+              Add Upman →
             </Link>
             <Link
               href="/admin/upmans"

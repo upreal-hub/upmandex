@@ -156,10 +156,14 @@ export function validateUpmanUpdatePayload(value: unknown):
         slug: string;
         name: string;
         creator: string;
+        creatorTwitch?: string | null;
         rarity: Rarity;
         creatorPersonId?: string | null;
         representedPersonId?: string | null;
+        dexVisibility?: "PUBLIC" | "HIDDEN";
+        isPullable?: boolean;
         confirmRepresentedPersonRemoval: boolean;
+        confirmConfigurationChange: boolean;
       };
     }
   | { success: false; error: string } {
@@ -171,12 +175,33 @@ export function validateUpmanUpdatePayload(value: unknown):
   const slug = validateSlug(payload.slug);
   const name = nonEmptyString(payload.name, 120);
   const creator = nonEmptyString(payload.creator, 120);
+  const hasCreatorTwitch = Object.hasOwn(payload, "creatorTwitch");
+  const creatorTwitchValue = payload.creatorTwitch;
   const rarity = validateRarity(payload.rarity);
   const hasCreatorPersonId = Object.hasOwn(payload, "creatorPersonId");
   const hasRepresentedPersonId = Object.hasOwn(payload, "representedPersonId");
   const creatorPersonId = hasCreatorPersonId ? optionalId(payload.creatorPersonId) : undefined;
   const representedPersonId = hasRepresentedPersonId ? optionalId(payload.representedPersonId) : undefined;
+  const hasDexVisibility = Object.hasOwn(payload, "dexVisibility");
+  const dexVisibility = hasDexVisibility
+    ? (payload.dexVisibility === "PUBLIC" || payload.dexVisibility === "HIDDEN" ? payload.dexVisibility : undefined)
+    : undefined;
+  const hasIsPullable = Object.hasOwn(payload, "isPullable");
+  const isPullable = hasIsPullable && typeof payload.isPullable === "boolean" ? payload.isPullable : hasIsPullable ? undefined : undefined;
   const confirmRepresentedPersonRemoval = payload.confirmRepresentedPersonRemoval === true;
+  const confirmConfigurationChange = payload.confirmConfigurationChange === true;
+
+  let creatorTwitch: string | null | undefined;
+  if (hasCreatorTwitch) {
+    if (creatorTwitchValue === null || creatorTwitchValue === "") {
+      creatorTwitch = null;
+    } else {
+      creatorTwitch = normalizeTwitchLogin(creatorTwitchValue);
+      if (!creatorTwitch) {
+        return { success: false, error: "Invalid creator Twitch login" };
+      }
+    }
+  }
 
   if (
     !slug ||
@@ -185,6 +210,8 @@ export function validateUpmanUpdatePayload(value: unknown):
     !rarity ||
     (hasCreatorPersonId && creatorPersonId === undefined) ||
     (hasRepresentedPersonId && representedPersonId === undefined) ||
+    (hasDexVisibility && dexVisibility === undefined) ||
+    (hasIsPullable && isPullable === undefined) ||
     (rarity === "Common" && representedPersonId !== undefined && representedPersonId !== null)
   ) {
     return { success: false, error: "Invalid Upman payload" };
@@ -196,10 +223,14 @@ export function validateUpmanUpdatePayload(value: unknown):
       slug,
       name,
       creator,
+      creatorTwitch,
       rarity,
       creatorPersonId,
       representedPersonId,
+      dexVisibility,
+      isPullable,
       confirmRepresentedPersonRemoval,
+      confirmConfigurationChange,
     },
   };
 }

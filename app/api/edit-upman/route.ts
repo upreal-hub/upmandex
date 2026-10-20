@@ -45,6 +45,33 @@ export async function POST(req: Request) {
     const representedPersonId = updatedUpman.representedPersonId === undefined
       ? existingUpman.representedPersonId
       : updatedUpman.representedPersonId;
+    const creatorTwitch = updatedUpman.creatorTwitch === undefined
+      ? existingUpman.creatorTwitch
+      : updatedUpman.creatorTwitch;
+    const dexVisibility = updatedUpman.dexVisibility === undefined
+      ? existingUpman.dexVisibility
+      : updatedUpman.dexVisibility;
+    const isPullable = updatedUpman.isPullable === undefined
+      ? existingUpman.isPullable
+      : updatedUpman.isPullable;
+
+    if ((updatedUpman.rarity === "Event" || updatedUpman.rarity === "Secret") && isPullable) {
+      return NextResponse.json(
+        { success: false, error: "Event and Secret Upmans cannot be enabled for classic pulls." },
+        { status: 400 }
+      );
+    }
+
+    const configurationChanged =
+      existingUpman.creatorTwitch !== creatorTwitch ||
+      existingUpman.dexVisibility !== dexVisibility ||
+      existingUpman.isPullable !== isPullable;
+    if (configurationChanged && !updatedUpman.confirmConfigurationChange) {
+      return NextResponse.json(
+        { success: false, error: "Confirm the visibility and availability change before saving." },
+        { status: 400 }
+      );
+    }
 
     if (
       updatedUpman.rarity === "Common" &&
@@ -79,10 +106,11 @@ export async function POST(req: Request) {
     }
 
     const peopleById = new Map(people.map((person) => [person.id, person]));
-    const legacyFieldsChanged =
+    const editableFieldsChanged =
       existingUpman.name !== updatedUpman.name ||
       existingUpman.creator !== updatedUpman.creator ||
-      existingUpman.rarity !== updatedUpman.rarity;
+      existingUpman.rarity !== updatedUpman.rarity ||
+      configurationChanged;
     const creatorPersonChanged = existingUpman.creatorPersonId !== creatorPersonId;
 
     await prisma.$transaction(async (tx) => {
@@ -93,14 +121,17 @@ export async function POST(req: Request) {
         data: {
           name: updatedUpman.name,
           creator: updatedUpman.creator,
+          creatorTwitch,
           rarity: updatedUpman.rarity,
+          dexVisibility,
+          isPullable,
           creatorPersonId,
           representedPersonId,
         },
         select: { id: true, slug: true, name: true },
       });
 
-      if (legacyFieldsChanged) {
+      if (editableFieldsChanged) {
         await tx.activityLog.create({
           data: createActivityLogData({
             action: "UPMAN_UPDATED",
@@ -111,11 +142,17 @@ export async function POST(req: Request) {
                 name: existingUpman.name,
                 creator: existingUpman.creator,
                 rarity: existingUpman.rarity,
+                creatorTwitch: existingUpman.creatorTwitch,
+                dexVisibility: existingUpman.dexVisibility,
+                isPullable: existingUpman.isPullable,
               },
               after: {
                 name: updatedUpman.name,
                 creator: updatedUpman.creator,
                 rarity: updatedUpman.rarity,
+                creatorTwitch,
+                dexVisibility,
+                isPullable,
               },
             },
           }),

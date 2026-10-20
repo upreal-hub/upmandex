@@ -43,10 +43,16 @@ export default function UpmanEditorModal({
   const router = useRouter();
   const [name, setName] = useState(upman.name);
   const [creator, setCreator] = useState(upman.creator);
+  const [creatorTwitch, setCreatorTwitch] = useState(upman.creatorTwitch ?? "");
   const [rarity, setRarity] = useState(upman.rarity);
+  const [dexVisibility, setDexVisibility] = useState(upman.dexVisibility);
+  const [isPullable, setIsPullable] = useState(
+    upman.rarity === "Event" || upman.rarity === "Secret" ? false : upman.isPullable,
+  );
   const [creatorPersonId, setCreatorPersonId] = useState(upman.creatorPersonId ?? "");
   const [representedPersonId, setRepresentedPersonId] = useState(upman.representedPersonId ?? "");
   const [confirmRepresentedPersonRemoval, setConfirmRepresentedPersonRemoval] = useState(false);
+  const [confirmConfigurationChange, setConfirmConfigurationChange] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,6 +63,12 @@ export default function UpmanEditorModal({
   const creatorStatus = getCreatorAssociationStatus(upman, upman.creatorPerson);
   const canonicalCreatorLogin = upman.creatorPerson?.user?.twitchLogin ?? null;
   const representedLogin = upman.representedPerson?.user?.twitchLogin ?? null;
+  const protectedFromClassicPulls = rarity === "Event" || rarity === "Secret";
+  const configurationChanged =
+    creatorTwitch.trim().toLowerCase() !== (upman.creatorTwitch ?? "") ||
+    dexVisibility !== upman.dexVisibility ||
+    isPullable !== upman.isPullable;
+  const activeRules = upman.acquisitionRules.filter((rule) => rule.isEnabled);
 
   const createdAt = upman.createdAt.toLocaleDateString("en-GB", {
     day: "numeric",
@@ -98,10 +110,14 @@ export default function UpmanEditorModal({
           slug: upman.slug,
           name,
           creator,
+          creatorTwitch,
           rarity,
+          dexVisibility,
+          isPullable,
           creatorPersonId: creatorPersonId || null,
           representedPersonId: representedPersonId || null,
           confirmRepresentedPersonRemoval,
+          confirmConfigurationChange,
         }),
       });
       const data = await readResponse(response);
@@ -200,7 +216,9 @@ export default function UpmanEditorModal({
             />
           </div>
 
-          <dl className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700">History & ownership</p>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
             <ReadOnlyField label="Slug" value={upman.slug} />
             <ReadOnlyField label="Image" value={upman.image} />
             <ReadOnlyField label="Owners" value={String(upman.ownersCount)} />
@@ -209,7 +227,8 @@ export default function UpmanEditorModal({
               value={upman.firstOwner ?? "Not discovered yet"}
             />
             <ReadOnlyField label="Added" value={createdAt} />
-          </dl>
+            </dl>
+          </div>
         </div>
 
         <section className="mt-6 grid gap-4 rounded-3xl border border-cyan-100 bg-cyan-50/60 p-5 md:grid-cols-2" aria-label="Association diagnostic">
@@ -234,9 +253,9 @@ export default function UpmanEditorModal({
         <form onSubmit={saveChanges} className="mt-8 rounded-3xl border border-sky-100 bg-white p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-black text-sky-950">Editable details</h3>
+              <h3 className="text-xl font-black text-sky-950">Identity</h3>
               <p className="mt-1 text-sm text-sky-700">
-                Only the fields supported by the current Admin API can be changed.
+                Edit the stable display attribution. Slug and image stay read-only to protect existing references.
               </p>
             </div>
             <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-black text-cyan-800">
@@ -265,6 +284,16 @@ export default function UpmanEditorModal({
                 className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
               />
             </label>
+            <label className="grid gap-2 text-sm font-bold text-sky-900">
+              Historical Creator Twitch <span className="font-medium text-sky-500">Optional</span>
+              <input
+                value={creatorTwitch}
+                onChange={(event) => setCreatorTwitch(event.target.value)}
+                maxLength={25}
+                placeholder="twitch_login"
+                className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              />
+            </label>
             <label className="grid gap-2 text-sm font-bold text-sky-900 sm:col-span-2">
               Rarity
               <select
@@ -275,6 +304,9 @@ export default function UpmanEditorModal({
                   if (nextRarity === "Common" && representedPersonId) {
                     setRepresentedPersonId("");
                     setConfirmRepresentedPersonRemoval(false);
+                  }
+                  if (nextRarity === "Event" || nextRarity === "Secret") {
+                    setIsPullable(false);
                   }
                 }}
                 className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -332,6 +364,29 @@ export default function UpmanEditorModal({
             </div>
           </section>
 
+          <section className="mt-6 rounded-3xl border border-violet-100 bg-violet-50/50 p-5" aria-labelledby="availability-title">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-violet-700">Visibility & availability</p>
+              <h3 id="availability-title" className="mt-1 text-xl font-black text-sky-950">Where this Upman can appear</h3>
+              <p className="mt-1 text-sm text-sky-700">Dex visibility and classic pull availability are separate controls. Event and Secret Upmans remain excluded from classic pulls.</p>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-bold text-sky-900">
+                Dex visibility
+                <select value={dexVisibility} onChange={(event) => setDexVisibility(event.target.value as "PUBLIC" | "HIDDEN")} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-slate-800 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+                  <option value="PUBLIC">Public — shown in the public Dex</option>
+                  <option value="HIDDEN">Hidden — only visible to its owner when collected</option>
+                </select>
+              </label>
+              <label className="flex items-start gap-3 rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 text-sm font-bold text-sky-900">
+                <input type="checkbox" checked={isPullable} disabled={protectedFromClassicPulls} onChange={(event) => setIsPullable(event.target.checked)} className="mt-0.5 h-4 w-4 accent-violet-600 disabled:opacity-50" />
+                <span><strong className="block">Available in classic pulls</strong><span className="mt-1 block text-xs font-medium text-sky-600">{protectedFromClassicPulls ? `${rarity} Upmans use dedicated acquisition rules and cannot enter classic pulls.` : "Only enabled weighted rarity rules can select this Upman."}</span></span>
+              </label>
+            </div>
+            {activeRules.length > 0 && <p className="mt-4 rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 text-sm text-sky-800"><strong>Active dedicated acquisition:</strong> {activeRules.map((rule) => `${rule.method.replaceAll("_", " ")}${rule.event ? ` · ${rule.event.name}` : ""}`).join(", ")}</p>}
+            {configurationChanged && <label className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950"><input type="checkbox" checked={confirmConfigurationChange} onChange={(event) => setConfirmConfigurationChange(event.target.checked)} className="mt-0.5 h-4 w-4 accent-amber-600" /><span>Confirm configuration change: Dex <strong>{upman.dexVisibility}</strong> → <strong>{dexVisibility}</strong>; classic pulls <strong>{upman.isPullable ? "enabled" : "disabled"}</strong> → <strong>{isPullable ? "enabled" : "disabled"}</strong>. Historical Twitch attribution is updated separately.</span></label>}
+          </section>
+
           {error && (
             <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
               {error}
@@ -349,7 +404,7 @@ export default function UpmanEditorModal({
             </button>
             <button
               type="submit"
-              disabled={isSaving || isDeleting}
+              disabled={isSaving || isDeleting || (configurationChanged && !confirmConfigurationChange)}
               className="rounded-xl bg-sky-500 px-4 py-2 font-black text-white transition hover:bg-sky-600 disabled:cursor-wait disabled:opacity-60"
             >
               {isSaving ? "Saving…" : "Save changes"}

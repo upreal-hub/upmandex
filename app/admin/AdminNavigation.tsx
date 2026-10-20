@@ -10,14 +10,11 @@ type NavigationItem = {
   comingSoon?: boolean;
 };
 
-const navigationItems: NavigationItem[] = [
-  { href: "/admin", icon: "☁️", label: "Dashboard" },
-  { href: "/admin/upmans", icon: "📦", label: "Upmans" },
-  { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" },
-  { href: "/admin/people", icon: "🧑‍🎨", label: "People" },
-  { href: "/admin/profile-cosmetics", icon: "🎨", label: "Profile Cosmetics" },
-  { href: "/admin/viewers", icon: "👥", label: "Viewers" },
-  { href: "/admin/activity", icon: "✨", label: "Activity" },
+const navigationGroups: { label: string; items: NavigationItem[] }[] = [
+  { label: "Overview", items: [{ href: "/admin", icon: "☁️", label: "Studio overview" }] },
+  { label: "Upmans", items: [{ href: "/admin/upmans", icon: "📦", label: "Upman library" }, { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" }] },
+  { label: "People & Twitch", items: [{ href: "/admin/people", icon: "🧑‍🎨", label: "People" }, { href: "/admin/viewers", icon: "👥", label: "Viewers" }] },
+  { label: "Configuration", items: [{ href: "/admin/profile-cosmetics", icon: "🎨", label: "Profile cosmetics" }, { href: "/admin/activity", icon: "✨", label: "Activity" }] },
 ];
 
 export default function AdminNavigation() {
@@ -25,8 +22,10 @@ export default function AdminNavigation() {
 
   return (
     <nav aria-label="Admin navigation">
-      <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
-        {navigationItems.map((item) => {
+      <div className="flex gap-4 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
+        {navigationGroups.map((group) => <div key={group.label} className="flex min-w-max gap-2 lg:flex-col">
+          <p className="hidden px-3 pt-2 text-[10px] font-black uppercase tracking-[0.18em] text-sky-500 lg:block">{group.label}</p>
+          {group.items.map((item) => {
           const isActive =
             item.href === pathname ||
             (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
@@ -63,7 +62,8 @@ export default function AdminNavigation() {
               <span>{item.label}</span>
             </Link>
           );
-        })}
+          })}
+        </div>)}
       </div>
     </nav>
   );

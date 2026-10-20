@@ -65,6 +65,8 @@ export default function UpmanManager({
 }) {
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("All rarities");
+  const [visibility, setVisibility] = useState<"All" | "PUBLIC" | "HIDDEN">("All");
+  const [availability, setAvailability] = useState<"All" | "pullable" | "restricted">("All");
   const [sort, setSort] = useState<SortOption>("newest");
   const [editingUpman, setEditingUpman] = useState<ManagedUpman | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -82,12 +84,14 @@ export default function UpmanManager({
         upman.representedPerson?.displayName.toLowerCase().includes(normalizedQuery) ||
         upman.representedPerson?.user?.twitchLogin.toLowerCase().includes(normalizedQuery);
       const matchesRarity = rarity === "All rarities" || upman.rarity === rarity;
+      const matchesVisibility = visibility === "All" || upman.dexVisibility === visibility;
+      const matchesAvailability = availability === "All" || (availability === "pullable" ? upman.isPullable : !upman.isPullable);
 
-      return matchesQuery && matchesRarity;
+      return matchesQuery && matchesRarity && matchesVisibility && matchesAvailability;
     });
 
     return sortUpmans(filtered, sort);
-  }, [query, rarity, sort, upmans]);
+  }, [availability, query, rarity, sort, upmans, visibility]);
 
   function openEditor(upman: ManagedUpman) {
     setEditingUpman(upman);
@@ -133,7 +137,7 @@ export default function UpmanManager({
       <ActiveEventUpmanPanel eventUpmans={eventUpmans} initialConfig={eventConfig} />
 
       <section className="mt-6 rounded-3xl border border-sky-100 bg-sky-50/70 p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_170px_170px_170px_170px]">
           <label className="grid gap-2 text-sm font-bold text-sky-900">
             Search Upmans
             <input
@@ -142,6 +146,22 @@ export default function UpmanManager({
               placeholder="Search by name, slug, or creator"
               className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
             />
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-sky-900">
+            Dex visibility
+            <select value={visibility} onChange={(event) => setVisibility(event.target.value as "All" | "PUBLIC" | "HIDDEN")} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+              <option value="All">All visibility</option>
+              <option value="PUBLIC">Public</option>
+              <option value="HIDDEN">Hidden</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-sky-900">
+            Availability
+            <select value={availability} onChange={(event) => setAvailability(event.target.value as "All" | "pullable" | "restricted")} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
+              <option value="All">All availability</option>
+              <option value="pullable">Classic pulls enabled</option>
+              <option value="restricted">Restricted / no classic pulls</option>
+            </select>
           </label>
           <label className="grid gap-2 text-sm font-bold text-sky-900">
             Rarity
@@ -216,6 +236,11 @@ export default function UpmanManager({
                     </span>
                   </div>
                   <p className="mt-1 truncate text-xs text-sky-600">/{upman.slug}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-black">
+                    <span className={`rounded-full px-2 py-1 ${upman.dexVisibility === "PUBLIC" ? "bg-sky-100 text-sky-800" : "bg-slate-200 text-slate-700"}`}>{upman.dexVisibility === "PUBLIC" ? "Public Dex" : "Hidden"}</span>
+                    <span className={`rounded-full px-2 py-1 ${upman.isPullable ? "bg-emerald-100 text-emerald-800" : "bg-violet-100 text-violet-800"}`}>{upman.isPullable ? "Classic pulls" : "Restricted"}</span>
+                    {upman.rarity !== "Common" && !upman.representedPerson && <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-900">No represented Person</span>}
+                  </div>
                 </div>
                 <div className="text-sm font-semibold text-sky-800">
                   <span className="mr-1 text-sky-500 lg:hidden">Creator:</span>

@@ -18,6 +18,8 @@ export default async function AdminUpmansPage() {
       rarity: true,
       creator: true,
       creatorTwitch: true,
+      dexVisibility: true,
+      isPullable: true,
       creatorPersonId: true,
       representedPersonId: true,
       creatorPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { twitchLogin: true, avatar: true } } } },
@@ -25,6 +27,7 @@ export default async function AdminUpmansPage() {
       ownersCount: true,
       firstOwner: true,
       createdAt: true,
+      acquisitionRules: { select: { id: true, method: true, isEnabled: true, externalKey: true, event: { select: { name: true } } } },
     },
     }),
     prisma.person.findMany({

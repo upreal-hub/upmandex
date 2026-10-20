@@ -6,6 +6,8 @@ export type ManagedUpman = {
   rarity: string;
   creator: string;
   creatorTwitch: string | null;
+  dexVisibility: "PUBLIC" | "HIDDEN";
+  isPullable: boolean;
   creatorPersonId: string | null;
   representedPersonId: string | null;
   creatorPerson: { id: string; displayName: string; isPublic: boolean; user: { twitchLogin: string; avatar: string | null } | null } | null;
@@ -13,6 +15,7 @@ export type ManagedUpman = {
   ownersCount: number;
   firstOwner: string | null;
   createdAt: Date;
+  acquisitionRules: { id: string; method: string; isEnabled: boolean; externalKey: string | null; event: { name: string } | null }[];
 };
 
 export type PersonOption = {

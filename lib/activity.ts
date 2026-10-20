@@ -28,8 +28,8 @@ type ActivityPerson = {
 
 export type ActivityMetadata =
   | {
-      before: { name: string; creator: string; rarity: string };
-      after: { name: string; creator: string; rarity: string };
+      before: { name: string; creator: string; rarity: string; creatorTwitch?: string | null; dexVisibility?: string; isPullable?: boolean };
+      after: { name: string; creator: string; rarity: string; creatorTwitch?: string | null; dexVisibility?: string; isPullable?: boolean };
     }
   | { inventoryRemoved: number }
   | {
