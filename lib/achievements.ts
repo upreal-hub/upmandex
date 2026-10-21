@@ -23,6 +23,7 @@ type AchievementMetric =
   | "creation-count"
   | "artwork-count"
   | "check-in-count"
+  | "first-count"
   | "gartic-count"
   | "event-count"
   | "event-upman-count"
@@ -95,6 +96,9 @@ const achievementCosmetics: Record<string, AchievementCosmeticBundle> = {
   "checked-in-10": bundle("checked-in-10", "Regular", "Regular Evening", "Little Lights", "Rare Blue"),
   "checked-in-50": bundle("checked-in-50", "Familiar Face", "Warm Community Night", "Warm Light Cluster", "Epic Purple"),
   "checked-in-100": bundle("checked-in-100", "Always Here", "Always Here Night", "Moonlit Clouds", "Legendary Gold"),
+  "first-1": bundle("first-1", "First Light", "First Light Sky", "First Spark", "Cyan"),
+  "first-10": bundle("first-10", "First Regular", "First Rush Sky", "First Star Trail", "Rare Blue"),
+  "first-25": bundle("first-25", "First Legend", "First Dawn Sky", "First Crown", "Legendary Gold"),
   "event-veteran-1": bundle("event-veteran-1", "Been There", "Event Pass Sky", "Single Event Pass", "Cyan"),
   "event-veteran-10": bundle("event-veteran-10", "Event Regular", "Event Pattern Sky", "Event Pass Pattern", "Epic Purple"),
   "event-veteran-50": bundle("event-veteran-50", "I Was There", "Event Memory Sky", "Memory Layers", "Legendary Gold"),
@@ -128,9 +132,10 @@ const rawDefinitions: AchievementDefinitionInput[] = [
     ["gartic-regular-1", "gartic-regular", "GARTIC", "Gartic Regular", "Take part in Gartic Phone sessions.", "1", 1], ["gartic-regular-10", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "10", 10], ["gartic-regular-50", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "50", 50],
     ["gartic-gallery-1", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "1", 1], ["gartic-gallery-10", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "10", 10], ["gartic-gallery-50", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "50", 50],
     ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "100", 100],
+    ["first-1", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "1", 1], ["first-10", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "10", 10], ["first-25", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "25", 25],
     ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "50", 50],
     ["event-collector-1", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "1", 1], ["event-collector-10", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "10", 10], ["event-collector-25", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "25", 25],
-  ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: family === "checked-in" ? "check-in-count" as const : family === "gartic-regular" ? "gartic-count" as const : family === "event-veteran" ? "event-count" as const : family === "event-collector" ? "event-upman-count" as const : "unavailable" as const, target: target as number, order: 100 + index })),
+  ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: family === "checked-in" ? "check-in-count" as const : family === "first" ? "first-count" as const : family === "gartic-regular" ? "gartic-count" as const : family === "event-veteran" ? "event-count" as const : family === "event-collector" ? "event-upman-count" as const : "unavailable" as const, target: target as number, order: 100 + index })),
   ...[["artist-1", "1", 1], ["artist-10", "10", 10], ["artist-100", "100", 100]].map(([key, label, target], index) => ({ key: key as string, family: "artist", category: "ART" as const, name: "Artist", description: "Share artwork with the UPMANDEX community.", label: label as string, metric: "artwork-count" as const, target: target as number, order: 10 + index })),
 ];
 
@@ -191,6 +196,7 @@ type EvaluationContext = {
   creations: number;
   artworks: number;
   checkIns: number;
+  firsts: number;
   garticParticipations: number;
   events: number;
   eventUpmans: number;
@@ -210,6 +216,7 @@ function metricValue(definition: AchievementDefinition, context: EvaluationConte
     case "creation-count": return context.creations;
     case "artwork-count": return context.artworks;
     case "check-in-count": return context.checkIns;
+    case "first-count": return context.firsts;
     case "gartic-count": return context.garticParticipations;
     case "event-count": return context.events;
     case "event-upman-count": return context.eventUpmans;
@@ -245,13 +252,14 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
   });
   if (!person) return null;
 
-  const [upmans, creations, artworks, inventory, pulls, checkIns, garticParticipations, eventGrants] = await Promise.all([
+  const [upmans, creations, artworks, inventory, pulls, checkIns, firsts, garticParticipations, eventGrants] = await Promise.all([
     prisma.upman.findMany({ select: { id: true, rarity: true } }),
     prisma.upman.count({ where: { creatorPersonId: person.id } }),
     prisma.personArtwork.count({ where: { personId: person.id } }),
     person.userId ? prisma.inventory.findMany({ where: { userId: person.userId }, select: { upman: { select: { rarity: true } } } }) : Promise.resolve([]),
     person.userId ? prisma.pullEvent.findMany({ where: { userId: person.userId }, select: { result: true, upmanRarity: true } }) : Promise.resolve([]),
     person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "CHECK_IN" } }) : Promise.resolve(0),
+    person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "FIRST" } }) : Promise.resolve(0),
     person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "GARTIC_PARTICIPATION" } }) : Promise.resolve(0),
     person.userId ? prisma.upmanAcquisitionGrant.findMany({ where: { userId: person.userId, rule: { method: "EVENT_REDEEM" } }, select: { upmanId: true, rule: { select: { eventId: true } } } }) : Promise.resolve([]),
   ]);
@@ -273,6 +281,7 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
     creations,
     artworks,
     checkIns,
+    firsts,
     garticParticipations,
     events: new Set(eventGrants.map((grant) => grant.rule.eventId).filter(Boolean)).size,
     eventUpmans: new Set(eventGrants.map((grant) => grant.upmanId)).size,

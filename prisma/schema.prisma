@@ -75,6 +75,7 @@ enum UpmanAcquisitionResult {
 
 enum TwitchAchievementEventKind {
   CHECK_IN
+  FIRST
   GARTIC_PARTICIPATION
 }
 
