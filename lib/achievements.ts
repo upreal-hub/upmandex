@@ -22,6 +22,10 @@ type AchievementMetric =
   | "duplicate-pulls"
   | "creation-count"
   | "artwork-count"
+  | "check-in-count"
+  | "gartic-count"
+  | "event-count"
+  | "event-upman-count"
   | "unavailable";
 
 type AchievementDefinition = {
@@ -126,7 +130,7 @@ const rawDefinitions: AchievementDefinitionInput[] = [
     ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "100", 100],
     ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "50", 50],
     ["event-collector-1", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "1", 1], ["event-collector-10", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "10", 10], ["event-collector-25", "event-collector", "EVENTS", "Event Collector", "Collect Event Upmans.", "25", 25],
-  ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: "unavailable" as const, target: target as number, order: 100 + index })),
+  ].map(([key, family, category, name, description, label, target], index) => ({ key: key as string, family: family as string, category: category as AchievementCategory, name: name as string, description: description as string, label: label as string, metric: family === "checked-in" ? "check-in-count" as const : family === "gartic-regular" ? "gartic-count" as const : family === "event-veteran" ? "event-count" as const : family === "event-collector" ? "event-upman-count" as const : "unavailable" as const, target: target as number, order: 100 + index })),
   ...[["artist-1", "1", 1], ["artist-10", "10", 10], ["artist-100", "100", 100]].map(([key, label, target], index) => ({ key: key as string, family: "artist", category: "ART" as const, name: "Artist", description: "Share artwork with the UPMANDEX community.", label: label as string, metric: "artwork-count" as const, target: target as number, order: 10 + index })),
 ];
 
@@ -186,6 +190,10 @@ type EvaluationContext = {
   hasLegendaryPull: boolean;
   creations: number;
   artworks: number;
+  checkIns: number;
+  garticParticipations: number;
+  events: number;
+  eventUpmans: number;
 };
 
 function metricValue(definition: AchievementDefinition, context: EvaluationContext) {
@@ -201,6 +209,10 @@ function metricValue(definition: AchievementDefinition, context: EvaluationConte
     case "duplicate-pulls": return context.duplicatePulls;
     case "creation-count": return context.creations;
     case "artwork-count": return context.artworks;
+    case "check-in-count": return context.checkIns;
+    case "gartic-count": return context.garticParticipations;
+    case "event-count": return context.events;
+    case "event-upman-count": return context.eventUpmans;
     case "unavailable": return 0;
   }
 }
@@ -233,12 +245,15 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
   });
   if (!person) return null;
 
-  const [upmans, creations, artworks, inventory, pulls] = await Promise.all([
+  const [upmans, creations, artworks, inventory, pulls, checkIns, garticParticipations, eventGrants] = await Promise.all([
     prisma.upman.findMany({ select: { id: true, rarity: true } }),
     prisma.upman.count({ where: { creatorPersonId: person.id } }),
     prisma.personArtwork.count({ where: { personId: person.id } }),
     person.userId ? prisma.inventory.findMany({ where: { userId: person.userId }, select: { upman: { select: { rarity: true } } } }) : Promise.resolve([]),
     person.userId ? prisma.pullEvent.findMany({ where: { userId: person.userId }, select: { result: true, upmanRarity: true } }) : Promise.resolve([]),
+    person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "CHECK_IN" } }) : Promise.resolve(0),
+    person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "GARTIC_PARTICIPATION" } }) : Promise.resolve(0),
+    person.userId ? prisma.upmanAcquisitionGrant.findMany({ where: { userId: person.userId, rule: { method: "EVENT_REDEEM" } }, select: { upmanId: true, rule: { select: { eventId: true } } } }) : Promise.resolve([]),
   ]);
 
   const rarityTotal = new Map<string, number>();
@@ -257,6 +272,10 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
     hasLegendaryPull: pulls.some((pull) => pull.upmanRarity === "Legendary"),
     creations,
     artworks,
+    checkIns,
+    garticParticipations,
+    events: new Set(eventGrants.map((grant) => grant.rule.eventId).filter(Boolean)).size,
+    eventUpmans: new Set(eventGrants.map((grant) => grant.upmanId)).size,
   };
   const unlocks = new Map(person.achievements.map((achievement) => [achievement.achievementKey, achievement.unlockedAt.toISOString()]));
   const byFamily = new Map<string, AchievementFamily>();

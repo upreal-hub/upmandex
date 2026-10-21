@@ -73,6 +73,11 @@ enum UpmanAcquisitionResult {
   DUPLICATE
 }
 
+enum TwitchAchievementEventKind {
+  CHECK_IN
+  GARTIC_PARTICIPATION
+}
+
 model User {
   id               String        @id @default(cuid())
   twitchLogin      String        @unique
@@ -84,6 +89,7 @@ model User {
   inventory        Inventory[]
   pullEvents       PullEvent[]
   acquisitionGrants UpmanAcquisitionGrant[]
+  achievementEvents TwitchAchievementEvent[]
   activityAsActor  ActivityLog[] @relation("ActivityActor")
   activityAsTarget ActivityLog[] @relation("ActivityTarget")
   person           Person?
@@ -298,6 +304,23 @@ model UpmanAcquisitionGrant {
   @@index([ruleId, createdAt])
   @@index([userId, createdAt])
   @@index([upmanId, createdAt])
+}
+
+model TwitchAchievementEvent {
+  id           String                      @id @default(cuid())
+  kind         TwitchAchievementEventKind
+  redemptionId String                      @unique
+  sessionId    String
+  userId       String
+  twitchUserId String
+  twitchLogin  String
+  displayName  String
+  createdAt    DateTime                    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, sessionId])
+  @@index([userId, kind, createdAt])
 }
 
 model StreamContext {
