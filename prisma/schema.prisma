@@ -310,7 +310,7 @@ model TwitchAchievementEvent {
   id           String                      @id @default(cuid())
   kind         TwitchAchievementEventKind
   redemptionId String                      @unique
-  sessionId    String
+  sessionId    String?
   userId       String
   twitchUserId String
   twitchLogin  String
