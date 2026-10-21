@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { TwitchAchievementEventKind } from "@/app/generated/prisma/client";
-import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth";
+import { getBearerToken } from "@/lib/streamerbot-auth";
+import { isStreamChatAuthorized } from "@/lib/stream-chat-auth";
 import { recordTwitchAchievementEvent } from "@/lib/twitch-achievement-events";
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
-  if (!isStreamerBotAuthorized(getBearerToken(request) ?? "")) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  if (!isStreamChatAuthorized(getBearerToken(request) ?? "")) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || !["CHECK_IN", "GARTIC_PARTICIPATION"].includes(String(body.kind))) return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
   const kind = body.kind as TwitchAchievementEventKind;
