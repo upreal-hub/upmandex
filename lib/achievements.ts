@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { classicCollectionUpmanWhere } from "@/lib/classic-collection";
 
 export const ACHIEVEMENT_CATEGORIES = [
   "COLLECTION",
@@ -264,11 +265,16 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
   if (!person) return null;
 
   const [upmans, creations, artworks, submissions, inventory, pulls, checkIns, firsts, garticParticipations, eventGrants] = await Promise.all([
-    prisma.upman.findMany({ select: { id: true, rarity: true } }),
+    prisma.upman.findMany({ where: classicCollectionUpmanWhere, select: { id: true, rarity: true } }),
     prisma.upman.count({ where: { creatorPersonId: person.id } }),
     prisma.personArtwork.count({ where: { personId: person.id } }),
     person.userId ? prisma.upmanSubmission.count({ where: { userId: person.userId } }) : Promise.resolve(0),
-    person.userId ? prisma.inventory.findMany({ where: { userId: person.userId }, select: { upman: { select: { rarity: true } } } }) : Promise.resolve([]),
+    person.userId
+      ? prisma.inventory.findMany({
+        where: { userId: person.userId, upman: classicCollectionUpmanWhere },
+        select: { upman: { select: { rarity: true } } },
+      })
+      : Promise.resolve([]),
     person.userId ? prisma.pullEvent.findMany({ where: { userId: person.userId }, select: { result: true, upmanRarity: true } }) : Promise.resolve([]),
     person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "CHECK_IN" } }) : Promise.resolve(0),
     person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "FIRST" } }) : Promise.resolve(0),
