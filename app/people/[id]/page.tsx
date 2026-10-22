@@ -160,7 +160,6 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             </CustomizeModeOnly>
           </div>}
       {person.userId && person.user?.twitchLogin && <section className={styles.mySky} aria-labelledby="my-sky-title">
-        <Image src="/cloud-decorations/two_month_cloud.png" alt="" aria-hidden="true" width={48} height={48} className={styles.skyCloud} />
         <div className={styles.skyIntro}><p className={styles.eyebrow}>✦ A LITTLE WORLD OF DISCOVERIES</p><h2 id="my-sky-title">{isOwner ? "My sky" : "Collection sky"}</h2><p>{skyOwned} of {skyTotal} Upmans discovered · {skyTotal ? Math.round(skyOwned / skyTotal * 100) : 0}% complete</p><progress max={skyTotal || 1} value={skyOwned} aria-label="Collection progress" /><Link href={isOwner ? "/my-collection" : `/collection/${encodeURIComponent(person.user.twitchLogin)}`}>{isOwner ? "My Collection" : "View collection"} →</Link></div>
         <div className={styles.skyDetails}><div><span>✧ Latest discovery</span>{skyLatest ? <Link href={`/upmans/${encodeURIComponent(skyLatest.upman.slug)}`}>{skyLatest.upman.name}</Link> : <strong>No discoveries yet</strong>}</div><div><span>☁ Created Upmans</span><strong>{person.createdUpmans.length}</strong>{hasCreated && <a href="#person-creations">Explore creations →</a>}</div></div>
       </section>}

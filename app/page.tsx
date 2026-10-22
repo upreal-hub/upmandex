@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import HomeFeaturedUpmanCard from "@/components/HomeFeaturedUpmanCard";
@@ -34,7 +35,7 @@ export default async function HomePage() {
           </p>
           <Link href="/upmans" className="primary-button cloud-button">Explore the Upmandex <span aria-hidden="true">↗</span></Link>
         </div>
-        <div className="hero-orbit" aria-hidden="true"><span>☁</span><i>✦</i><b>✧</b></div>
+        <div className="hero-orbit" aria-hidden="true"><Image src="/cloud-decorations/two_month_cloud.png" alt="" width={42} height={42} className="hero-orbit-cloud" /><i>✦</i><b>✧</b></div>
         <div className="home-facts" aria-label="Upmandex facts">
           <span className="home-fact"><strong>{totalUpmans}</strong><small>Upmans</small></span>
           <span className="home-fact"><strong>{totalCreators}</strong><small>creators</small></span>
@@ -48,10 +49,10 @@ export default async function HomePage() {
           <h2 id="destinations-title">Where would you like to wander?</h2>
         </div>
         <div className="destination-grid">
-          <Link href="/upmans" className="destination-card destination-card-sky"><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>A world of curious faces to discover</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/my-collection" className="destination-card destination-card-lavender"><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>Your discoveries, one little cloud at a time</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/art" className="destination-card destination-card-coral"><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>From a spark of an idea to a world of art</span></div><b aria-hidden="true">↗</b></Link>
-          <Link href="/community" className="destination-card destination-card-gold"><span className="destination-icon">☼</span><div><p>04 · Beyond the Dex</p><h3>EXPLORE</h3><span>Creators, friends and community</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/upmans" className="destination-card destination-card-sky"><Image src="/cloud-decorations/three_months_cloud.png" alt="" aria-hidden="true" width={48} height={48} className="destination-cloud destination-cloud-sky" /><span className="destination-icon">◌</span><div><p>01 · The Dex</p><h3>UPMANDEX</h3><span>A world of curious faces to discover</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/my-collection" className="destination-card destination-card-lavender"><Image src="/cloud-decorations/base_cloud.png" alt="" aria-hidden="true" width={48} height={48} className="destination-cloud destination-cloud-collection" /><span className="destination-icon">✦</span><div><p>02 · Yours</p><h3>MY COLLECTION</h3><span>Your discoveries, one little cloud at a time</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/art" className="destination-card destination-card-coral"><Image src="/cloud-decorations/tier_2_flair.png" alt="" aria-hidden="true" width={48} height={48} className="destination-cloud destination-cloud-art" /><span className="destination-icon">✎</span><div><p>03 · Made with care</p><h3>ART</h3><span>From a spark of an idea to a world of art</span></div><b aria-hidden="true">↗</b></Link>
+          <Link href="/community" className="destination-card destination-card-gold"><Image src="/cloud-decorations/two_month_cloud.png" alt="" aria-hidden="true" width={48} height={48} className="destination-cloud destination-cloud-explore" /><span className="destination-icon">☼</span><div><p>04 · Beyond the Dex</p><h3>EXPLORE</h3><span>Creators, friends and community</span></div><b aria-hidden="true">↗</b></Link>
         </div>
       </section>
 

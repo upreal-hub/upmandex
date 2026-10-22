@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import LoginButton from "./LoginButton";
@@ -116,7 +117,7 @@ export default function Navbar() {
     <nav ref={navRef} className="site-nav" aria-label="Primary navigation" onPointerLeave={(event) => { if (event.pointerType === "mouse") leaveMenu(); }} onPointerEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}>
       <div className={`site-nav-bar ${styles.bar}`}>
         <Link href="/" className="brand-mark" aria-label="UPMANDEX home" onClick={closeNavigation}>
-          <span aria-hidden="true" className="brand-cloud">☁</span><span className="brand-wordmark">UPMANDEX</span>
+          <Image src="/cloud-decorations/base_cloud.png" alt="" aria-hidden="true" width={32} height={28} className="brand-cloud" priority /><span className="brand-wordmark">UPMANDEX</span>
         </Link>
         <div className={`site-nav-desktop ${styles.desktop}`}>
           {visibleMenus.map((menu) => <button key={menu.label} ref={(node) => { triggers.current[menu.label] = node; }} type="button"

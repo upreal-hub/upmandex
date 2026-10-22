@@ -1,5 +1,4 @@
 import { auth } from "@/auth";
-import Image from "next/image";
 import CollectionGallery from "@/components/CollectionGallery";
 import LoginButton from "@/components/LoginButton";
 import { prisma } from "@/lib/prisma";
@@ -34,7 +33,6 @@ export default async function MyCollectionPage() {
   return (
     <main className={`collection-page ${styles.page} ${titleStyles.titlePolish}`}>
       <header className={styles.header}>
-        <Image src="/cloud-decorations/base_cloud.png" alt="" aria-hidden="true" width={48} height={48} className={styles.collectionCloud} />
         {user.avatar && (
           // This is the stored avatar from the authenticated Twitch User record.
           // eslint-disable-next-line @next/next/no-img-element
