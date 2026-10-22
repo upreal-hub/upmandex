@@ -33,7 +33,9 @@
 @media (min-width: 701px) and (max-width: 900px) { .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }.entry { min-height: 23.5rem; grid-template-rows: 14.5rem auto; }.artwork img { max-height: 15rem; } }
 
 .collectionContext { width: 100%; margin: 1rem 0 2rem; border-radius: 1.2rem; }
-.collectionContext a { color: var(--ink); min-height: 2.75rem; display: inline-flex; align-items: center; }
+.collectionContext a { display:inline-flex; min-height:2.35rem; align-items:center; padding:.4rem .72rem; border:1px solid color-mix(in srgb,var(--line) 76%,#73c5e4); border-radius:999px; color:var(--ink); background:color-mix(in srgb,var(--surface-strong) 82%,#c7effc); box-shadow:inset 0 1px 0 #fff9; font-size:.74rem; text-decoration:none; transition:transform .18s ease,background .18s ease,box-shadow .18s ease; }
+.collectionContext a:hover { transform:translateY(-1px); background:color-mix(in srgb,var(--surface-strong) 56%,#a9e1f6); box-shadow:0 .3rem .75rem #3785a526,inset 0 1px 0 #fff; }.collectionContext a:focus-visible { outline:3px solid #efb43d; outline-offset:3px; }
+@media (prefers-reduced-motion: reduce) { .collectionContext a { transition:none; }.collectionContext a:hover { transform:none; } }
 
 /* Keep the collection reminder light, like a passing cloud. */
 .collectionContext { border: 0; background: transparent; box-shadow: none; padding: .6rem .3rem; margin: .25rem 0 1.4rem; }

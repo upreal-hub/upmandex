@@ -19,5 +19,6 @@
 .login :global(.twitch-login-button)::before { content: none; }
 
 .avatarFallback { display:grid; flex:0 0 auto; place-items:center; width:3.7rem; height:3.7rem; border:2px solid #8ed9f8; border-radius:50%; color:var(--ink); background:var(--surface-strong); font-size:1.5rem; }
-.collectionProfileLink { display:inline-block; margin-top:.6rem; color:var(--ink); font-size:.85rem; font-weight:800; text-underline-offset:.2rem; }
+.collectionProfileLink { display:inline-flex; min-height:2.25rem; align-items:center; margin-top:.7rem; padding:.38rem .7rem; border:1px solid color-mix(in srgb, var(--line) 78%, #76c8e6); border-radius:999px; color:var(--ink); background:color-mix(in srgb, var(--surface-strong) 82%, #c8effc); box-shadow:inset 0 1px 0 #fff9; font-size:.78rem; font-weight:850; text-decoration:none; transition:transform .18s ease,background .18s ease,box-shadow .18s ease; }
+.collectionProfileLink:hover { transform:translateY(-1px); background:color-mix(in srgb, var(--surface-strong) 58%, #a9e1f6); box-shadow:0 .3rem .75rem #3785a526,inset 0 1px 0 #fff; }
 .collectionProfileLink:focus-visible { outline:3px solid #efb43d; outline-offset:3px; }

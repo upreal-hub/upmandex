@@ -7,7 +7,8 @@
 .card { min-width: 0; padding: 1.5rem; border: 1px solid var(--line); border-radius: 2.4rem 2.9rem 2.3rem 2.6rem / 2rem 2.4rem 2.2rem 2.3rem; background: color-mix(in srgb, var(--surface-strong) 90%, #a5e2f8); box-shadow: 0 7px 0 #6fbcd927, 0 14px 26px #25658c13, inset 0 1px 0 #ffffff75; }
 .card h2 { margin: 0 0 .6rem; font-family: var(--display-font); font-size: 1.18rem; }
 .card p, .card li { color: var(--ink-soft); font-size: .92rem; line-height: 1.7; }
-.card a, .action { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; color: var(--ink); font-weight: 800; text-underline-offset: .2rem; }
+.card a, .action { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.45rem; padding: .42rem .76rem; border: 1px solid color-mix(in srgb, var(--line) 78%, #79c9e7); border-radius: 999px; color: var(--ink); background: color-mix(in srgb, var(--surface-strong) 84%, #c8effc); box-shadow: inset 0 1px 0 #fff9; font-size: .8rem; font-weight: 800; text-decoration: none; transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+.card a:hover, .action:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--surface-strong) 58%, #a9e1f6); box-shadow: 0 .32rem .8rem #3785a526, inset 0 1px 0 #fff; }
 .card a:focus-visible, .action:focus-visible { outline: 3px solid #efb43d; outline-offset: 3px; }
 .rates { display: flex; flex-wrap: wrap; gap: .6rem; padding: 0; list-style: none; }
 .rates li { padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); background: var(--surface-strong); font-weight: 800; }
@@ -33,6 +34,7 @@
 .portalCopy { position:relative; display:grid; gap:.6rem; flex:1; padding:1.4rem 1.7rem 1.7rem; background:linear-gradient(180deg,transparent,#102238bb 20%); }.portalCopy small { color:var(--portal); font:900 .65rem var(--display-font); letter-spacing:.11em; }.portalCopy strong { font:900 clamp(1.5rem,3vw,2.2rem) / 1 var(--display-font); }.portalCopy > span { color:#f0f8ff; font-size:.9rem; line-height:1.55; }.portalCopy em { align-self:end; margin-top:.5rem; color:#fff; font-size:.8rem; font-style:normal; font-weight:900; }
 @media(max-width:650px) { .portalGrid { grid-template-columns:1fr; }.portalVisual { height:10rem; }.portalCopy { padding:1.2rem 1.3rem 1.5rem; } }
 @media(prefers-reduced-motion:reduce) { .worldPortal,.portalVisual img,.worldPortal::after { transition:none; }.worldPortal:hover,.worldPortal:hover .portalVisual img { transform:none; } }
+@media(prefers-reduced-motion:reduce) { .card a,.action { transition:none; }.card a:hover,.action:hover { transform:none; } }
 
 /* Portals share a silhouette, but keep their own light and identity. */
 .worldPortal { border-width:2px; border-color:color-mix(in srgb,var(--portal) 80%,#fff); box-shadow:0 7px 0 color-mix(in srgb,var(--portal) 42%,#223c59),0 18px 40px color-mix(in srgb,var(--portal) 30%,transparent),inset 0 1px 0 #fff; }

@@ -72,3 +72,35 @@
   .cloudWinner[data-rank="1"] { min-height: 12.45rem; }
   .winnerLinks { gap: .28rem; }
 }
+
+/* Compact action pills keep profile and collection destinations distinct from body copy. */
+.podiumLinks a, .winnerLinks a {
+  display: inline-flex;
+  min-height: 1.9rem;
+  align-items: center;
+  padding: .3rem .58rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .42);
+  font-size: .68rem;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.podiumLinks a:hover, .winnerLinks a:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--surface-strong) 52%, #bcecff);
+  box-shadow: 0 .24rem .65rem color-mix(in srgb, #297a9e 18%, transparent), inset 0 1px 0 rgb(255 255 255 / .62);
+}
+.podiumLinks a:focus-visible, .winnerLinks a:focus-visible {
+  outline: 3px solid #efb43d;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .podiumLinks a, .winnerLinks a { min-height: 1.8rem; padding: .27rem .48rem; font-size: .64rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .podiumLinks a, .winnerLinks a { transition: none; }
+  .podiumLinks a:hover, .winnerLinks a:hover { transform: none; }
+}
