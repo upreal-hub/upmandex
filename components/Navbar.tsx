@@ -14,7 +14,7 @@ type Menu = { label: string; intro: string; icon: string; items: MenuItem[]; aut
 const menus: Menu[] = [
   { label: "Upmandex", intro: "Meet the faces in the clouds.", icon: "☁", items: [
     { label: "Explore the Dex", detail: "Discover every public Upman", icon: "✦", href: "/upmans" },
-    { label: "Pull Chances", detail: "How rarity chances work", icon: "✧", href: "/guides/pulls" },
+    { label: "UPMANDEX Tutorial", detail: "A guided tour of the cloud world", icon: "✧", href: "/guides/pulls" },
     { label: "Twitch Commands", detail: "Stream interactions and commands", icon: "⌘", href: "/guides/commands" },
     { label: "Upman Lore", detail: "Meet the world and its creators", icon: "☼", href: "/guides/lore" },
   ] },

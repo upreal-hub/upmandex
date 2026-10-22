@@ -116,7 +116,7 @@ export default async function HowToCollectGuide() {
         <div className={styles.faqList}>{questions.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
       </section>
 
-      <nav className={styles.footer} aria-label="Related destinations"><Link className={styles.action} href="/guides/pulls">Pull Chances →</Link><Link className={styles.action} href="/achievements">Explore Achievements →</Link><Link className={styles.action} href="/upmans">Explore the Dex →</Link></nav>
+      <nav className={styles.footer} aria-label="Related destinations"><a className={styles.action} href="#rarities">Pull chances &amp; rarities →</a><Link className={styles.action} href="/achievements">Explore Achievements →</Link><Link className={styles.action} href="/upmans">Explore the Dex →</Link></nav>
     </main>
   );
 }
