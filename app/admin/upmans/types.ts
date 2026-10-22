@@ -21,6 +21,7 @@ export type ManagedUpman = {
 export type PersonOption = {
   id: string;
   displayName: string;
+  user: { twitchLogin: string } | null;
 };
 
 export type EventUpmanOption = {

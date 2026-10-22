@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 
 import { UP_MAN_RARITIES } from "./types";
 import type { ManagedUpman, PersonOption } from "./types";
+import PersonPicker from "./PersonPicker";
 import { getCreatorAssociationStatus } from "@/lib/upman-identity";
 
 type UpmanEditorModalProps = {
@@ -345,22 +346,14 @@ export default function UpmanEditorModal({
             </div>
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-bold text-sky-900">
-                Creator Person
-                <select value={creatorPersonId} onChange={(event) => setCreatorPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
-                  <option value="">None — legacy creator only</option>
-                  {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-                </select>
+              <div>
+                <PersonPicker label="Creator Person" people={people} value={creatorPersonId} onChange={setCreatorPersonId} noneLabel="None — legacy creator only" />
                 <span className="text-xs font-medium text-sky-600">Legacy attribution: {upman.creator}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</span>
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-sky-900">
-                Represented Person
-                <select value={representedPersonId} disabled={rarity === "Common"} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:cursor-not-allowed disabled:opacity-60">
-                  <option value="">None</option>
-                  {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-                </select>
+              </div>
+              <div>
+                <PersonPicker label="Represented Person" people={people} value={representedPersonId} onChange={setRepresentedPersonId} noneLabel="None" disabled={rarity === "Common"} />
                 <span className="text-xs font-medium text-sky-600">{rarity === "Common" ? "Not applicable — Common Upmans cannot represent a Person." : "This is independent from the creator."}</span>
-              </label>
+              </div>
             </div>
           </section>
 

@@ -32,7 +32,7 @@ export default async function AdminUpmansPage() {
     }),
     prisma.person.findMany({
       orderBy: [{ displayName: "asc" }, { id: "asc" }],
-      select: { id: true, displayName: true },
+      select: { id: true, displayName: true, user: { select: { twitchLogin: true } } },
     }),
     prisma.upman.findMany({
       where: { rarity: "Event" },

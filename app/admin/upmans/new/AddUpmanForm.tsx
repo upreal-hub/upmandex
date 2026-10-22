@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { UP_MAN_RARITIES } from "../types";
 import type { PersonOption } from "../types";
+import PersonPicker from "../PersonPicker";
 
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 
@@ -288,20 +289,8 @@ export default function AddUpmanForm({ people }: { people: PersonOption[] }) {
             </Link>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-bold text-sky-900">
-              Creator Person
-              <select value={creatorPersonId} onChange={(event) => setCreatorPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
-                <option value="">None — legacy creator only</option>
-                {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-bold text-sky-900">
-              Represented Person
-              <select value={representedPersonId} onChange={(event) => setRepresentedPersonId(event.target.value)} className="rounded-xl border border-sky-200 bg-[#fffdf7] px-3 py-2.5 text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
-                <option value="">None</option>
-                {people.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-              </select>
-            </label>
+            <PersonPicker label="Creator Person" people={people} value={creatorPersonId} onChange={setCreatorPersonId} noneLabel="None — legacy creator only" />
+            <PersonPicker label="Represented Person" people={people} value={representedPersonId} onChange={setRepresentedPersonId} noneLabel="None" />
           </div>
         </section>
 

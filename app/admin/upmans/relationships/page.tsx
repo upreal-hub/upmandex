@@ -22,7 +22,7 @@ export default async function UpmanRelationshipsPage() {
     prisma.user.findMany({
       orderBy: [{ twitchLogin: "asc" }],
       select: {
-        id: true, twitchLogin: true, displayName: true, avatar: true,
+        id: true, twitchUserId: true, twitchLogin: true, displayName: true, avatar: true,
         person: { select: { id: true, displayName: true } },
       },
     }),
