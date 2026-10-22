@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PULL_RARITIES } from "@/lib/upman-rarity";
 import styles from "../guide.module.css";
+import HowToCollectGuide from "../HowToCollectGuide";
 import TwitchCommandsGuide from "../TwitchCommandsGuide";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ guides.commands = guides.stream;
 export default async function GuidePage({ params }: { params: Promise<{ topic: string }> }) {
   const { topic } = await params;
   if (topic === "stream" || topic === "commands") return <TwitchCommandsGuide />;
+  if (topic === "collect") return <HowToCollectGuide />;
   const guide = Object.hasOwn(guides, topic) ? guides[topic] : null;
   if (!guide) notFound();
   let rates: { rarity: string; weight: number }[] = [];
