@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
+        pathname: "/upman-submissions/**",
+        search: "",
+      },
+      {
+        protocol: "https",
         hostname: "e4pburhj5wrv8agh.public.blob.vercel-storage.com",
         pathname: "/personal-profile-backgrounds/**",
         search: "",

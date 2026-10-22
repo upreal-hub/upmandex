@@ -12,7 +12,7 @@ type NavigationItem = {
 
 const navigationGroups: { label: string; items: NavigationItem[] }[] = [
   { label: "Overview", items: [{ href: "/admin", icon: "☁️", label: "Studio overview" }] },
-  { label: "Upmans", items: [{ href: "/admin/upmans", icon: "📦", label: "Upman library" }, { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" }] },
+  { label: "Upmans", items: [{ href: "/admin/upmans", icon: "📦", label: "Upman library" }, { href: "/admin/upman-submissions", icon: "☁️", label: "Submissions" }, { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" }] },
   { label: "People & Twitch", items: [{ href: "/admin/people", icon: "🧑‍🎨", label: "People" }, { href: "/admin/viewers", icon: "👥", label: "Viewers" }] },
   { label: "Configuration", items: [{ href: "/admin/profile-cosmetics", icon: "🎨", label: "Profile cosmetics" }, { href: "/admin/activity", icon: "✨", label: "Activity" }] },
 ];

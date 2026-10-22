@@ -21,6 +21,8 @@ type AchievementMetric =
   | "legendary-pull"
   | "duplicate-pulls"
   | "creation-count"
+  | "submission-count"
+  | "approved-submission-count"
   | "artwork-count"
   | "check-in-count"
   | "first-count"
@@ -83,6 +85,12 @@ const achievementCosmetics: Record<string, AchievementCosmeticBundle> = {
   "upman-creator-1": bundle("upman-creator-1", "Upman Creator", "Sketch Sky", "Sketch Line", "Cyan"),
   "upman-creator-10": bundle("upman-creator-10", "Upman Maker", "Maker Grid Sky", "Creative Lines", "Rare Blue"),
   "upman-creator-50": bundle("upman-creator-50", "Upman Factory", "Factory Glow Sky", "Workshop Horizon", "Legendary Gold"),
+  "upman-submitter-1": bundle("upman-submitter-1", "Cloud Sketcher", "Idea Cloud Sky", "First Idea", "Cyan"),
+  "upman-submitter-10": bundle("upman-submitter-10", "Upman Creator", "Creator Cloud Sky", "Idea Parade", "Rare Blue"),
+  "upman-submitter-25": bundle("upman-submitter-25", "Cloud Architect", "Creator Studio Sky", "Studio Horizon", "Epic Purple"),
+  "upman-artist-1": bundle("upman-artist-1", "Approved Artist", "Approved Sky", "First Approval", "Cyan"),
+  "upman-artist-5": bundle("upman-artist-5", "Upman Artist", "Artist Cloud Sky", "Approval Streak", "Rare Blue"),
+  "upman-artist-10": bundle("upman-artist-10", "Cloud Master", "Master Studio Sky", "Masterpiece Horizon", "Legendary Gold"),
   "artist-1": bundle("artist-1", "Artist", "Painted Sky", "Single Brush Band", "Paint Blue"),
   "artist-10": bundle("artist-10", "Sky Painter", "Expressive Sky", "Color Strokes", "Epic Purple"),
   "artist-100": bundle("artist-100", "Master Artist", "Masterpiece Sky", "Painterly Horizon", "Legendary Gold"),
@@ -128,9 +136,13 @@ const rawDefinitions: AchievementDefinitionInput[] = [
   { key: "upman-creator-1", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "1", metric: "creation-count", target: 1, order: 10 },
   { key: "upman-creator-10", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "10", metric: "creation-count", target: 10, order: 20 },
   { key: "upman-creator-50", family: "upman-creator", category: "CREATION", name: "Upman Creator", description: "Create Upmans added to the UPMANDEX.", label: "50", metric: "creation-count", target: 50, order: 30 },
+  { key: "upman-submitter-1", family: "upman-submitter", category: "CREATION", name: "Upman Creator", description: "Submit Upmans for review.", label: "1", metric: "submission-count", target: 1, order: 40 },
+  { key: "upman-submitter-10", family: "upman-submitter", category: "CREATION", name: "Upman Creator", description: "Submit Upmans for review.", label: "10", metric: "submission-count", target: 10, order: 50 },
+  { key: "upman-submitter-25", family: "upman-submitter", category: "CREATION", name: "Upman Creator", description: "Submit Upmans for review.", label: "25", metric: "submission-count", target: 25, order: 60 },
+  { key: "upman-artist-1", family: "upman-artist", category: "CREATION", name: "Upman Artist", description: "Get submitted Upmans approved for the Dex.", label: "1", metric: "approved-submission-count", target: 1, order: 70 },
+  { key: "upman-artist-5", family: "upman-artist", category: "CREATION", name: "Upman Artist", description: "Get submitted Upmans approved for the Dex.", label: "5", metric: "approved-submission-count", target: 5, order: 80 },
+  { key: "upman-artist-10", family: "upman-artist", category: "CREATION", name: "Upman Artist", description: "Get submitted Upmans approved for the Dex.", label: "10", metric: "approved-submission-count", target: 10, order: 90 },
   ...[
-    ["gartic-regular-1", "gartic-regular", "GARTIC", "Gartic Regular", "Take part in Gartic Phone sessions.", "1", 1], ["gartic-regular-10", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "10", 10], ["gartic-regular-50", "gartic-regular", "GARTIC", "Take part in Gartic Phone sessions.", "50", 50],
-    ["gartic-gallery-1", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "1", 1], ["gartic-gallery-10", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "10", 10], ["gartic-gallery-50", "gartic-gallery", "GARTIC", "Gartic Gallery", "Have Gartic drawings saved to the gallery.", "50", 50],
     ["checked-in-1", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "1", 1], ["checked-in-10", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "10", 10], ["checked-in-50", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "50", 50], ["checked-in-100", "checked-in", "STREAM", "Checked In", "Check in during upreal_ streams.", "100", 100],
     ["first-1", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "1", 1], ["first-10", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "10", 10], ["first-25", "first", "STREAM", "First!", "Be the first to check in during a live stream.", "25", 25],
     ["event-veteran-1", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "1", 1], ["event-veteran-10", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "10", 10], ["event-veteran-50", "event-veteran", "EVENTS", "Event Veteran", "Take part in UPMANDEX events.", "50", 50],
@@ -150,7 +162,8 @@ export function getAchievementDefinition(key: string) {
 }
 
 export function getAchievementCosmetic(key: string, slot: CosmeticSlot) {
-  return getAchievementDefinition(key)?.cosmetic[slot] ?? null;
+  // Retired achievements keep their already-earned cosmetic rewards usable.
+  return getAchievementDefinition(key)?.cosmetic[slot] ?? achievementCosmetics[key]?.[slot] ?? null;
 }
 
 export function getAchievementCatalog() {
@@ -194,6 +207,8 @@ type EvaluationContext = {
   duplicatePulls: number;
   hasLegendaryPull: boolean;
   creations: number;
+  submissions: number;
+  approvedSubmissions: number;
   artworks: number;
   checkIns: number;
   firsts: number;
@@ -214,6 +229,8 @@ function metricValue(definition: AchievementDefinition, context: EvaluationConte
     case "legendary-pull": return context.hasLegendaryPull ? 1 : 0;
     case "duplicate-pulls": return context.duplicatePulls;
     case "creation-count": return context.creations;
+    case "submission-count": return context.submissions;
+    case "approved-submission-count": return context.approvedSubmissions;
     case "artwork-count": return context.artworks;
     case "check-in-count": return context.checkIns;
     case "first-count": return context.firsts;
@@ -252,10 +269,12 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
   });
   if (!person) return null;
 
-  const [upmans, creations, artworks, inventory, pulls, checkIns, firsts, garticParticipations, eventGrants] = await Promise.all([
+  const [upmans, creations, artworks, submissions, approvedSubmissions, inventory, pulls, checkIns, firsts, garticParticipations, eventGrants] = await Promise.all([
     prisma.upman.findMany({ select: { id: true, rarity: true } }),
     prisma.upman.count({ where: { creatorPersonId: person.id } }),
     prisma.personArtwork.count({ where: { personId: person.id } }),
+    person.userId ? prisma.upmanSubmission.count({ where: { userId: person.userId } }) : Promise.resolve(0),
+    person.userId ? prisma.upmanSubmission.count({ where: { userId: person.userId, status: "APPROVED" } }) : Promise.resolve(0),
     person.userId ? prisma.inventory.findMany({ where: { userId: person.userId }, select: { upman: { select: { rarity: true } } } }) : Promise.resolve([]),
     person.userId ? prisma.pullEvent.findMany({ where: { userId: person.userId }, select: { result: true, upmanRarity: true } }) : Promise.resolve([]),
     person.userId ? prisma.twitchAchievementEvent.count({ where: { userId: person.userId, kind: "CHECK_IN" } }) : Promise.resolve(0),
@@ -279,6 +298,8 @@ export async function getAchievementProgress(personId: string): Promise<Achievem
     duplicatePulls: pulls.filter((pull) => pull.result === "DUPLICATE").length,
     hasLegendaryPull: pulls.some((pull) => pull.upmanRarity === "Legendary"),
     creations,
+    submissions,
+    approvedSubmissions,
     artworks,
     checkIns,
     firsts,

@@ -61,6 +61,12 @@ enum UpmanDexVisibility {
   HIDDEN
 }
 
+enum UpmanSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum UpmanAcquisitionMethod {
   EVENT_REDEEM
   STREAM_COMMAND
@@ -97,6 +103,8 @@ model User {
   personalProfileCosmeticAssets ProfileCosmeticAsset[] @relation("PersonalProfileCosmeticAssetOwner")
   artworkLikes      PersonArtworkLike[]
   projectLikes      PersonProjectLike[]
+  upmanSubmissions  UpmanSubmission[] @relation("UpmanSubmissionAuthor")
+  reviewedUpmanSubmissions UpmanSubmission[] @relation("UpmanSubmissionReviewer")
 }
 
 model Person {
@@ -243,11 +251,37 @@ model Upman {
   acquisitionRules    UpmanAcquisitionRule[]
   acquisitionGrants   UpmanAcquisitionGrant[]
   activityLogs        ActivityLog[]
+  sourceSubmission    UpmanSubmission? @relation("UpmanSubmissionApprovedUpman")
   creatorPerson       Person?       @relation("UpmanCreatorPerson", fields: [creatorPersonId], references: [id], onDelete: SetNull)
   representedPerson   Person?       @relation("UpmanRepresentedPerson", fields: [representedPersonId], references: [id], onDelete: SetNull)
 
   @@index([creatorPersonId])
   @@index([representedPersonId])
+}
+
+model UpmanSubmission {
+  id                 String                @id @default(cuid())
+  userId             String
+  name               String
+  description        String
+  image              String
+  contentFingerprint String
+  status             UpmanSubmissionStatus @default(PENDING)
+  rarity             String?
+  represent          Boolean               @default(false)
+  approvedUpmanId    String?               @unique
+  reviewedByUserId   String?
+  reviewedAt         DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  user          User  @relation("UpmanSubmissionAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy    User? @relation("UpmanSubmissionReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  approvedUpman Upman? @relation("UpmanSubmissionApprovedUpman", fields: [approvedUpmanId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, contentFingerprint])
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 model UpmanEvent {

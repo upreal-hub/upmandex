@@ -24,6 +24,7 @@ const menus: Menu[] = [
     { label: "Achievements", detail: "Explore the achievement gallery", icon: "✦", href: "/achievements" },
   ] },
   { label: "Community", intro: "A sky shared by many explorers.", icon: "✺", items: [
+    { label: "Submit an Upman", detail: "Share an idea for Admin review", icon: "✎", href: "/submit-upman" },
     { label: "Leaderboards", detail: "Explore the collector ranking", icon: "♛", href: "/community/leaderboards" },
     { label: "Cloud Members", detail: "Find community members", icon: "☁", href: "/community/members" },
     { label: "Top Creators", detail: "Discover the people creating Upmans", icon: "✎", href: "/community/creators" },
