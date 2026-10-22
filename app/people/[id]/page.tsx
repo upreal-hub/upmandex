@@ -133,7 +133,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
 
   const profile = (
     <main className={`person-page ${styles.page}`} data-background={customBackground ? "custom" : background?.styleKey ?? "default"} data-accent={accent?.styleKey ?? "default"}>
-      {customBackground && <div className={styles.customProfileBackground} aria-hidden="true"><Image src={customBackground.image} alt="" fill sizes="(max-width: 760px) 100vw, 75rem" className={styles.customProfileImage} /></div>}
+      {customBackground && <div className={styles.customProfileBackground} aria-hidden="true"><Image src={customBackground.image} alt="" fill sizes="100vw" className={styles.customProfileImage} /></div>}
       <div className={styles.profileScene} aria-hidden="true" />
       <section className={styles.header} data-banner={customBanner ? "custom" : banner?.styleKey ?? "default"} aria-labelledby="person-name">
         {customBanner
@@ -151,7 +151,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         </div>
       </section>
 
-      {isOwner && <OwnerCustomizeControls />}
+      {isOwner && <OwnerCustomizeControls personId={person.id} />}
           {isOwner && <div id="profile-customization" className={styles.ownerActions}>
 
             <CustomizeModeOnly>

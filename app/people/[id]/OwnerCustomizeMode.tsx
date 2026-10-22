@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 import styles from "./person.module.css";
@@ -23,9 +24,9 @@ export function useOwnerCustomizeMode() {
   return useContext(CustomizeModeContext);
 }
 
-export function OwnerCustomizeControls() {
+export function OwnerCustomizeControls({ personId }: { personId: string }) {
   const { isCustomizeMode, setCustomizeMode } = useOwnerCustomizeMode();
-  return <nav className={styles.profileTabs} aria-label="My Profile"><button type="button" aria-pressed={!isCustomizeMode} onClick={() => setCustomizeMode(false)}>☁ My Profile</button><button type="button" aria-pressed={isCustomizeMode} onClick={() => setCustomizeMode(true)}>✧ Customization</button><a href="#person-creations" onClick={() => setCustomizeMode(true)}>✎ My Workshop</a></nav>;
+  return <nav className={styles.profileTabs} aria-label="My Profile"><button type="button" aria-pressed={!isCustomizeMode} onClick={() => setCustomizeMode(false)}>☁ My Profile</button><button type="button" aria-pressed={isCustomizeMode} onClick={() => setCustomizeMode(true)}>✧ Customization</button><Link href={`/people/${encodeURIComponent(personId)}/art`}>✎ My Workshop</Link></nav>;
 }
 
 export function CustomizeModeOnly({ children }: { children: ReactNode }) {
