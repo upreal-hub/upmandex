@@ -6,7 +6,7 @@ import { Prisma, UpmanSubmissionStatus } from "@/app/generated/prisma/client";
 
 import { auth } from "@/auth";
 import { createActivityLogData } from "@/lib/activity";
-import { isPngFile, UPMAN_IMAGE_MAX_BYTES } from "@/lib/blob";
+import { UPMAN_IMAGE_MAX_BYTES, validateUpmanPngFile } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { safelySyncLinkedPersonAchievements } from "@/lib/achievements";
 import { isUpmanRarity, type UpmanRarity } from "@/lib/upman-rarity";
@@ -69,7 +69,7 @@ export async function createUpmanSubmission(formData: FormData) {
   const image = formData.get("image");
   if (!name || !description) throw new UpmanSubmissionError("Provide an Upman name and description");
   if (!(image instanceof File)) throw new UpmanSubmissionError("A PNG image is required");
-  if (image.size === 0 || image.size > UPMAN_IMAGE_MAX_BYTES || image.type !== "image/png" || !image.name.toLowerCase().endsWith(".png") || !(await isPngFile(image))) {
+  if (image.size === 0 || image.size > UPMAN_IMAGE_MAX_BYTES || image.type !== "image/png" || !image.name.toLowerCase().endsWith(".png") || !(await validateUpmanPngFile(image))) {
     throw new UpmanSubmissionError("Image must be a PNG smaller than 4 MiB");
   }
 

@@ -2,7 +2,7 @@ import { del, put } from "@vercel/blob";
 import { Prisma } from "@/app/generated/prisma/client";
 import { NextResponse } from "next/server";
 
-import { getUpmanBlobPath, isPngFile, UPMAN_IMAGE_MAX_BYTES } from "@/lib/blob";
+import { getUpmanBlobPath, UPMAN_IMAGE_MAX_BYTES, validateUpmanPngFile } from "@/lib/blob";
 import { requireAdmin } from "@/lib/authorization";
 import { createActivityLogData } from "@/lib/activity";
 import { safelySyncPersonAchievements } from "@/lib/achievements";
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     image.size > UPMAN_IMAGE_MAX_BYTES ||
     image.type !== "image/png" ||
     !image.name.toLowerCase().endsWith(".png") ||
-    !(await isPngFile(image))
+    !(await validateUpmanPngFile(image))
   ) {
     return NextResponse.json(
       { success: false, error: "Image must be a PNG smaller than 4 MiB" },

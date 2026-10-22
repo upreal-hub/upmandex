@@ -1,9 +1,10 @@
 import "server-only";
 
-export const UPMAN_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+import { validateUpmanPngBytes, type PngImageInfo } from "@/lib/png-validation";
 
-const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+export const UPMAN_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 const UPMAN_BLOB_PREFIX = "/upmans/";
+export type { PngImageInfo } from "@/lib/png-validation";
 
 export function getUpmanBlobPath(slug: string): string {
   return `upmans/${slug}.png`;
@@ -33,11 +34,6 @@ export function isManagedUpmanBlobUrl(value: string): boolean {
   }
 }
 
-export async function isPngFile(file: File): Promise<boolean> {
-  const header = new Uint8Array(await file.slice(0, PNG_SIGNATURE.length).arrayBuffer());
-
-  return (
-    header.length === PNG_SIGNATURE.length &&
-    PNG_SIGNATURE.every((value, index) => header[index] === value)
-  );
+export async function validateUpmanPngFile(file: File): Promise<PngImageInfo | null> {
+  return validateUpmanPngBytes(new Uint8Array(await file.arrayBuffer()));
 }
