@@ -174,6 +174,7 @@ export async function CommunityView({ view = "members" }: { view?: "members" | "
       <header className={styles.hero}>
         <p className={styles.eyebrow}>EVERY CLOUD FOUND TOGETHER</p>
         <h1>{({ members: "CLOUD MEMBERS", leaderboards: "LEADERBOARDS", creators: "TOP CREATORS", highlights: "COMMUNITY HIGHLIGHTS" })[view]}</h1>
+        <Image src="/cloud-decorations/three_months_cloud.png" alt="" aria-hidden="true" width={48} height={48} className={styles.heroCloud} />
         <p className={styles.intro}>The people, collections, and discoveries that keep the cloud world growing.</p>
       </header>
 

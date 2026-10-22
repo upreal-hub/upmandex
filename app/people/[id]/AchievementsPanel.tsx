@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
@@ -120,7 +121,7 @@ export default function AchievementsPanel({ progress, personId, isOwner, achieve
 
   return (
     <section className={styles.achievementsSummary} aria-labelledby="achievements-summary-heading">
-      <div><p className={styles.eyebrow}>ACHIEVEMENTS</p><h2 id="achievements-summary-heading" className={styles.achievementsTitle}>{progress.summary.unlocked} / {progress.summary.available} unlocked</h2></div>
+      <div><p className={`${styles.eyebrow} ${styles.achievementEyebrow}`}><Image src="/cloud-decorations/tier_2_flair.png" alt="" aria-hidden="true" width={28} height={28} />ACHIEVEMENTS</p><h2 id="achievements-summary-heading" className={styles.achievementsTitle}>{progress.summary.unlocked} / {progress.summary.available} unlocked</h2></div>
       <div className={styles.featuredBadges} aria-label="Featured achievements">
         <p>Featured</p>
         <div>{visibleFeatured.length ? visibleFeatured.map((badge) => <span key={badge.key} data-category={badge.category}><b aria-hidden="true">✦</b><strong>{featuredAchievementName(badge)}</strong><small>{featuredAchievementReward(badge)}</small></span>) : <span className={styles.noBadges}>No featured achievements yet</span>}</div>
