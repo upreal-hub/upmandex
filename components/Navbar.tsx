@@ -34,6 +34,7 @@ const menus: Menu[] = [
   { label: "Cloud Worlds", intro: "Creative corners of the community.", icon: "✵", items: [
     { label: "Other Websites", detail: "Visit neighbouring creative worlds", icon: "☁", href: "/guides/worlds" },
     { label: "Creative Studio", detail: "Art and projects from the community", icon: "✎", href: "/creative-studio" },
+    { label: "Discord", detail: "Join our Discord community!", icon: "✺", href: "/discord" },
     { label: "Stream", detail: "Visit upreal_ and learn about the stream", icon: "◷", href: "https://garticverse.com/s/upreal_" },
   ] },
   { label: "My Profile", intro: "Make your own corner of the sky.", icon: "✿", auth: true, items: [
