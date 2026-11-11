@@ -26,13 +26,18 @@ type AcquisitionUpman = {
   rarity: string;
   image: string;
   creator: string;
+  publiclyDisplayable?: boolean;
+};
+
+type StoredAcquisitionUpman = Omit<AcquisitionUpman, "publiclyDisplayable"> & {
+  dexVisibility: string;
 };
 
 type ResolvedAcquisition = {
   status: "resolved";
   idempotent: boolean;
   result: "new" | "duplicate";
-  viewer: { twitchLogin: string; displayName: string };
+  viewer: { twitchUserId: string; twitchLogin: string; displayName: string };
   upman: AcquisitionUpman;
 };
 
@@ -122,19 +127,28 @@ function eventIsAvailable(event: {
 
 function persistedResult(grant: {
   result: "NEW" | "DUPLICATE";
+  twitchUserId: string | null;
   twitchLogin: string;
   displayName: string;
-  upman: AcquisitionUpman;
+  upman: StoredAcquisitionUpman;
 }): ResolvedAcquisition {
   return {
     status: "resolved",
     idempotent: true,
     result: grant.result === "NEW" ? "new" : "duplicate",
     viewer: {
+      twitchUserId: grant.twitchUserId ?? "",
       twitchLogin: grant.twitchLogin,
       displayName: grant.displayName,
     },
-    upman: grant.upman,
+    upman: {
+      slug: grant.upman.slug,
+      name: grant.upman.name,
+      rarity: grant.upman.rarity,
+      image: grant.upman.image,
+      creator: grant.upman.creator,
+      publiclyDisplayable: grant.upman.dexVisibility === "PUBLIC",
+    },
   };
 }
 
@@ -154,6 +168,7 @@ export async function resolveUpmanAcquisition(
             where: { idempotencyKey: normalized.idempotencyKey },
             select: {
               result: true,
+              twitchUserId: true,
               twitchLogin: true,
               displayName: true,
               upman: {
@@ -163,6 +178,7 @@ export async function resolveUpmanAcquisition(
                   rarity: true,
                   image: true,
                   creator: true,
+                  dexVisibility: true,
                 },
               },
             },
@@ -188,6 +204,7 @@ export async function resolveUpmanAcquisition(
                   rarity: true,
                   image: true,
                   creator: true,
+                  dexVisibility: true,
                 },
               },
             },
@@ -281,6 +298,7 @@ export async function resolveUpmanAcquisition(
             idempotent: false,
             result: result === "NEW" ? "new" : "duplicate",
             viewer: {
+              twitchUserId: normalized.viewer.twitchUserId,
               twitchLogin: identity.user.twitchLogin,
               displayName: normalized.viewer.displayName,
             },
@@ -290,6 +308,7 @@ export async function resolveUpmanAcquisition(
               rarity: rule.upman.rarity,
               image: rule.upman.image,
               creator: rule.upman.creator,
+              publiclyDisplayable: rule.upman.dexVisibility === "PUBLIC",
             },
           };
         },

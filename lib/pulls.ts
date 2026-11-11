@@ -20,15 +20,19 @@ type PullUpman = {
   rarity: string;
   image: string;
   creator: string;
+  dexVisibility: string;
 };
 
 type PersistedPull = {
   result: "new" | "duplicate";
   viewer: {
+    twitchUserId: string;
     twitchLogin: string;
     displayName: string;
   };
-  upman: Omit<PullUpman, "id">;
+  upman: Omit<PullUpman, "id" | "dexVisibility"> & {
+    publiclyDisplayable?: boolean;
+  };
 };
 
 export type ResolvePullResult =
@@ -62,6 +66,7 @@ function waitForTransactionRetry(attempt: number) {
 
 function toPersistedPull(event: {
   result: "NEW" | "DUPLICATE";
+  twitchUserId: string;
   twitchLogin: string;
   displayName: string;
   upmanSlug: string;
@@ -73,6 +78,7 @@ function toPersistedPull(event: {
   return {
     result: event.result === "NEW" ? "new" : "duplicate",
     viewer: {
+      twitchUserId: event.twitchUserId,
       twitchLogin: event.twitchLogin,
       displayName: event.displayName,
     },
@@ -126,6 +132,7 @@ export async function resolvePull(
             where: { requestId: input.requestId },
             select: {
               result: true,
+              twitchUserId: true,
               twitchLogin: true,
               displayName: true,
               upmanSlug: true,
@@ -171,6 +178,7 @@ export async function resolvePull(
               rarity: true,
               image: true,
               creator: true,
+              dexVisibility: true,
             },
             orderBy: { slug: "asc" },
           });
@@ -268,6 +276,7 @@ export async function resolvePull(
             idempotent: false,
             result: result === "NEW" ? "new" : "duplicate",
             viewer: {
+              twitchUserId: input.viewer.twitchUserId,
               twitchLogin: viewerResult.user.twitchLogin,
               displayName: input.viewer.displayName,
             },
@@ -277,6 +286,7 @@ export async function resolvePull(
               rarity: upman.rarity,
               image: upman.image,
               creator: upman.creator,
+              publiclyDisplayable: upman.dexVisibility === "PUBLIC",
             },
           };
         },
