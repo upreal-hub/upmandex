@@ -10,6 +10,8 @@ import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth"
 import { isEventUpmanAuthorized } from "@/lib/eventupman-auth";
 import { isStreamChatAuthorized } from "@/lib/stream-chat-auth";
 import { canReadDisplay } from "@/lib/gartic-feud-token";
+import { prisma } from "@/lib/prisma";
+import { isStreamSpritePath, isStreamSubmissionRequest } from "@/lib/stream-media-path";
 
 const privateProxy = (waitingUrl: URL) => auth((request) => {
   const path = request.nextUrl.pathname;
@@ -64,6 +66,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ headers: { "Cache-Control": "private, no-store" } });
   }
   if (await isSitePrivate()) {
+    if (request.method === "GET" || request.method === "HEAD") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (isStreamSubmissionRequest(path, request.nextUrl.search)) return NextResponse.next({ headers });
+      if (!request.nextUrl.search && isStreamSpritePath(path)) {
+        const publicSprite = await prisma.upman.findFirst({
+          where: { image: path, dexVisibility: "PUBLIC", rarity: { not: "Secret" } },
+          select: { id: true },
+        }).catch(() => null);
+        if (publicSprite) return NextResponse.next({ headers });
+      }
+    }
     return privateProxy(new URL("/waiting", request.url))(request, { params: Promise.resolve({}) });
   }
   const headers = { "Cache-Control": "private, no-store" };

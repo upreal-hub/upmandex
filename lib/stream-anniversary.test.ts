@@ -90,11 +90,11 @@ test("stream routes and achievements with isolated Twitch and Prisma mocks", asy
   });
 
   await context.test("public card and chat/TTS projections share custom cosmetics and represented Upman", async (test) => {
-    const represented = { slug: "public", name: "Public Upman", image: "/upmans/public.png" };
+    const represented = { slug: "public", name: "Public Upman", image: "/api/submission-media/fixture" };
     const background = { kind: "custom", image: "https://example.test/background.png" };
     mockPrisma(test, prisma.upman, "findUnique", async () => null);
     mockPrisma(test, prisma.user, "findUnique", async ({ select }: { select: { person: { select: { representedUpmans?: { where: object } } } } }) => {
-      if (select.person.select.representedUpmans) assert.deepEqual(select.person.select.representedUpmans.where, { dexVisibility: "PUBLIC" });
+      if (select.person.select.representedUpmans) assert.deepEqual(select.person.select.representedUpmans.where, { dexVisibility: "PUBLIC", rarity: { not: "Secret" } });
       return { ...viewer, avatar: null, person: {
         id: "person", userId: "user", isPublic: true, representedUpmans: [represented],
         equippedCustomBackground: { type: "BACKGROUND", image: background.image },
@@ -107,7 +107,7 @@ test("stream routes and achievements with isolated Twitch and Prisma mocks", asy
     const projection = (await (await profile(request("stream-profile", "fixture-chat", viewer))).json()).profile;
     const fullCard = (await (await card(request("stream-card", "fixture-chat", viewer))).json()).card;
     assert.deepEqual(projection.background, background);
-    assert.deepEqual(projection.representedUpman, represented);
+    assert.deepEqual(projection.representedUpman, { ...represented, image: represented.image + "?stream=1" });
     assert.equal(projection.accent.styleKey, "default");
     assert.deepEqual(fullCard.representedUpman, projection.representedUpman);
     assert.deepEqual(fullCard.background, projection.background);

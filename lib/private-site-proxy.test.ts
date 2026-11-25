@@ -38,6 +38,13 @@ test("real Proxy and Auth.js handlers protect Preview requests without external 
     const originalQuery = prisma.$queryRaw;
     context.after(() => { prisma.$queryRaw = originalQuery; });
     prisma.$queryRaw = (async () => [{ status: publication, version: 0 }]) as typeof prisma.$queryRaw;
+    const originalFind = prisma.upman.findFirst;
+    context.after(() => { prisma.upman.findFirst = originalFind; });
+    prisma.upman.findFirst = (async (input: { where: { image: string; dexVisibility: string; rarity: { not: string } } }) => {
+      assert.equal(input.where.dexVisibility, "PUBLIC");
+      assert.deepEqual(input.where.rarity, { not: "Secret" });
+      return input.where.image === "/upmans/normalupman.png" ? { id: "fixture" } : null;
+    }) as unknown as typeof prisma.upman.findFirst;
     const cookie = async (id: string, isAdmin = false) =>
       salt + "=" + await encode({ secret, salt, token: { twitchUserId: id, isAdmin } });
     const call = async (path: string, init?: ConstructorParameters<typeof NextRequest>[1],
@@ -57,6 +64,13 @@ test("real Proxy and Auth.js handlers protect Preview requests without external 
     assert.equal((await call("/waiting")).headers.get("x-middleware-next"), "1");
     assert.equal((await call("/_next/static/fixture.js")).headers.get("x-middleware-next"), "1");
     assert.equal((await call("/api/viewer-inventory")).status, 401);
+    assert.equal((await call("/upmans/normalupman.png")).headers.get("x-middleware-next"), "1");
+    assert.equal((await call("/upmans/normalupman.png", { method: "HEAD" })).headers.get("x-middleware-next"), "1");
+    assert.equal((await call("/upmans/hidden.png")).status, 307);
+    assert.equal((await call("/upmans/normalupman.png?other=1")).status, 307);
+    assert.equal((await call("/api/submission-media/fixture?stream=1")).headers.get("x-middleware-next"), "1");
+    assert.equal((await call("/api/submission-media/fixture")).status, 401);
+    assert.equal((await call("/api/submission-media/fixture?stream=1", { method: "POST" })).status, 401);
     process.env.UPMANDEX_MEW_RUNTIME_ENABLED = "1";
     try {
       assert.equal((await call("/api/viewer-inventory")).status, 401);

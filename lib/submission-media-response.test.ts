@@ -41,6 +41,17 @@ test("PUBLIC never exposes pending submissions to unrelated visitors", async () 
   f.context.access.privateSite = true;
   assert.equal((await submissionMediaResponse("submission1", f.deps)).status, 404);
 });
+test("the stream image path allows only approved public artwork while PRIVATE", async () => {
+  const f = fixture();
+  Object.assign(f.context.access, { member: true, owner: true, admin: true });
+  assert.equal((await submissionMediaResponse("submission1", f.deps, true)).status, 404);
+  assert.equal(f.reads(), 0);
+  Object.assign(f.context.access, { member: false, owner: false, admin: false, approvedPublic: true });
+  const response = await submissionMediaResponse("submission1", f.deps, true);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "image/png");
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+});
 test("stored media cannot redirect credentials or request arbitrary hosts", async () => {
   const f = fixture();
   Object.assign(f.context.access, { member: true, owner: true });

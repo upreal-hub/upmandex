@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { resolvePull } from "@/lib/pulls";
 import { getBearerToken, isStreamerBotAuthorized } from "@/lib/streamerbot-auth";
 import { validatePullPayload } from "@/lib/validation";
+import { streamUpmanImage } from "@/lib/stream-media-path";
 
 export async function POST(request: Request) {
   const secret = getBearerToken(request) ?? "";
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
           idempotent: result.idempotent,
           result: result.result,
           viewer: result.viewer,
-          upman: result.upman,
+          upman: { ...result.upman, image: streamUpmanImage(result.upman.image) },
         });
       case "identity-conflict":
         return NextResponse.json(

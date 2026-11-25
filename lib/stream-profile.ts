@@ -8,6 +8,7 @@ import {
   type StreamBackgroundAppearance,
 } from "@/lib/stream-profile-backgrounds";
 import { publicUpmanWhere } from "@/lib/upman-visibility";
+import { streamUpmanImage } from "@/lib/stream-media-path";
 import { normalizeTwitchLogin } from "@/lib/validation";
 
 const NORMAL_UPMAN_SLUG = "normalupman";
@@ -67,7 +68,7 @@ async function findViewer(
           select: { type: true, image: true },
         },
         representedUpmans: {
-          where: publicUpmanWhere,
+          where: { ...publicUpmanWhere, rarity: { not: "Secret" } },
           orderBy: [{ name: "asc" }, { slug: "asc" }],
           take: 1,
           select: { slug: true, name: true, image: true },
@@ -162,6 +163,8 @@ export async function resolveStreamProfile(
     displayName: viewer.displayName,
     accent: accent ?? DEFAULT_ACCENT,
     background,
-    representedUpman: viewer.person.representedUpmans[0] ?? fallbackUpman,
+    representedUpman: viewer.person.representedUpmans[0]
+      ? { ...viewer.person.representedUpmans[0], image: streamUpmanImage(viewer.person.representedUpmans[0].image) }
+      : fallbackUpman,
   };
 }
