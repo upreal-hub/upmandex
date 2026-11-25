@@ -11,3 +11,8 @@ test("includes only public, pullable Upmans from classic pull rarities", () => {
   assert.equal(isClassicCollectionUpman({ dexVisibility: "HIDDEN", isPullable: true, rarity: "Rare" }), false);
   assert.equal(isClassicCollectionUpman({ dexVisibility: "PUBLIC", isPullable: false, rarity: "Epic" }), false);
 });
+
+test("includes an approved submission once it is public, pullable, and classic", () => {
+  // Submission provenance does not alter classic-pull eligibility after approval.
+  assert.equal(isClassicCollectionUpman({ dexVisibility: "PUBLIC", isPullable: true, rarity: "Common" }), true);
+});

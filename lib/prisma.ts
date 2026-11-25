@@ -1,5 +1,8 @@
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { verifyAdminTestPreview } from "./admin-test-preview";
+
+verifyAdminTestPreview(process.env);
 
 const globalForPrisma =
   globalThis as unknown as {

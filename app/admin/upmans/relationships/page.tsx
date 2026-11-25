@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 
 import RelationshipManager from "./RelationshipManager";
@@ -6,6 +8,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function UpmanRelationshipsPage() {
+  const authorization = await requireAdmin();
+  if (!authorization.ok) redirect("/");
   const [upmans, people, users] = await Promise.all([
     prisma.upman.findMany({
       orderBy: [{ name: "asc" }, { id: "asc" }],

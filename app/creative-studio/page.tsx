@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import CreativeStudio from "./CreativeStudio";
 import { isCreativeStudioSchemaAvailable } from "@/lib/creative-studio";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -38,9 +37,9 @@ type StudioProject = {
 
 export default async function CreativeStudioPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const tab = (await searchParams).tab === "projects" ? "projects" : "art";
-  const login = normalizeTwitchLogin((await auth())?.user?.name);
-  const viewer = login
-    ? await prisma.user.findUnique({ where: { twitchLogin: login }, select: { id: true } })
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  const viewer = twitchUserId
+    ? await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } })
     : null;
   const migrationReady = await isCreativeStudioSchemaAvailable();
 

@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import SkyAtmosphere from "@/components/SkyAtmosphere";
 import Navbar from "@/components/Navbar";
 import AuthProvider from "@/components/SessionProvider";
 import SiteThemeProvider from "@/components/SiteThemeProvider";
+import { auth } from "@/auth";
+import { isPrivateSiteMember } from "@/lib/private-site-access";
+import { isSitePrivate } from "@/lib/site-publication";
+import AnniversaryWaiting from "@/components/AnniversaryWaiting";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,11 +26,17 @@ export const metadata: Metadata = {
   description: "Welcome to the Skylands",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
+  if (await isSitePrivate()) {
+    const id = (await auth())?.user?.twitchUserId;
+    if (!isPrivateSiteMember(id)) return <html lang="en"><body><AnniversaryWaiting /></body></html>;
+  }
+
   return (
     <html
       lang="en"

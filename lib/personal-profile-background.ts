@@ -7,7 +7,6 @@ import { ProfileCosmeticAssetType } from "@/app/generated/prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { validateProfileCosmeticImage } from "@/lib/profile-cosmetics";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 const PREFIX = "personal-profile-backgrounds/";
 const EXTENSIONS = /\.(png|jpe?g|webp)$/i;
@@ -39,9 +38,9 @@ export class PersonalProfileBackgroundError extends Error {
 type Owner = { user: { id: string }; person: { id: string; userId: string | null } };
 
 async function getOwner(personId: string): Promise<Owner> {
-  const login = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!login) throw new PersonalProfileBackgroundError(401, "Authentication required");
-  const user = await prisma.user.findUnique({ where: { twitchLogin: login }, select: { id: true } });
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new PersonalProfileBackgroundError(401, "Authentication required");
+  const user = await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } });
   if (!user) throw new PersonalProfileBackgroundError(403, "Your Twitch account is not available");
   const person = await prisma.person.findUnique({ where: { id: personId }, select: { id: true, userId: true } });
   if (!person) throw new PersonalProfileBackgroundError(404, "Person not found");

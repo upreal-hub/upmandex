@@ -308,7 +308,7 @@ export function validateUpmanRelationshipPayload(value: unknown):
   | {
       success: true;
       data:
-        | { relation: "creator" | "represented"; source: "unlink" }
+        | { relation: "creator" | "represented"; source: "unlink"; expectedPersonId?: string }
         | { relation: "creator" | "represented"; source: "existing-person"; personId: string }
         | {
             relation: "creator" | "represented";
@@ -329,7 +329,13 @@ export function validateUpmanRelationshipPayload(value: unknown):
     return { success: false, error: "Invalid relationship request" };
   }
 
-  if (source === "unlink") return { success: true, data: { relation, source } };
+  if (source === "unlink") {
+    if (!Object.hasOwn(payload, "expectedPersonId")) return { success: true, data: { relation, source } };
+    const expectedPersonId = optionalId(payload.expectedPersonId);
+    return expectedPersonId
+      ? { success: true, data: { relation, source, expectedPersonId } }
+      : { success: false, error: "Invalid current Person" };
+  }
 
   if (source === "existing-person") {
     const personId = optionalId(payload.personId);

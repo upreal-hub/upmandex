@@ -6,7 +6,6 @@ import type { Prisma } from "@/app/generated/prisma/client";
 import { auth } from "@/auth";
 import { PERSON_LINK_PLATFORMS, type PersonLinkPlatform } from "@/lib/person-link-platforms";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 const MAX_PERSON_LINK_URL_LENGTH = 2048;
 
@@ -117,9 +116,9 @@ export function validatePersonLinkMutation(value: unknown):
 }
 
 async function getPersonLinkOwner(personId: string) {
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!sessionLogin) throw new PersonLinkError(401, "Sign in to manage links");
-  const user = await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } });
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new PersonLinkError(401, "Sign in to manage links");
+  const user = await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } });
   if (!user) throw new PersonLinkError(401, "Sign in to manage links");
   const person = await prisma.person.findUnique({ where: { id: personId }, select: { id: true, userId: true } });
   if (!person) throw new PersonLinkError(404, "Person not found");

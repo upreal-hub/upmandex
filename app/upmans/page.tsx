@@ -2,7 +2,6 @@ import Image from "next/image";
 import { auth } from "@/auth";
 import UpmandexGallery, { type UpmandexEntry } from "@/components/UpmandexGallery";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 import { publicUpmanWhere } from "@/lib/upman-visibility";
 import { resolvePublicCreatorIdentity } from "@/lib/upman-identity";
 
@@ -13,7 +12,7 @@ export const revalidate = 0;
 
 export default async function UpmansPage() {
   const session = await auth();
-  const twitchLogin = normalizeTwitchLogin(session?.user?.name);
+  const twitchUserId = session?.user?.twitchUserId;
 
   const [upmans, viewer] = await Promise.all([
     prisma.upman.findMany({
@@ -30,9 +29,9 @@ export default async function UpmansPage() {
         creatorPerson: { select: { id: true, displayName: true, isPublic: true, user: { select: { twitchLogin: true, avatar: true } } } },
       },
     }),
-    twitchLogin
+    twitchUserId
       ? prisma.user.findUnique({
-          where: { twitchLogin },
+          where: { twitchUserId },
           select: { inventory: { where: { upman: publicUpmanWhere }, select: { upmanId: true } } },
         })
       : null,

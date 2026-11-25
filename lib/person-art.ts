@@ -7,7 +7,7 @@ import { del, put } from "@vercel/blob";
 import { auth } from "@/auth";
 import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin, validateArtworkTitle } from "@/lib/validation";
+import { validateArtworkTitle } from "@/lib/validation";
 
 export const PERSON_ART_MAX_BYTES = 5 * 1024 * 1024;
 export const PERSON_ART_MAX_DIMENSION = 4096;
@@ -198,11 +198,11 @@ export function isManagedPersonArtworkBlobUrl(value: string, personId: string): 
 }
 
 async function getPersonArtworkOwner(personId: string): Promise<ArtworkOwner> {
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!sessionLogin) throw new PersonArtworkError(401, "Authentication required");
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new PersonArtworkError(401, "Authentication required");
 
   const user = await prisma.user.findUnique({
-    where: { twitchLogin: sessionLogin },
+    where: { twitchUserId },
     select: { id: true, twitchLogin: true },
   });
   if (!user) throw new PersonArtworkError(403, "You can only manage your own art");

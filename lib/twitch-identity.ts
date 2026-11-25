@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Prisma } from "@/app/generated/prisma/client";
+import type { Prisma } from "@/app/generated/prisma/client";
 
 export type TwitchIdentityInput = {
   twitchUserId: string;
@@ -18,18 +18,25 @@ export type TwitchIdentityResolution =
 
 export async function resolveTwitchIdentity(
   tx: Prisma.TransactionClient,
-  identity: TwitchIdentityInput
+  identity: TwitchIdentityInput,
+  diagnostic?: (stage: "owner-admin-not-found" | "owner-admin-not-linked" | "owner-account-not-admin" | "owner-admin-verified") => void
 ): Promise<TwitchIdentityResolution> {
   const [userByTwitchId, userByLogin] = await Promise.all([
     tx.user.findUnique({
       where: { twitchUserId: identity.twitchUserId },
-      select: { id: true, twitchUserId: true, twitchLogin: true },
+      select: { id: true, twitchUserId: true, twitchLogin: true, role: true },
     }),
     tx.user.findUnique({
       where: { twitchLogin: identity.twitchLogin },
-      select: { id: true, twitchUserId: true, twitchLogin: true },
+      select: { id: true, twitchUserId: true, twitchLogin: true, role: true },
     }),
   ]);
+
+  // Observation only: all binding, conflict and role rules below are unchanged.
+  if (userByTwitchId?.role === "ADMIN") diagnostic?.("owner-admin-verified");
+  else if (userByLogin?.role === "ADMIN" && !userByTwitchId) diagnostic?.("owner-admin-not-linked");
+  else if (!userByTwitchId && !userByLogin) diagnostic?.("owner-admin-not-found");
+  else diagnostic?.("owner-account-not-admin");
 
   if (userByTwitchId && userByLogin && userByTwitchId.id !== userByLogin.id) {
     return { status: "identity-conflict" };
@@ -58,8 +65,13 @@ export async function resolveTwitchIdentity(
     return { status: "identity-conflict" };
   }
 
+  if (existingUser.role === "ADMIN" && !existingUser.twitchUserId
+    && process.env.UPMANDEX_ADMIN_TWITCH_ID !== identity.twitchUserId) {
+    return { status: "identity-conflict" };
+  }
+
   const user = await tx.user.update({
-    where: { id: existingUser.id },
+    where: { id: existingUser.id, AND: { twitchUserId: existingUser.twitchUserId, role: existingUser.role } },
     data: {
       twitchUserId: identity.twitchUserId,
       twitchLogin: identity.twitchLogin,

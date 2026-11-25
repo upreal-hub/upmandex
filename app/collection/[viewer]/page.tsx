@@ -16,10 +16,10 @@ export default async function ViewerCollection({ params }: { params: Promise<{ v
   const { viewer } = await params;
   const targetLogin = normalizeTwitchLogin(viewer);
   if (!targetLogin) notFound();
-  const visitorLogin = normalizeTwitchLogin((await auth())?.user?.name);
+  const twitchUserId = (await auth())?.user?.twitchUserId;
   const [user, visitor] = await Promise.all([
     prisma.user.findUnique({ where: { twitchLogin: targetLogin }, select: { id: true, twitchLogin: true, displayName: true, avatar: true, person: { select: { id: true, isPublic: true } } } }),
-    visitorLogin ? prisma.user.findUnique({ where: { twitchLogin: visitorLogin }, select: { id: true } }) : null,
+    twitchUserId ? prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } }) : null,
   ]);
   if (!user) notFound();
   const isOwner = visitor?.id === user.id;

@@ -50,6 +50,11 @@ export type ActivityMetadata =
       changes: string[];
       linkedUserLogin?: string | null;
     }
+  | {
+      changes: string[];
+      before: { creator: string; creatorTwitch: string | null; creatorPersonId: string | null };
+      after: { creator: string; creatorTwitch: string | null; creatorPersonId: string | null };
+    }
   | { assetId: string; assetName: string; assetType: "BACKGROUND" | "BANNER"; cleanupWarning?: boolean };
 
 export function createActivityLogData({

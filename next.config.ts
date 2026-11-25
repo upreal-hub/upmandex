@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Authenticated media must be requested by the browser with its session,
+    // never fetched without cookies or retained in the shared image optimizer cache.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

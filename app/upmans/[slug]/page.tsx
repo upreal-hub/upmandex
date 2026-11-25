@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import UpmanDetailHotbar from "@/components/UpmanDetailHotbar";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 import { publicUpmanWhere, upmanDetailWhere } from "@/lib/upman-visibility";
 import { getUpmanRarityLabel } from "@/lib/upman-rarity";
 import { resolvePublicCreatorIdentity } from "@/lib/upman-identity";
@@ -30,9 +29,9 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
   const { slug } = await params;
   const { view } = await searchParams;
   const session = await auth();
-  const twitchLogin = normalizeTwitchLogin(session?.user?.name);
-  const currentUser = twitchLogin
-    ? await prisma.user.findUnique({ where: { twitchLogin }, select: { id: true } })
+  const twitchUserId = session?.user?.twitchUserId;
+  const currentUser = twitchUserId
+    ? await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } })
     : null;
   const upman = await prisma.upman.findFirst({
     where: upmanDetailWhere(slug, currentUser?.id ?? null),
@@ -62,7 +61,7 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
   const structuredCreator = upman.creatorPerson?.isPublic ? upman.creatorPerson : null;
   const representedPerson = upman.representedPerson?.isPublic ? upman.representedPerson : null;
   const [viewer, legacyCreator] = await Promise.all([
-    twitchLogin ? prisma.user.findUnique({ where: { twitchLogin }, select: { inventory: { where: { upmanId: upman.id }, select: { id: true } } } }) : null,
+    twitchUserId ? prisma.user.findUnique({ where: { twitchUserId }, select: { inventory: { where: { upmanId: upman.id }, select: { id: true } } } }) : null,
     !structuredCreator && upman.creatorTwitch ? prisma.user.findUnique({ where: { twitchLogin: upman.creatorTwitch }, select: { avatar: true } }) : null,
   ]);
   const creatorIdentity: PublicIdentity = resolvePublicCreatorIdentity(upman, upman.creatorPerson, legacyCreator?.avatar ?? null);
@@ -81,7 +80,7 @@ export default async function UpmanPage({ params, searchParams }: { params: Prom
       <p className={styles.creator}><span>Created by</span><span>{creatorIdentity.avatar && <Avatar src={creatorIdentity.avatar} />} {creatorIdentity.displayName}</span></p>
       <UpmanDetailHotbar active={activeView} upmanHref={`/upmans/${upman.slug}`} creatorHref={`/upmans/${upman.slug}?view=creator`} personHref={hasPersonView ? `/upmans/${upman.slug}?view=person` : undefined} />
     </section>
-    {activeView === "CREATOR" ? <CreatorView identity={creatorIdentity} personHref={structuredCreator ? `/people/${structuredCreator.id}` : undefined} currentSlug={upman.slug} currentName={upman.name} upmans={creatorUpmans} /> : activeView === "PERSON" && representedPerson ? <PersonView identity={{ displayName: representedPerson.displayName, avatar: representedPerson.user?.avatar ?? null, twitchLogin: representedPerson.user?.twitchLogin ?? null }} personHref={`/people/${representedPerson.id}`} currentSlug={upman.slug} upmans={representedUpmans} /> : <UpmanView creatorName={creatorIdentity.displayName} creatorUpmans={creatorUpmans.filter((candidate) => candidate.slug !== upman.slug).slice(0, 4)} isOwned={Boolean(viewer?.inventory.length)} isSignedIn={Boolean(twitchLogin)} previousUpman={previousUpman} nextUpman={nextUpman} />}
+    {activeView === "CREATOR" ? <CreatorView identity={creatorIdentity} personHref={structuredCreator ? `/people/${structuredCreator.id}` : undefined} currentSlug={upman.slug} currentName={upman.name} upmans={creatorUpmans} /> : activeView === "PERSON" && representedPerson ? <PersonView identity={{ displayName: representedPerson.displayName, avatar: representedPerson.user?.avatar ?? null, twitchLogin: representedPerson.user?.twitchLogin ?? null }} personHref={`/people/${representedPerson.id}`} currentSlug={upman.slug} upmans={representedUpmans} /> : <UpmanView creatorName={creatorIdentity.displayName} creatorUpmans={creatorUpmans.filter((candidate) => candidate.slug !== upman.slug).slice(0, 4)} isOwned={Boolean(viewer?.inventory.length)} isSignedIn={Boolean(twitchUserId)} previousUpman={previousUpman} nextUpman={nextUpman} />}
   </main>;
 }
 

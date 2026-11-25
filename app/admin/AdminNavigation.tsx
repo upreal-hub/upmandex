@@ -12,7 +12,7 @@ type NavigationItem = {
 
 const navigationGroups: { label: string; items: NavigationItem[] }[] = [
   { label: "Overview", items: [{ href: "/admin", icon: "☁️", label: "Studio overview" }] },
-  { label: "Upmans", items: [{ href: "/admin/upmans", icon: "📦", label: "Upman library" }, { href: "/admin/upman-submissions", icon: "☁️", label: "Submissions" }, { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" }] },
+  { label: "Upmans", items: [{ href: "/admin/upmans", icon: "📦", label: "Upman library" }, { href: "/admin/upmans/new", icon: "✦", label: "Add an Upman" }, { href: "/admin/upman-submissions", icon: "☁️", label: "Submissions" }, { href: "/admin/upmans/relationships", icon: "🔗", label: "Relationships" }] },
   { label: "People & Twitch", items: [{ href: "/admin/people", icon: "🧑‍🎨", label: "People" }, { href: "/admin/viewers", icon: "👥", label: "Viewers" }] },
   { label: "Configuration", items: [{ href: "/admin/profile-cosmetics", icon: "🎨", label: "Profile cosmetics" }, { href: "/admin/activity", icon: "✨", label: "Activity" }] },
 ];
@@ -28,7 +28,7 @@ export default function AdminNavigation() {
           {group.items.map((item) => {
           const isActive =
             item.href === pathname ||
-            (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
+            (item.href !== "/admin" && !group.items.some(({ href }) => href === pathname) && pathname.startsWith(`${item.href}/`));
           const className = `
             flex min-w-max items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition
             ${

@@ -1,11 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { publicUpmanWhere } from "@/lib/upman-visibility";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import styles from "../guide.module.css";
 import HowToCollectGuide from "../HowToCollectGuide";
+import DiscoverGuide from "../DiscoverGuide";
 import TwitchCommandsGuide from "../TwitchCommandsGuide";
+import { readCommandCatalog } from "@/lib/twitch-command-store";
+import { publicCommands } from "@/lib/twitch-command-catalog";
 import UpmandexTutorialGuide from "../UpmandexTutorialGuide";
 
 export const dynamic = "force-dynamic";
@@ -23,22 +27,26 @@ const guides: Record<string, { title: string; intro: string; cards: Card[] }> = 
     { title: "Natade Gallery", image: "/worlds/natade.jpg", text: "NataDeGallery is Natiiebouzie’s gallery for Gartic Phone custom modes, with a Gartic Wall of Fame.", href: "https://natiiebouzie.com/natadegallery", action: "Visit Natade Gallery", external: true },
     { title: "Garticverse", image: "/worlds/garticverse.ico", text: "Browse the Garticverse gallery, or visit upreal_’s own stream space from Cloud Worlds → Stream.", href: "https://garticverse.com/all", action: "Visit Garticverse", external: true },
   ] },
-  stream: { title: "Twitch commands", intro: "Join upreal_ on Twitch and share the cloud world live.", cards: [
-    { title: "Watch on Twitch", text: "Chat with the community and discover the rewards available during the stream.", href: "https://www.twitch.tv/upreal_", action: "Open Twitch", external: true, status: "confirmed" },
-    { title: "Twitch commands", id: "commands", text: "The public command list is managed in Streamer.bot and is not stored in this repository. Ask in chat for the commands currently enabled; some interactions depend on the live stream category.", href: "https://www.twitch.tv/upreal_", action: "Ask in Twitch chat", external: true, status: "manual" },
-    { title: "Chat and rewards", text: "Twitch rewards can trigger Upman pulls and, when enabled, an event-specific Upman. Available rewards may change during a stream.", status: "stream-dependent" },
-    { title: "Find your stream space", text: "Open upreal_’s Garticverse space to explore the stream’s world.", href: "https://garticverse.com/s/upreal_", action: "Open upreal_’s space", external: true, status: "confirmed" },
-    { title: "Your Twitch identity", text: "Rewards are attached to your Twitch account. Sign in with that account to check your collection. A repeated delivery of the same reward does not grant another copy.", href: "/my-collection", action: "Check your collection", status: "confirmed" },
-  ] },
 };
 
-guides.commands = guides.stream;
+
+export async function generateMetadata({ params }: { params: Promise<{ topic: string }> }): Promise<Metadata> {
+  const { topic } = await params;
+  if (topic === "discover") return { title: "Discover UPMANDEX | Anniversary", description: "Meet the Upmans, explore the Dex and get to know the Twitch community.", alternates: { canonical: "https://upmandex.com/guides/discover" } };
+  if (["collect", "pulls", "pull-chances"].includes(topic)) return { title: "How to Collect | UPMANDEX", description: "Learn how to pull Upmans on Twitch, read the current rarity odds and follow your collection progress.", alternates: { canonical: "https://upmandex.com/guides/collect" } };
+  return {};
+}
 
 export default async function GuidePage({ params }: { params: Promise<{ topic: string }> }) {
   const { topic } = await params;
-  if (topic === "stream" || topic === "commands") return <TwitchCommandsGuide />;
-  if (topic === "collect") return <HowToCollectGuide />;
-  if (topic === "pulls") return <UpmandexTutorialGuide />;
+  if (topic === "stream" || topic === "commands") {
+    const saved = await readCommandCatalog().catch(() => null);
+    return <TwitchCommandsGuide catalog={saved ? publicCommands(saved.catalog) : null} />;
+  }
+  if (topic === "pulls" || topic === "collect") return <HowToCollectGuide />;
+  if (topic === "pull-chances") permanentRedirect("/guides/collect#rarities");
+  if (topic === "discover") return <DiscoverGuide />;
+  if (topic === "tutorial") return <UpmandexTutorialGuide />;
   const guide = Object.hasOwn(guides, topic) ? guides[topic] : null;
   if (!guide) notFound();
   const stories = topic === "lore" ? await prisma.upman.findMany({ where: publicUpmanWhere, orderBy: [{ createdAt: "asc" }, { slug: "asc" }], select: { slug: true, name: true, image: true, creator: true, rarity: true } }) : [];

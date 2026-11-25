@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import CollectionGallery from "@/components/CollectionGallery";
 import LoginButton from "@/components/LoginButton";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 import { getCollectionView } from "@/lib/collection-view";
 
 import styles from "./collection.module.css";
@@ -13,14 +12,14 @@ export const revalidate = 0;
 
 export default async function MyCollectionPage() {
   const session = await auth();
-  const twitchLogin = normalizeTwitchLogin(session?.user?.name);
+  const twitchUserId = session?.user?.twitchUserId;
 
-  if (!twitchLogin) {
+  if (!twitchUserId) {
     return <LoggedOutCollection />;
   }
 
   const user = await prisma.user.findUnique({
-    where: { twitchLogin },
+    where: { twitchUserId },
     select: { id: true, twitchLogin: true, displayName: true, avatar: true },
   });
 

@@ -1,12 +1,18 @@
+import { auth } from "@/auth";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { isReleaseOwner } from "@/lib/site-publication-policy";
 import { getCreatorAssociationStatus } from "@/lib/upman-identity";
 
 import AdminDashboard from "./AdminDashboard";
+import ReleaseControl from "./ReleaseControl";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminPage() {
+  const session = await auth();
+  const showRelease = isReleaseOwner(session?.user?.twitchUserId, process.env.UPMANDEX_RELEASE_ADMIN_TWITCH_ID);
   const [totalUpmans, totalUsers, totalPeople, totalDiscoveries, rarityCounts, relationshipUpmans, latestUpman, recentActivity] =
     await Promise.all([
       prisma.upman.count(),
@@ -58,7 +64,13 @@ export default async function AdminPage() {
   const canonicalCreators = new Set(relationshipUpmans.map((upman) => upman.creatorPerson?.id).filter(Boolean)).size;
 
   return (
-    <AdminDashboard
+    <>{showRelease && <>
+      <Link href="/admin/twitch-commands" className="mb-4 mr-2 inline-block rounded-xl bg-sky-900 px-4 py-2 font-bold text-white">Twitch Commands</Link>
+      <Link href="/admin/gartic-feud" className="mb-4 inline-block rounded-xl bg-sky-900 px-4 py-2 font-bold text-white">
+        Gartic Feud
+      </Link>
+      <ReleaseControl />
+    </>}<AdminDashboard
       data={{
         totalUpmans,
         totalUsers,
@@ -72,6 +84,6 @@ export default async function AdminPage() {
         latestUpman,
         recentActivity,
       }}
-    />
+    /></>
   );
 }

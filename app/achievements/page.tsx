@@ -3,16 +3,15 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { getAchievementCatalog, getAchievementProgress } from "@/lib/achievements";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 import styles from "@/app/guides/guide.module.css";
 import AchievementBrowser from "./AchievementBrowser";
 
 export const dynamic = "force-dynamic";
 
 export default async function AchievementsPage() {
-  const login = normalizeTwitchLogin((await auth())?.user?.name);
-  const user = login ? await prisma.user.findUnique({
-    where: { twitchLogin: login },
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  const user = twitchUserId ? await prisma.user.findUnique({
+    where: { twitchUserId },
     select: { person: { select: { id: true } } },
   }) : null;
   const progress = user?.person ? await getAchievementProgress(user.person.id) : null;
@@ -25,7 +24,7 @@ export default async function AchievementsPage() {
         <p className={styles.eyebrow}>Your journey in the clouds</p>
         <h1>Achievements</h1>
         <p>Collect, create and explore to unlock achievements and profile cosmetics.</p>
-        <p>{progress ? `${progress.summary.unlocked} achievements unlocked.` : login ? "Link a Person profile to see your progress." : "Sign in with Twitch to see your progress."}</p>
+        <p>{progress ? `${progress.summary.unlocked} achievements unlocked.` : twitchUserId ? "Link a Person profile to see your progress." : "Sign in with Twitch to see your progress."}</p>
       </header>
       <AchievementBrowser signedIn={Boolean(progress)} items={catalog.map((achievement) => {
           const milestone = milestones.get(achievement.key);

@@ -21,9 +21,9 @@ type AuthorizationResult =
 
 export async function requireAdmin(): Promise<AuthorizationResult> {
   const session = await auth();
-  const sessionLogin = session?.user?.name?.trim().toLowerCase();
+  const twitchUserId = session?.user?.twitchUserId;
 
-  if (!sessionLogin) {
+  if (!twitchUserId) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -34,7 +34,7 @@ export async function requireAdmin(): Promise<AuthorizationResult> {
   }
 
   const user = await prisma.user.findUnique({
-    where: { twitchLogin: sessionLogin },
+    where: { twitchUserId },
     select: { id: true, twitchLogin: true, role: true },
   });
 

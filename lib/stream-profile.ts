@@ -87,8 +87,8 @@ async function findViewer(
   const normalizedLogin = normalizeTwitchLogin(twitchLogin);
   if (!normalizedLogin) return null;
 
-  return prisma.user.findUnique({
-    where: { twitchLogin: normalizedLogin },
+  return prisma.user.findFirst({
+    where: { twitchLogin: normalizedLogin, ...(twitchUserId ? { twitchUserId: null } : {}) },
     select,
   });
 }
@@ -102,7 +102,7 @@ export async function resolveStreamProfile(
 ): Promise<StreamProfile> {
   const [normalUpman, viewer] = await Promise.all([
     prisma.upman.findUnique({
-      where: { slug: NORMAL_UPMAN_SLUG },
+      where: { slug: NORMAL_UPMAN_SLUG, ...publicUpmanWhere },
       select: { slug: true, name: true, image: true },
     }),
     findViewer(request.twitchUserId, request.twitchLogin),

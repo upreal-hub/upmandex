@@ -7,6 +7,14 @@ datasource db {
   provider = "postgresql"
 }
 
+model SitePublication {
+  id        String   @id
+  status    String   @default("PRIVATE")
+  version   Int      @default(0)
+  history   Json     @default("[]")
+  updatedAt DateTime @default(now())
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -442,4 +450,14 @@ model ActivityLog {
   @@index([targetUserId, createdAt])
   @@index([upmanId, createdAt])
   @@index([personId, createdAt])
+}
+model GarticFeud {
+  id       String @id
+  revision Int
+  state    Json
+}
+model TwitchCommandCatalog {
+  id       String @id
+  revision Int
+  catalog  Json
 }

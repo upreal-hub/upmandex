@@ -1,12 +1,20 @@
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
-import { safelySyncPersonAchievements } from "@/lib/achievements";
 import { requireAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
+import { handleCreatorCredit } from "@/lib/upman-creator-admin";
 import { validateSlug, validateUpmanRelationshipPayload } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 const MAX_TRANSACTION_ATTEMPTS = 2;
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  return handleCreatorCredit(request, slug, {
+    authorize: requireAdmin,
+    transaction: action => prisma.$transaction(action, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }),
+  });
+}
 
 export async function POST(
   request: Request,
@@ -88,8 +96,11 @@ export async function POST(
           }
 
           const previous = data.relation === "creator" ? upman.creatorPerson : upman.representedPerson;
+          if (data.source === "unlink" && data.expectedPersonId && previous?.id !== data.expectedPersonId) {
+            return { status: "stale-link" as const };
+          }
           const nextPersonId = person?.id ?? null;
-          const relationshipChanged = previous?.id !== nextPersonId;
+          const relationshipChanged = (previous?.id ?? null) !== nextPersonId;
           if (relationshipChanged) {
             const updated = await tx.upman.update({
               where: { id: upman.id },
@@ -138,10 +149,7 @@ export async function POST(
       if (result.status === "person-not-found") return NextResponse.json({ success: false, error: "Selected Person not found" }, { status: 400 });
       if (result.status === "user-not-found") return NextResponse.json({ success: false, error: "Selected User not found" }, { status: 400 });
       if (result.status === "common") return NextResponse.json({ success: false, error: "Common Upmans cannot represent a Person" }, { status: 400 });
-
-      if (data.relation === "creator" && result.relationshipChanged && result.person) {
-        await safelySyncPersonAchievements(result.person.id);
-      }
+      if (result.status === "stale-link") return NextResponse.json({ success: false, error: "This link changed. Reopen the editor before removing it." }, { status: 409 });
 
       return NextResponse.json({ success: true, person: result.person, personCreated: result.personCreated });
     } catch (error) {

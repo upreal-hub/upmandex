@@ -15,6 +15,10 @@ export type LegacyCreatorIdentity = {
   creatorTwitch: string | null;
 };
 
+export function hasCreatorCredit(credit: LegacyCreatorIdentity & { creatorPersonId: string | null }) {
+  return Boolean(credit.creator.trim() || credit.creatorTwitch || credit.creatorPersonId);
+}
+
 export type ResolvedCreatorIdentity = {
   displayName: string;
   twitchLogin: string | null;
@@ -34,8 +38,8 @@ export function resolvePublicCreatorIdentity(
 ): ResolvedCreatorIdentity {
   if (creatorPerson?.isPublic) {
     return {
-      displayName: creatorPerson.displayName,
-      twitchLogin: creatorPerson.user?.twitchLogin ?? null,
+      displayName: legacy.creator.trim() || creatorPerson.displayName,
+      twitchLogin: creatorPerson.user?.twitchLogin ?? legacy.creatorTwitch,
       avatar: creatorPerson.user?.avatar ?? null,
       source: "canonical",
     };

@@ -63,7 +63,10 @@ async function findViewer(twitchUserId: string | null, twitchLogin: string | nul
 
   const login = normalizeTwitchLogin(twitchLogin);
   return login
-    ? prisma.user.findUnique({ where: { twitchLogin: login }, select: viewerSelect })
+    ? prisma.user.findFirst({
+        where: { twitchLogin: login, ...(twitchUserId ? { twitchUserId: null } : {}) },
+        select: viewerSelect,
+      })
     : null;
 }
 

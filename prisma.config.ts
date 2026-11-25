@@ -3,25 +3,21 @@ import path from "node:path";
 
 import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
+import { verifyAdminTestPreview } from "./lib/admin-test-preview";
+import { checkPrismaEnvironment } from "./lib/prisma-build-policy";
 
 const localEnvPath = path.resolve(process.cwd(), ".env.local");
 const isVercel = process.env.VERCEL === "1";
-const isAnniversaryPreview =
-  isVercel &&
-  process.env.VERCEL_ENV === "preview" &&
-  process.env.UPMANDEX_ENV === "anniversary";
+const generating = process.argv[2] === "generate";
+checkPrismaEnvironment(process.env, process.argv[2]);
 
-if (isVercel) {
-  if (!isAnniversaryPreview) {
-    throw new Error(
-      "Prisma is restricted to the UPMANDEX anniversary Vercel Preview environment."
-    );
-  }
+if (isVercel && !generating) {
+  verifyAdminTestPreview(process.env);
 
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required for the anniversary Vercel Preview build.");
   }
-} else {
+} else if (!isVercel) {
   if (!existsSync(localEnvPath)) {
     throw new Error("Prisma requires .env.local for the anniversary development workflow.");
   }

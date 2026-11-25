@@ -3,16 +3,15 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!sessionLogin) redirect("/");
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) redirect("/");
 
   const user = await prisma.user.findUnique({
-    where: { twitchLogin: sessionLogin },
+    where: { twitchUserId },
     select: { person: { select: { id: true } } },
   });
 

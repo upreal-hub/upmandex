@@ -3,7 +3,6 @@ import "server-only";
 import { auth } from "@/auth";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 type ProjectOwner = { person: { id: string; displayName: string } };
 
@@ -14,11 +13,11 @@ export class PersonProjectError extends Error {
 }
 
 async function getPersonProjectOwner(personId: string): Promise<ProjectOwner> {
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!sessionLogin) throw new PersonProjectError(401, "Sign in to manage projects");
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new PersonProjectError(401, "Sign in to manage projects");
 
   const user = await prisma.user.findUnique({
-    where: { twitchLogin: sessionLogin },
+    where: { twitchUserId },
     select: { id: true },
   });
   if (!user) throw new PersonProjectError(401, "Sign in to manage projects");

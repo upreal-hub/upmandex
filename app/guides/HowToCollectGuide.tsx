@@ -1,122 +1,106 @@
 import Image from "next/image";
 import Link from "next/link";
-
+import { classicCollectionUpmanWhere } from "@/lib/classic-collection";
+import { guidePullOdds } from "@/lib/guide-pull-odds";
 import { prisma } from "@/lib/prisma";
 import { PULL_RARITIES } from "@/lib/upman-rarity";
+import styles from "./anniversary-guides.module.css";
 
-import styles from "./guide.module.css";
+const sections = [
+  ["getting-started", "Getting started"], ["first-pull", "Your first pull"], ["how-pulls-work", "How pulls work"],
+  ["rarities", "Rarities & Pull Chances"], ["special", "Special Upmans"], ["collection", "Your collection"], ["faq", "FAQ"],
+];
 
-const rarityColours: Record<string, string> = {
-  Common: "#4aa875",
-  Rare: "#2e9ed5",
-  Epic: "#9163d9",
-  Mythic: "#dc6c62",
-  Legendary: "#d99e26",
-};
+const faq = [
+  ["Do I need to sign in before redeeming?", "Redeem on Twitch with the account you want to collect on. Sign in to UPMANDEX with that same account to open My Collection."],
+  ["Why can’t I find the pull reward?", "Open Channel Points on the Twitch stream. The reward may be unavailable, or Twitch may show a cost or redemption limit that prevents you from using it."],
+  ["Can I choose a rarity or avoid duplicates?", "No. The normal reward randomly selects an eligible rarity and then an eligible Upman. The selection includes Upmans you already own."],
+  ["Why do the odds change?", "The site calculates the odds from the current enabled weights and eligible Upmans. A rarity drops out of the draw when it is disabled, has no positive weight, or has no eligible Upmans."],
+  ["Does Twitch retrying a redemption count twice?", "No. UPMANDEX recognizes the same redemption and returns its original result."],
+];
 
-const questions = [
-  ["Can I get the same Upman twice?", "Yes. A repeated normal pull is recorded as a duplicate, but your collection keeps one ownership entry for that Upman."],
-  ["Are all Upmans available through normal pulls?", "No. Event and Secret Upmans are outside the normal weighted pull pool, and some Upmans may be unavailable for normal pulls."],
-  ["How do I check my collection?", "Connect with the same Twitch account, then open My Collection to see your owned Upmans and the public Dex to explore the catalogue."],
-  ["Do Event Upmans work differently?", "Yes. They are awarded through a dedicated event reward only while that event is active; they are never selected by a normal pull."],
-  ["Can I choose which Upman I receive?", "No. A normal pull first selects a rarity by its current configured chance, then selects an eligible Upman from that rarity."],
-] as const;
+export default function HowToCollectGuide() {
+  return <main className={styles.page}>
+    <header className={styles.hero}>
+      <div><h1>How to Collect</h1><p>Make your first Twitch pull, read the live rarity odds, and follow your progress in My Collection.</p>
+        <a className={styles.button} href="https://www.twitch.tv/upreal_">Open Twitch ↗</a>
+      </div>
+      <div className={styles.sky} aria-hidden="true"><span className={styles.cloud} /><span className={styles.stars}>✦　✧　⋆</span>
+        <Image className={styles.spriteMain} src="/upmans/normalupman.png" alt="" width={210} height={210} />
+      </div>
+    </header>
+    <nav className={styles.quick} aria-label="On this page">{sections.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
+    <section id="getting-started" className={styles.panel}>
+      <h2>Getting started</h2>
+      <p>Use the Twitch account you watch with. When the normal Upman pull reward is available on upreal_’s stream, check Twitch for the current Channel Points cost and redemption limits. Sign in with that account to open <Link href="/my-collection">My Collection</Link>.</p>
+    </section>
+    <section id="first-pull" className={styles.section}>
+      <h2>Your first pull</h2>
+      <ol className={styles.steps}>
+        <li><Image src="/upmans/garticupman.png" alt="" width={70} height={70} /><h3>Redeem the reward</h3><p>Open Channel Points on Twitch and choose the normal Upman pull reward.</p></li>
+        <li><Image src="/upmans/discoupman.png" alt="" width={70} height={70} /><h3>See your result</h3><p>The redemption draws one eligible Upman. It can be a new discovery or a duplicate.</p></li>
+        <li><Image src="/upmans/normalupman.png" alt="" width={70} height={70} /><h3>Check your collection</h3><p>A new discovery is added automatically to the Twitch account that redeemed the reward.</p></li>
+      </ol>
+    </section>
+    <section id="how-pulls-work" className={styles.panel}>
+      <h2>How pulls work</h2>
+      <ol className={styles.flow} aria-label="Normal pull sequence"><li>Channel Points redemption</li><li>Weighted rarity draw</li><li>Random eligible Upman</li></ol>
+      <p>A normal pull first chooses one of the five standard rarities. Each enabled rarity with positive weight and at least one eligible Upman gets a share of the draw proportional to its weight.</p>
+      <p>Within the selected rarity, every eligible Upman has the same chance. An Upman must be public in the Dex, enabled for normal pulls and belong to that rarity.</p>
+      <p>For example, if Rare is selected and has three eligible Upmans, each has a one-in-three chance <em>within that Rare draw</em>.</p>
+    </section>
+    <RarityOdds />
+    <section id="special" className={styles.section}>
+      <h2>Special Upmans</h2>
+      <div className={styles.pair}>
+        <article className={styles.panel}><h3>Event Upmans</h3><p>An enabled event can award an Upman through its dedicated Twitch reward while the event is available. Event Upmans are outside the normal pull pool.</p></article>
+        <article className={styles.panel}><h3>Secret Upmans</h3><p>Secret Upmans can have their own discovery requirements. Their identities and unlock conditions are intentionally omitted from this guide. They are outside the normal pull pool.</p></article>
+      </div>
+    </section>
+    <section id="collection" className={styles.panel}>
+      <h2>Understanding your collection</h2>
+      <p>A duplicate is recorded as a pull result. It adds neither another copy nor another unique discovery. Replaying the same redemption returns its original result.</p>
+      <p>Open <Link href="/my-collection">My Collection</Link> to see what you own, switch between collected and missing Upmans, or review <Link href="/my-collection#collection-progress">your progress by rarity</Link>. Classic collection completion tracks the public normal-pull catalogue. Event, Secret and hidden Upmans are outside that goal.</p>
+    </section>
+    <section id="faq" className={styles.section}>
+      <h2>Frequently Asked Questions</h2>
+      {faq.map(([question, answer]) => <details className={styles.faq} key={question}><summary>{question}</summary><p>{answer}</p></details>)}
+    </section>
+    <footer className={styles.cta}>
+      <nav aria-label="Keep exploring"><Link className={styles.button} href="/my-collection">My Collection</Link><Link href="/upmans">Explore the Dex</Link><Link href="/guides/discover">Discover UPMANDEX</Link></nav>
+    </footer>
+  </main>;
+}
 
-export default async function HowToCollectGuide() {
-  const [rules, candidates, examples] = await Promise.all([
+async function RarityOdds() {
+  const [rules, examples] = await prisma.$transaction([
     prisma.pullRarityRule.findMany({
-      where: { enabled: true, weight: { gt: 0 }, rarity: { in: [...PULL_RARITIES] } },
-      select: { rarity: true, weight: true },
-    }),
-    prisma.upman.groupBy({
-      by: ["rarity"],
-      where: { isPullable: true, rarity: { in: [...PULL_RARITIES] } },
-      _count: { _all: true },
+      where: { rarity: { in: [...PULL_RARITIES] } },
+      select: { rarity: true, weight: true, enabled: true },
     }),
     prisma.upman.findMany({
-      where: { dexVisibility: "PUBLIC", isPullable: true, rarity: { in: [...PULL_RARITIES] } },
-      select: { slug: true, name: true, image: true, rarity: true },
-      orderBy: [{ rarity: "asc" }, { name: "asc" }, { slug: "asc" }],
+      where: classicCollectionUpmanWhere, distinct: ["rarity"], orderBy: [{ rarity: "asc" }, { slug: "asc" }],
+      select: { rarity: true, slug: true, name: true, image: true },
     }),
-  ]);
-
-  const availableRarities = new Set(candidates.map((candidate) => candidate.rarity));
-  const activeRates = rules
-    .filter((rule) => availableRarities.has(rule.rarity))
-    .sort((first, second) => PULL_RARITIES.indexOf(first.rarity as typeof PULL_RARITIES[number]) - PULL_RARITIES.indexOf(second.rarity as typeof PULL_RARITIES[number]));
-  const totalWeight = activeRates.reduce((total, rule) => total + rule.weight, 0);
-  const exampleByRarity = new Map<string, (typeof examples)[number]>();
-  for (const example of examples) {
-    if (!exampleByRarity.has(example.rarity)) exampleByRarity.set(example.rarity, example);
-  }
-
-  return (
-    <main className={styles.page}>
-      <header className={`${styles.hero} ${styles.collectHero}`}>
-        <span className={styles.eyebrow}>✦ UPMANDEX CLOUD GUIDE</span>
-        <h1>How to Collect</h1>
-        <p>Start your collection during the live stream, understand each pull, and keep track of every cloud face that finds its way to you.</p>
-      </header>
-
-      <nav className={styles.collectNav} aria-label="How to Collect sections">
-        <a href="#start">Getting started</a><a href="#get-upmans">Get Upmans</a><a href="#rarities">Rarities</a><a href="#duplicates">Duplicates</a><a href="#collection">Your collection</a><a href="#faq">FAQ</a>
-      </nav>
-
-      <section id="start" className={styles.collectSection} aria-labelledby="start-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">🎁</span><div><p>FIRST CLOUDS</p><h2 id="start-heading">Getting started</h2></div></div>
-        <div className={styles.collectSteps}>
-          <article><span>1</span><h3>Connect your Twitch</h3><p>Use the Twitch account you watch with. This is the account UPMANDEX uses to recognise your collection when you sign in.</p></article>
-          <article><span>2</span><h3>Watch a live stream</h3><p>Normal pulls are made through the Twitch reward when it is available during a live stream.</p></article>
-          <article><span>3</span><h3>Open your little sky</h3><p>Visit My Collection to see the Upmans your Twitch account owns and to follow your progress.</p><Link href="/my-collection">Open My Collection →</Link></article>
-        </div>
-      </section>
-
-      <section id="get-upmans" className={styles.collectSection} aria-labelledby="get-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">🎲</span><div><p>WAYS TO COLLECT</p><h2 id="get-heading">How to get Upmans</h2></div></div>
-        <div className={styles.methodGrid}>
-          <article className={styles.methodCard}><span className={styles.methodBadge}>NORMAL PULL</span><h3>Use the live Twitch pull reward</h3><p>When the normal reward is available, it resolves one weighted pull for your Twitch account. The rarity is chosen first, then one eligible Upman from that rarity.</p></article>
-          <article className={styles.methodCard}><span className={styles.methodBadge}>EVENT</span><h3>Join an active event</h3><p>An active event can use its own Twitch reward to award the selected Event Upman. Event availability is controlled for the stream and does not use normal pull odds.</p></article>
-          <article className={styles.methodCard}><span className={styles.methodBadge}>SECRET</span><h3>Discover special stream moments</h3><p>Some Secret Upmans can be tied to a dedicated stream interaction with its own requirements. Their acquisition rules are intentionally part of the discovery.</p></article>
-          <article className={styles.methodCard}><span className={styles.methodBadge}>ACHIEVEMENTS</span><h3>Check in and be First!</h3><p>Daily Check-in and First! record stream participation for Achievements. They do not award an Upman pull by themselves.</p></article>
-        </div>
-      </section>
-
-      <section id="rarities" className={styles.collectSection} aria-labelledby="rarities-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">⭐</span><div><p>LIVE CONFIGURATION</p><h2 id="rarities-heading">Pull chances &amp; rarities</h2></div></div>
-        <p className={styles.collectLead}>Normal pulls use the enabled rarity weights currently configured by UPMANDEX. Only rarities with at least one eligible Upman take part, so these percentages always follow the live setup.</p>
-        {totalWeight > 0 ? <div className={styles.rarityGuideGrid}>{activeRates.map((rule) => {
-          const chance = rule.weight / totalWeight * 100;
-          const example = exampleByRarity.get(rule.rarity);
-          return <article className={styles.rarityGuideCard} key={rule.rarity} style={{ "--rarity": rarityColours[rule.rarity] ?? "#4aa9d0" } as React.CSSProperties}>
-            <div className={styles.rarityGuideTop}><span>{rule.rarity}</span><strong>{new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(chance)}%</strong></div>
-            <meter min={0} max={100} value={chance} aria-label={`${rule.rarity} chance`} />
-            <p>Each eligible {rule.rarity} Upman has an equal share after this rarity is selected.</p>
-            {example ? <Link className={styles.rarityExample} href={`/upmans/${example.slug}`}><Image src={example.image} alt={example.name} width={96} height={78} /><span><small>Public Dex example</small><strong>{example.name}</strong></span></Link> : <span className={styles.rarityUnavailable}>No public example is currently available.</span>}
-          </article>;
-        })}</div> : <p className={styles.collectEmpty}>No normal-pull rarity is currently configured with an eligible Upman.</p>}
-        <aside className={styles.specialRarityNote}><strong>Event and Secret are special.</strong><span>They are not part of the normal weighted pool, so they do not have a normal-pull percentage here.</span></aside>
-      </section>
-
-      <section id="duplicates" className={styles.collectSection} aria-labelledby="duplicates-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">🔁</span><div><p>ONE OF A KIND</p><h2 id="duplicates-heading">Understanding duplicates</h2></div></div>
-        <div className={styles.duplicatePanel}><div><h3>New discovery</h3><p>When the Upman is new to your Twitch account, it is added to your collection as a unique ownership entry.</p></div><div><h3>Duplicate pull</h3><p>When you pull one you already own, UPMANDEX records the duplicate for its related Achievement progress. It does not add another inventory copy or give compensation.</p></div></div>
-      </section>
-
-      <section id="collection" className={styles.collectSection} aria-labelledby="collection-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">📚</span><div><p>FOLLOW YOUR JOURNEY</p><h2 id="collection-heading">Your collection</h2></div></div>
-        <div className={styles.collectionGuideGrid}>
-          <article><h3>The Dex</h3><p>Explore public Upmans, their rarity, artwork and creator credits.</p><Link href="/upmans">Explore the Dex →</Link></article>
-          <article><h3>My Collection</h3><p>See the Upmans owned by your connected Twitch account, including the faces you are still missing from the visible catalogue.</p><Link href="/my-collection">View collection →</Link></article>
-          <article><h3>Your profile</h3><p>A represented Upman is a profile display choice. It does not replace or create an ownership entry in your collection.</p><Link href="/profile">Open My Profile →</Link></article>
-        </div>
-      </section>
-
-      <section id="faq" className={styles.collectSection} aria-labelledby="faq-heading">
-        <div className={styles.collectHeading}><span aria-hidden="true">💬</span><div><p>QUICK ANSWERS</p><h2 id="faq-heading">Tips &amp; FAQ</h2></div></div>
-        <div className={styles.faqList}>{questions.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
-      </section>
-
-      <nav className={styles.footer} aria-label="Related destinations"><a className={styles.action} href="#rarities">Pull chances &amp; rarities →</a><Link className={styles.action} href="/achievements">Explore Achievements →</Link><Link className={styles.action} href="/upmans">Explore the Dex →</Link></nav>
-    </main>
-  );
+  ], { isolationLevel: "RepeatableRead" });
+  const odds = guidePullOdds(rules, new Set(examples.map(candidate => candidate.rarity)));
+  const unavailable = odds.every(row => row.chance === null);
+  const percent = new Intl.NumberFormat("en", { style: "percent", maximumFractionDigits: 2 });
+  return <section id="rarities" className={styles.section} aria-labelledby="rarity-title">
+    <h2 id="rarity-title">Rarities &amp; Pull Chances</h2>
+    <p>These are the current rarity odds for a normal pull. Rarities with no eligible Upmans, a disabled rule or no positive weight are left out, so their weights do not reduce the remaining chances.</p>
+    {unavailable && <p role="status">Normal pulls are currently unavailable.</p>}
+    <div className={styles.rarityGrid}>{odds.map(({ rarity, chance, status }) => {
+      const example = examples.find(upman => upman.rarity === rarity);
+      return <article key={rarity} data-rarity={rarity.toLowerCase()} className={styles.rarity}>
+        <h3><span className={`rarity-badge rarity-${rarity.toLowerCase()}`}>{rarity}</span></h3>
+        {example && <Link href={`/upmans/${example.slug}`} className={styles.rarityExample}>
+          <Image src={example.image} alt="" width={105} height={100} /><span>{example.name}</span>
+        </Link>}
+        <strong>{chance === null ? "Unavailable" : chance > 0 && chance < 0.00005 ? "<0.01%" : percent.format(chance)}</strong>
+        <progress aria-label={`${rarity} chance`} value={chance ?? 0} max={1} />
+        {status !== "active" && <small>{status === "empty" ? "No eligible Upmans" : "Rarity inactive"}</small>}
+      </article>;
+    })}</div>
+  </section>;
 }

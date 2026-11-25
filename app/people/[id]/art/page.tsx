@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 import PersonArtworkGallery from "../PersonArtworkGallery";
 
@@ -23,8 +22,8 @@ export default async function PersonArtPage({ params }: { params: Promise<{ id: 
   });
   if (!person) notFound();
 
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  const currentUser = twitchUserId ? await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
 

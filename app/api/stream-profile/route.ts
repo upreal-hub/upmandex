@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const validation = validateStreamProfilePayload(await request.json());
+    const validation = validateStreamProfilePayload(await request.json().catch(() => null));
     if (!validation.success) {
       return NextResponse.json(
         { success: false, error: validation.error },

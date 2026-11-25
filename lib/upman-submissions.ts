@@ -10,7 +10,6 @@ import { UPMAN_IMAGE_MAX_BYTES, validateUpmanPngFile } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { safelySyncLinkedPersonAchievements } from "@/lib/achievements";
 import { isUpmanRarity, type UpmanRarity } from "@/lib/upman-rarity";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 const MAX_NAME_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 1000;
@@ -34,10 +33,10 @@ function slugPart(value: string) {
 }
 
 async function currentUser(): Promise<SubmissionAuthor> {
-  const login = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!login) throw new UpmanSubmissionError("Sign in with Twitch to submit an Upman", 401);
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new UpmanSubmissionError("Sign in with Twitch to submit an Upman", 401);
   const user = await prisma.user.findUnique({
-    where: { twitchLogin: login },
+    where: { twitchUserId },
     select: { id: true, twitchLogin: true, displayName: true, avatar: true },
   });
   if (!user) throw new UpmanSubmissionError("Your Twitch account is not ready yet. Please sign in again.", 403);
@@ -59,7 +58,7 @@ export async function getMyUpmanSubmissions() {
       approvedUpman: { select: { slug: true, name: true } },
     },
   });
-  return { user, submissions };
+  return { user, submissions: submissions.map(submission => ({ ...submission, image: `/api/submission-media/${submission.id}` })) };
 }
 
 export async function createUpmanSubmission(formData: FormData) {
@@ -79,8 +78,10 @@ export async function createUpmanSubmission(formData: FormData) {
   if (duplicate) throw new UpmanSubmissionError("This exact proposal was already submitted", 409);
 
   let blob: { url: string };
+  const privateToken = process.env.PRIVATE_BLOB_READ_WRITE_TOKEN;
+  if (!privateToken) throw new UpmanSubmissionError("Private submission storage is not configured", 503);
   try {
-    blob = await put(`upman-submissions/${user.id}/${randomUUID()}.png`, image, { access: "public", addRandomSuffix: false, contentType: "image/png" });
+    blob = await put(`upman-submissions/${user.id}/${randomUUID()}.png`, image, { access: "private", token: privateToken, addRandomSuffix: false, contentType: "image/png" });
   } catch {
     throw new UpmanSubmissionError("Unable to store the submission image", 500);
   }
@@ -92,7 +93,7 @@ export async function createUpmanSubmission(formData: FormData) {
     await safelySyncLinkedPersonAchievements(user.id);
     return submission;
   } catch (error) {
-    await del(blob.url).catch(() => undefined);
+    await del(blob.url, { token: privateToken }).catch(() => undefined);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new UpmanSubmissionError("This exact proposal was already submitted", 409);
     throw error;
   }
@@ -100,7 +101,7 @@ export async function createUpmanSubmission(formData: FormData) {
 
 export async function getAdminUpmanSubmissions(status?: string) {
   const where = status && Object.values(UpmanSubmissionStatus).includes(status as UpmanSubmissionStatus) ? { status: status as UpmanSubmissionStatus } : {};
-  return prisma.upmanSubmission.findMany({
+  const submissions = await prisma.upmanSubmission.findMany({
     where,
     orderBy: { createdAt: "desc" },
     select: {
@@ -110,6 +111,7 @@ export async function getAdminUpmanSubmissions(status?: string) {
       approvedUpman: { select: { id: true, slug: true, name: true, rarity: true } },
     },
   });
+  return submissions.map(submission => ({ ...submission, image: `/api/submission-media/${submission.id}` }));
 }
 
 type ReviewInput = { action: "approve" | "reject"; name?: unknown; description?: unknown; rarity?: unknown; represent?: unknown; confirmReplaceRepresentation?: unknown };
@@ -143,10 +145,14 @@ export async function reviewUpmanSubmission(submissionId: string, input: ReviewI
     }
     const author = await tx.user.findUnique({ where: { id: locked.userId }, select: { id: true, twitchLogin: true, displayName: true, person: { select: { id: true, displayName: true, representedUpmans: { select: { id: true, name: true }, take: 1 } } } } });
     if (!author) throw new UpmanSubmissionError("Submission creator no longer exists", 409);
-    if (represent && author.person?.representedUpmans.length && input.confirmReplaceRepresentation !== true) throw new UpmanSubmissionError("Confirm replacement of the current represented Upman", 409);
+    if (represent && !author.person) throw new UpmanSubmissionError("Link the creator to a profile before setting their represented Upman", 409);
+    if (represent && author.person?.representedUpmans.length) {
+      if (input.confirmReplaceRepresentation !== true) throw new UpmanSubmissionError("Confirm replacement of the current represented Upman", 409);
+      await tx.upman.updateMany({ where: { representedPersonId: author.person.id }, data: { representedPersonId: null } });
+    }
     const slug = `${slugPart(nextName)}-${locked.id.slice(-6).toLowerCase()}`;
     const upman = await tx.upman.create({
-      data: { slug, name: nextName, image: locked.image, rarity: rarity as UpmanRarity, creator: author.displayName, creatorTwitch: author.twitchLogin, creatorPersonId: author.person?.id ?? null, representedPersonId: represent ? author.person?.id ?? null : null, isPullable: rarity !== "Event" && rarity !== "Secret" },
+      data: { slug, name: nextName, image: `/api/submission-media/${locked.id}`, rarity: rarity as UpmanRarity, creator: author.displayName, creatorTwitch: author.twitchLogin, creatorPersonId: author.person?.id ?? null, representedPersonId: represent ? author.person?.id ?? null : null, isPullable: rarity !== "Event" && rarity !== "Secret" },
       select: { id: true, slug: true, name: true, rarity: true },
     });
     await tx.upmanSubmission.update({ where: { id: locked.id }, data: { name: nextName, description: nextDescription, status: "APPROVED", rarity, represent, approvedUpmanId: upman.id, reviewedByUserId: reviewer.id, reviewedAt: new Date() } });

@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 
 import { ADMIN_RARITY_CLASSES } from "../../rarity";
 import PersonPicker from "../PersonPicker";
+import CreatorCreditDialog from "./CreatorCreditDialog";
+import { hasCreatorCredit } from "@/lib/upman-identity";
 import { UP_MAN_RARITIES } from "@/lib/upman-rarity";
 
 type Person = { id: string; displayName: string; userId: string | null; user: { twitchLogin: string } | null };
@@ -16,7 +18,7 @@ type Upman = {
   creatorPerson: { id: string; displayName: string } | null;
   representedPerson: { id: string; displayName: string } | null;
 };
-type Relation = "creator" | "represented";
+const hasCredit = (upman: Upman) => hasCreatorCredit({ ...upman, creatorPersonId: upman.creatorPerson?.id ?? null });
 type Status = "All" | "Needs attention" | "Complete" | "Missing represented viewer" | "Missing creator";
 
 const rarities = ["All", ...UP_MAN_RARITIES];
@@ -27,7 +29,7 @@ function needsViewer(upman: Upman) {
 }
 
 function needsAttention(upman: Upman) {
-  return !upman.creatorPerson || needsViewer(upman) || (upman.rarity === "Common" && Boolean(upman.representedPerson));
+  return !hasCredit(upman) || needsViewer(upman) || (upman.rarity === "Common" && Boolean(upman.representedPerson));
 }
 
 function matchesStatus(upman: Upman, status: Status) {
@@ -35,12 +37,11 @@ function matchesStatus(upman: Upman, status: Status) {
   if (status === "Needs attention") return needsAttention(upman);
   if (status === "Complete") return !needsAttention(upman);
   if (status === "Missing represented viewer") return needsViewer(upman);
-  return !upman.creatorPerson;
+  return !hasCredit(upman);
 }
 
 function RelationshipModal({ upman, people, users, onClose }: { upman: Upman; people: Person[]; users: User[]; onClose: () => void }) {
   const router = useRouter();
-  const [relation, setRelation] = useState<Relation>("represented");
   const [mode, setMode] = useState<"existing" | "user" | "new">("existing");
   const [personId, setPersonId] = useState("");
   const [userQuery, setUserQuery] = useState("");
@@ -62,29 +63,37 @@ function RelationshipModal({ upman, people, users, onClose }: { upman: Upman; pe
     setError(null);
   }
 
-  async function save() {
+  async function save(removeRepresentation = false) {
+    if (isSaving) return;
     setError(null);
-    const body = relation === "creator" && mode === "existing"
-      ? { relation, source: personId ? "existing-person" : "unlink", ...(personId ? { personId } : {}) }
-      : relation === "represented" && mode === "existing"
+    const relation = "represented";
+    const body = removeRepresentation
+      ? { relation: "represented", source: "unlink" }
+      : mode === "existing"
         ? { relation, source: personId ? "existing-person" : "unlink", ...(personId ? { personId } : {}) }
         : mode === "user"
           ? { relation, source: "create-person", displayName, userId: selectedUserId || null }
           : { relation, source: "create-person", displayName, userId: null };
 
-    if ((mode === "user" && !selectedUserId) || (mode === "new" && !displayName.trim())) {
+    if (!removeRepresentation && ((mode === "user" && !selectedUserId) || (mode === "new" && !displayName.trim()))) {
       setError(mode === "user" ? "Select a Twitch User first." : "Enter a Person display name.");
       return;
     }
-    if (relation === "represented" && isCommon && body.source !== "unlink") {
+    if (isCommon && body.source !== "unlink") {
       setError("Common Upmans cannot represent a Person.");
       return;
+    }
+    let expectedPersonId: string | undefined;
+    if (body.source === "unlink") {
+      const current = upman.representedPerson;
+      if (!current || !window.confirm(`Remove the link between ${upman.name} and ${current.displayName}?`)) return;
+      expectedPersonId = current.id;
     }
 
     setIsSaving(true);
     try {
       const response = await fetch(`/api/admin-upmans/${upman.slug}/relationships`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, expectedPersonId }),
       });
       const data = (await response.json()) as { error?: string };
       if (!response.ok) { setError(data.error ?? "Unable to save this relationship."); return; }
@@ -103,23 +112,26 @@ function RelationshipModal({ upman, people, users, onClose }: { upman: Upman; pe
       <section role="dialog" aria-modal="true" aria-labelledby="relationship-title" onClick={(event) => event.stopPropagation()} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white bg-[#fffdf7] p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-7">
         <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">Upman relationships</p><h2 id="relationship-title" className="mt-1 text-3xl font-black text-sky-950">{upman.name}</h2><p className="mt-1 text-sm text-sky-700">{upman.rarity} · legacy creator: {upman.creator}</p></div><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800">Close</button></div>
 
-        <div className="mt-6 flex gap-2 rounded-2xl bg-sky-50 p-1" role="tablist" aria-label="Relationship type">
-          <button type="button" role="tab" aria-selected={relation === "represented"} onClick={() => { setRelation("represented"); setMode("existing"); setError(null); }} className={`flex-1 rounded-xl px-3 py-2 text-sm font-black ${relation === "represented" ? "bg-white text-sky-950 shadow-sm" : "text-sky-700"}`}>Represented viewer</button>
-          <button type="button" role="tab" aria-selected={relation === "creator"} onClick={() => { setRelation("creator"); setMode("existing"); setError(null); }} className={`flex-1 rounded-xl px-3 py-2 text-sm font-black ${relation === "creator" ? "bg-white text-sky-950 shadow-sm" : "text-sky-700"}`}>Creator</button>
-        </div>
 
-        {relation === "represented" && isCommon ? <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Not applicable — Common Upmans are generic concepts and cannot represent a viewer.</div> : <>
+
+        {upman.representedPerson && (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-sky-950">
+            <p>Represented Person: <strong>{upman.representedPerson.displayName}</strong></p>
+            <button type="button" disabled={isSaving} onClick={() => save(true)} className="rounded-xl border border-rose-200 bg-white px-3 py-2 font-bold text-rose-700">Remove link</button>
+          </div>
+        )}
+        {isCommon ? <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Not applicable - Common Upmans are generic concepts and cannot represent a viewer.</div> : <>
           <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" onClick={() => setMode("existing")} className={`rounded-xl px-3 py-2 text-sm font-black ${mode === "existing" ? "bg-sky-500 text-white" : "border border-sky-200 bg-white text-sky-800"}`}>Select Person</button>
             <button type="button" onClick={() => setMode("user")} className={`rounded-xl px-3 py-2 text-sm font-black ${mode === "user" ? "bg-sky-500 text-white" : "border border-sky-200 bg-white text-sky-800"}`}>Select Twitch User</button>
             <button type="button" onClick={() => setMode("new")} className={`rounded-xl px-3 py-2 text-sm font-black ${mode === "new" ? "bg-sky-500 text-white" : "border border-sky-200 bg-white text-sky-800"}`}>Create Person only</button>
           </div>
-          {mode === "existing" && <div className="mt-5"><PersonPicker label={relation === "creator" ? "Structured Creator" : "Represented Person"} people={people} value={personId} onChange={setPersonId} noneLabel="None / unlink" /></div>}
+          {mode === "existing" && <div className="mt-5"><PersonPicker label="Represented Person" people={people} value={personId} onChange={setPersonId} noneLabel="None / unlink" /></div>}
           {mode === "user" && <div className="mt-5 grid gap-3"><label className="grid gap-2 text-sm font-bold text-sky-900">Search Twitch Users<input value={userQuery} onChange={(event) => setUserQuery(event.target.value)} placeholder="Login, display name, or Twitch ID" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><div className="max-h-44 overflow-y-auto rounded-2xl border border-sky-100 bg-white">{filteredUsers.map((user) => <button type="button" key={user.id} onClick={() => chooseUser(user)} className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-sky-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-500 ${selectedUserId === user.id ? "bg-sky-50" : ""}`}>{user.avatar ? <img src={user.avatar} alt="" className="h-8 w-8 rounded-full object-cover" /> : <span className="grid h-8 w-8 place-items-center rounded-full bg-sky-100 font-black text-sky-700">{user.displayName.slice(0, 1).toUpperCase()}</span>}<span><strong className="block text-sky-950">{user.displayName}</strong><span className="text-sky-600">@{user.twitchLogin}{user.twitchUserId ? ` · Twitch ID ${user.twitchUserId}` : ""}</span></span></button>)}{filteredUsers.length === 0 && <p className="px-3 py-4 text-sm font-medium text-sky-700">No Twitch Users match this search.</p>}</div>{selectedUser && <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-sky-900"><p className="font-black">Selected: {selectedUser.displayName} (@{selectedUser.twitchLogin})</p>{selectedUser.person ? <p className="mt-1">Existing Person: <strong>{selectedUser.person.displayName}</strong>. Saving reuses it.</p> : <label className="mt-3 grid gap-2 font-bold">Person display name<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={120} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-slate-800 outline-none focus:border-sky-500" /></label>}</div>}</div>}
           {mode === "new" && <label className="mt-5 grid gap-2 text-sm font-bold text-sky-900">Person display name<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={120} placeholder="Reviewed canonical name" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /><span className="text-xs font-medium text-sky-600">No User will be created or inferred. A User can be linked later.</span></label>}
         </>}
         {error && <p role="alert" className="mt-5 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}
-        <div className="mt-6 flex justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button>{!(relation === "represented" && isCommon) && <button type="button" disabled={isSaving} onClick={save} className="rounded-xl bg-sky-500 px-4 py-2 font-black text-white disabled:opacity-60">{isSaving ? "Saving…" : "Save relationship"}</button>}</div>
+        <div className="mt-6 flex justify-end gap-3"><button type="button" disabled={isSaving} onClick={onClose} className="rounded-xl border border-sky-200 bg-white px-4 py-2 font-black text-sky-800">Cancel</button>{!isCommon && <button type="button" disabled={isSaving} onClick={() => save()} className="rounded-xl bg-sky-500 px-4 py-2 font-black text-white disabled:opacity-60">{isSaving ? "Saving…" : "Save relationship"}</button>}</div>
       </section>
     </div>, document.body);
 }
@@ -127,23 +139,58 @@ function RelationshipModal({ upman, people, users, onClose }: { upman: Upman; pe
 export default function RelationshipManager({ upmans, people, users }: { upmans: Upman[]; people: Person[]; users: User[] }) {
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("All");
-  const [status, setStatus] = useState<Status>("Needs attention");
+  const [status, setStatus] = useState<Status>("All");
   const [editing, setEditing] = useState<Upman | null>(null);
+  const [creditEdit, setCreditEdit] = useState<{ upman: Upman; operation: "add" | "edit" | "delete" } | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const router = useRouter();
   const visible = useMemo(() => upmans.filter((upman) => {
     const value = query.trim().toLowerCase();
-    const text = [upman.name, upman.creator, upman.creatorTwitch ?? "", upman.creatorPerson?.displayName ?? "", upman.representedPerson?.displayName ?? ""].join(" ").toLowerCase();
+    const text = [upman.name, upman.slug, upman.creator, upman.creatorTwitch ?? "", upman.creatorPerson?.displayName ?? "", upman.representedPerson?.displayName ?? ""].join(" ").toLowerCase();
     return (!value || text.includes(value)) && (rarity === "All" || upman.rarity === rarity) && matchesStatus(upman, status);
   }), [upmans, query, rarity, status]);
   const rarePlus = upmans.filter((upman) => upman.rarity !== "Common");
   const viewerLinked = rarePlus.filter((upman) => upman.representedPerson).length;
-  const creatorLinked = upmans.filter((upman) => upman.creatorPerson).length;
+  const creatorLinked = upmans.filter(hasCredit).length;
 
   return <main>
     <header className="flex flex-col gap-5 border-b border-sky-100 pb-7 lg:flex-row lg:items-end lg:justify-between"><div><p className="text-sm font-black uppercase tracking-[0.25em] text-cyan-600">Anniversary Admin</p><h1 className="mt-2 text-4xl font-black tracking-tight text-sky-950 sm:text-5xl">Upman Relationships</h1><p className="mt-3 text-sky-700">Explicitly connect canonical creators and represented viewers. Nothing is matched automatically.</p></div></header>
-    <section className="mt-6 grid gap-3 sm:grid-cols-3"><article className="rounded-3xl border border-sky-100 bg-white p-4"><p className="text-sm font-bold text-sky-600">Represented viewers</p><p className="mt-2 text-2xl font-black text-sky-950">{viewerLinked} / {rarePlus.length}</p><p className="mt-1 text-xs text-sky-700">Rare+ only; Commons excluded.</p></article><article className="rounded-3xl border border-sky-100 bg-white p-4"><p className="text-sm font-bold text-sky-600">Structured creators</p><p className="mt-2 text-2xl font-black text-sky-950">{creatorLinked} / {upmans.length}</p><p className="mt-1 text-xs text-sky-700">Independent from viewers.</p></article><article className="rounded-3xl border border-amber-100 bg-amber-50 p-4"><p className="text-sm font-bold text-amber-800">Needs attention</p><p className="mt-2 text-2xl font-black text-amber-950">{upmans.filter(needsAttention).length}</p><p className="mt-1 text-xs text-amber-800">Missing required links or invalid Common state.</p></article></section>
-    <section className="mt-6 grid gap-3 rounded-3xl border border-sky-100 bg-sky-50/70 p-4 lg:grid-cols-[minmax(0,1fr)_180px_220px]"><label className="grid gap-2 text-sm font-bold text-sky-900">Search<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Upman, legacy creator, Person, or Twitch login" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><label className="grid gap-2 text-sm font-bold text-sky-900">Rarity<select value={rarity} onChange={(event) => setRarity(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500">{rarities.map((value) => <option key={value}>{value}</option>)}</select></label><label className="grid gap-2 text-sm font-bold text-sky-900">Status<select value={status} onChange={(event) => setStatus(event.target.value as Status)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500">{statuses.map((value) => <option key={value}>{value}</option>)}</select></label></section>
+    <section className="mt-6 grid gap-3 sm:grid-cols-3"><article className="rounded-3xl border border-sky-100 bg-white p-4"><p className="text-sm font-bold text-sky-600">Represented viewers</p><p className="mt-2 text-2xl font-black text-sky-950">{viewerLinked} / {rarePlus.length}</p><p className="mt-1 text-xs text-sky-700">Rare+ only; Commons excluded.</p></article><article className="rounded-3xl border border-sky-100 bg-white p-4"><p className="text-sm font-bold text-sky-600">Creator credits</p><p className="mt-2 text-2xl font-black text-sky-950">{creatorLinked} / {upmans.length}</p><p className="mt-1 text-xs text-sky-700">Independent from viewers.</p></article><article className="rounded-3xl border border-amber-100 bg-amber-50 p-4"><p className="text-sm font-bold text-amber-800">Needs attention</p><p className="mt-2 text-2xl font-black text-amber-950">{upmans.filter(needsAttention).length}</p><p className="mt-1 text-xs text-amber-800">Missing required links or invalid Common state.</p></article></section>
+    <section className="mt-6 grid gap-3 rounded-3xl border border-sky-100 bg-sky-50/70 p-4 lg:grid-cols-[minmax(0,1fr)_180px_220px]"><label className="grid gap-2 text-sm font-bold text-sky-900">Search<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Upman, slug, creator or Twitch login" className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100" /></label><label className="grid gap-2 text-sm font-bold text-sky-900">Rarity<select value={rarity} onChange={(event) => setRarity(event.target.value)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500">{rarities.map((value) => <option key={value}>{value}</option>)}</select></label><label className="grid gap-2 text-sm font-bold text-sky-900">Status<select value={status} onChange={(event) => setStatus(event.target.value as Status)} className="rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-slate-800 outline-none focus:border-sky-500">{statuses.map((value) => <option key={value}>{value}</option>)}</select></label></section>
+    {message && <p role="status" className="mt-4 text-sm font-bold text-emerald-800">{message}</p>}
     <p className="mt-4 text-sm font-bold text-sky-700">{visible.length} {visible.length === 1 ? "Upman" : "Upmans"} shown</p>
-    <section className="mt-4 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm">{visible.map((upman) => <article key={upman.id} className="grid gap-3 border-b border-sky-100 px-4 py-4 last:border-b-0 sm:grid-cols-[56px_minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[56px_minmax(160px,0.8fr)_minmax(170px,1fr)_minmax(170px,1fr)_130px] lg:gap-4"><div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-sky-100 bg-sky-50 p-1"><Image src={upman.image} alt="" width={56} height={56} className="h-full w-full object-contain" /></div><div><div className="flex flex-wrap items-center gap-2"><strong className="text-sky-950">{upman.name}</strong><span className={`rounded-full px-2 py-0.5 text-xs font-black ${ADMIN_RARITY_CLASSES[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>{upman.rarity}</span></div><p className="mt-1 text-xs text-sky-600">Legacy: {upman.creator}{upman.creatorTwitch ? ` · @${upman.creatorTwitch}` : ""}</p></div><p className="text-sm text-sky-800"><span className="font-black">Creator:</span> {upman.creatorPerson?.displayName ?? "⚠ Missing"}</p><p className="text-sm text-sky-800"><span className="font-black">Viewer:</span> {upman.rarity === "Common" ? "Not applicable — Common" : upman.representedPerson ? `✓ ${upman.representedPerson.displayName}` : "⚠ Missing represented viewer"}</p><button type="button" onClick={() => setEditing(upman)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-black text-sky-800 transition hover:bg-sky-50">Manage</button></article>)}{visible.length === 0 && <p className="px-6 py-14 text-center text-sky-700">No Upmans match these filters.</p>}</section>
+
+    <section className="mt-4 overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-sm">
+      {visible.map(upman => {
+        const hasCurrentCredit = hasCredit(upman);
+        return <article key={upman.id} className="grid gap-3 border-b border-sky-100 px-4 py-4 last:border-b-0 sm:grid-cols-[56px_minmax(0,1fr)_auto] sm:items-center lg:grid-cols-[56px_minmax(140px,0.8fr)_minmax(140px,1fr)_minmax(145px,1fr)_210px] lg:gap-4">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-sky-100 bg-sky-50 p-1">
+            <Image src={upman.image} alt="" width={56} height={56} className="h-full w-full object-contain" />
+          </div>
+          <div>
+            <strong className="text-sky-950">{upman.name}</strong>
+            <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-black ${ADMIN_RARITY_CLASSES[upman.rarity] ?? "bg-sky-100 text-sky-700"}`}>{upman.rarity}</span>
+            <p className="mt-1 text-xs text-sky-600">{upman.slug}</p>
+          </div>
+          <p className="text-sm text-sky-800"><strong>Creator:</strong> {upman.creator || upman.creatorPerson?.displayName || "None"}
+            {upman.creatorTwitch && <span className="block text-xs">@{upman.creatorTwitch}</span>}
+          </p>
+          <p className="text-sm text-sky-800"><strong>Viewer:</strong> {upman.representedPerson?.displayName ?? (upman.rarity === "Common" ? "Not applicable" : "None")}</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" aria-label={`${hasCurrentCredit ? "Edit" : "Add"} creator credit for ${upman.name}`}
+              onClick={() => setCreditEdit({ upman, operation: hasCurrentCredit ? "edit" : "add" })}
+              className="rounded-xl border border-sky-200 px-3 py-2 text-sm font-bold text-sky-800">{hasCurrentCredit ? "Edit" : "Add"}</button>
+            {hasCurrentCredit && <button type="button" aria-label={`Delete creator credit for ${upman.name}`}
+              onClick={() => setCreditEdit({ upman, operation: "delete" })}
+              className="rounded-xl border border-rose-200 px-3 py-2 text-sm font-bold text-rose-700">Delete</button>}
+            <button type="button" aria-label={`Manage represented viewer for ${upman.name}`} onClick={() => setEditing(upman)}
+              className="rounded-xl border border-sky-200 px-3 py-2 text-sm font-bold text-sky-800">Viewer</button>
+          </div>
+        </article>;
+      })}
+      {visible.length === 0 && <p className="px-6 py-14 text-center text-sky-700">No Upmans match these filters.</p>}
+    </section>
+    {creditEdit && <CreatorCreditDialog {...creditEdit} people={people} users={users} onClose={() => setCreditEdit(null)} onSaved={success => { setCreditEdit(null); setMessage(success); router.refresh(); }} />}
     {editing && <RelationshipModal key={editing.id} upman={editing} people={people} users={users} onClose={() => setEditing(null)} />}
   </main>;
 }

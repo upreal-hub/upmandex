@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAchievementCosmetic, getAchievementProgress } from "@/lib/achievements";
 import { auth } from "@/auth";
-import { normalizeTwitchLogin } from "@/lib/validation";
 import { collectionUpmanWhere, publicUpmanWhere } from "@/lib/upman-visibility";
 import { isPersonalProfileBackgroundSchemaAvailable } from "@/lib/personal-profile-background";
 
@@ -87,8 +86,8 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   if (!person) notFound();
 
   const achievementProgress = await getAchievementProgress(id);
-  const sessionLogin = normalizeTwitchLogin((await auth())?.user?.name);
-  const currentUser = sessionLogin ? await prisma.user.findUnique({ where: { twitchLogin: sessionLogin }, select: { id: true } }) : null;
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  const currentUser = twitchUserId ? await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } }) : null;
   const isOwner = Boolean(currentUser && person.userId === currentUser.id);
   if (!person.isPublic && !isOwner) notFound();
   const personalBackgroundsAvailable = isOwner && await isPersonalProfileBackgroundSchemaAvailable();

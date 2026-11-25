@@ -3,6 +3,7 @@ import { randomInt } from "crypto";
 import { Prisma } from "@/app/generated/prisma/client";
 import { createActivityLogData } from "@/lib/activity";
 import { safelySyncLinkedPersonAchievementsByLogin } from "@/lib/achievements";
+import { classicCollectionUpmanWhere } from "@/lib/classic-collection";
 import { prisma } from "@/lib/prisma";
 import { resolveTwitchIdentity } from "@/lib/twitch-identity";
 import { PULL_RARITIES } from "@/lib/upman-rarity";
@@ -168,7 +169,7 @@ export async function resolvePull(
 
           const candidates = await tx.upman.findMany({
             where: {
-              isPullable: true,
+              ...classicCollectionUpmanWhere,
               rarity: { in: activeRules.map((rule) => rule.rarity) },
             },
             select: {

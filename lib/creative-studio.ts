@@ -2,7 +2,6 @@ import "server-only";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { normalizeTwitchLogin } from "@/lib/validation";
 
 export type CreativePublicationKind = "art" | "project";
 
@@ -47,9 +46,9 @@ export function parseCreativePublicationKind(value: string): CreativePublication
 }
 
 async function currentUserId() {
-  const login = normalizeTwitchLogin((await auth())?.user?.name);
-  if (!login) throw new CreativeStudioError(401, "Sign in with Twitch to like creations");
-  const user = await prisma.user.findUnique({ where: { twitchLogin: login }, select: { id: true } });
+  const twitchUserId = (await auth())?.user?.twitchUserId;
+  if (!twitchUserId) throw new CreativeStudioError(401, "Sign in with Twitch to like creations");
+  const user = await prisma.user.findUnique({ where: { twitchUserId }, select: { id: true } });
   if (!user) throw new CreativeStudioError(401, "Your Twitch account is not available");
   return user.id;
 }
